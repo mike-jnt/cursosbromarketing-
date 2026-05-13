@@ -5320,6 +5320,10 @@
                   <select id="courseStatusField"><option>Activo</option><option>Borrador</option><option>Oculto</option></select>
                 </div>
                 <div class="field">
+                  <label>Visibilidad para alumnos</label>
+                  <select id="courseVisibleField"><option value="true">Visible</option><option value="false">No visible</option></select>
+                </div>
+                <div class="field">
                   <label>Precio del curso</label>
                   <div class="money-input-wrap">
                     <span>COP</span>
@@ -6386,9 +6390,40 @@ function ensureDefaultStudentUser(){
 }
 
 function syncUsersState(){
+  normalizeCourseVisibility();
   state.users = (state.users || []).map((user, index) => normalizeUserRecord(user, index));
   ensureDefaultStudentUser();
   ensureDefaultAdminProfile();
+}
+
+function normalizeCourseVisibility(){
+  state.courses = (state.courses || []).map(course => {
+    if(course.visible === undefined || course.visible === null){
+      course.visible = String(course.status || 'Activo') === 'Activo';
+    }
+    if(String(course.status || '').trim() === 'Oculto'){
+      course.visible = false;
+    }
+    return course;
+  });
+}
+
+function isCourseVisible(course){
+  if(!course) return false;
+  if(String(course.status || '').trim() === 'Oculto') return false;
+  return course.visible !== false;
+}
+
+function courseVisibilityLabel(course){
+  return isCourseVisible(course) ? 'Visible para alumnos' : 'No visible para alumnos';
+}
+
+function courseVisibilityTagClass(course){
+  return isCourseVisible(course) ? 'status-ok' : 'status-lock';
+}
+
+function getVisibleCourses(){
+  return (state.courses || []).filter(isCourseVisible);
 }
 
 function ensureDefaultAdminProfile(){
@@ -6461,7 +6496,7 @@ function getStudentCourses(){
   if(!user) return [];
   const ids = new Set(getStudentCourseIds(user));
   return state.courses
-    .filter(course => ids.has(Number(course.id)))
+    .filter(course => ids.has(Number(course.id)) && isCourseVisible(course))
     .map(course => buildStudentCourseView(course, user))
     .filter(Boolean);
 }
@@ -6469,7 +6504,10 @@ function getStudentCourses(){
 function getStudentCourseForDisplay(courseId){
   const course = courseById(courseId);
   if(!course) return null;
-  if(state.currentUser && state.currentUser.role === 'student') return buildStudentCourseView(course, getCurrentStudentRecord());
+  if(state.currentUser && state.currentUser.role === 'student'){
+    if(!isCourseVisible(course)) return null;
+    return buildStudentCourseView(course, getCurrentStudentRecord());
+  }
   return course;
 }
 
@@ -6480,6 +6518,8 @@ function isCourseAssignedToCurrentStudent(courseId){
 function canCurrentStudentOpenCourse(courseId){
   const user = getCurrentStudentRecord();
   if(!user) return false;
+  const course = courseById(courseId);
+  if(!isCourseVisible(course)) return false;
   if(!isCourseAssignedToCurrentStudent(courseId)) return false;
   return user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo';
 }
@@ -7050,7 +7090,8 @@ syncUsersState();
     });
 
     function courseById(id){
-      return state.courses.find(c => c.id === id);
+      const courseId = Number(id);
+      return (state.courses || []).find(c => Number(c.id) === courseId);
     }
 
     function downloadResource(id){
@@ -7293,7 +7334,7 @@ Este es un archivo de demostración generado desde el campus.`;
 function renderAdminDashboard(){
       const users = Array.isArray(state.users) ? state.users : [];
       const courses = Array.isArray(state.courses) ? state.courses : [];
-      const publishedCourses = courses.filter(course => course.status === 'Activo' || course.status === 'Borrador').length;
+      const publishedCourses = courses.filter(isCourseVisible).length;
 
       const summary = getAccountingSummary(users);
       const { projectedByCourse, totals } = summary;
@@ -7434,6 +7475,7 @@ function renderAdminDashboard(){
             <span class="tag">${course.lessons.length} clases</span>
             <span class="tag">${course.category}</span>
             <span class="tag">${course.status}</span>
+            <span class="status ${courseVisibilityTagClass(course)}">${courseVisibilityLabel(course)}</span>
           </div>
           <p class="muted-text">${course.description}</p>
           <div class="course-price-line">
@@ -7444,6 +7486,7 @@ function renderAdminDashboard(){
           <div class="course-actions-row">
             <button class="btn btn-soft" onclick="editCourse(${course.id})">Editar</button>
             <button class="btn btn-dark" onclick="viewCourseStructure(${course.id})">Ver estructura</button>
+            <button class="btn btn-soft" onclick="toggleCourseVisibility(${course.id})">${isCourseVisible(course) ? 'Ocultar' : 'Hacer visible'}</button>
             <button class="btn btn-danger" onclick="openDeleteCourseConfirm(${course.id})">Eliminar curso</button>
           </div>
         </div>
@@ -7907,7 +7950,8 @@ function toggleUserCard(userId, event){
       const allGrid = document.getElementById('studentAllCoursesGrid');
       if(!recentGrid || !allGrid) return;
 
-      const sorted = [...state.courses].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+      const visibleCourses = getVisibleCourses();
+      const sorted = [...visibleCourses].sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
       const recent = sorted.slice(0, 3);
 
       const renderCard = (course) => {
@@ -7936,6 +7980,12 @@ function toggleUserCard(userId, event){
         </div>`;
       };
 
+      if(!sorted.length){
+        const empty = `<div class="empty-state">Por ahora no hay cursos visibles para alumnos. El administrador puede activarlos desde la sección Cursos.</div>`;
+        recentGrid.innerHTML = empty;
+        allGrid.innerHTML = empty;
+        return;
+      }
       recentGrid.innerHTML = recent.map(c => renderCard(c)).join('');
       allGrid.innerHTML = sorted.map(c => renderCard(c)).join('');
     }
@@ -8723,6 +8773,13 @@ function renderPlayer(courseId){
               <select id="editCourseStatusField">${getCourseEditOptions(statuses, course.status || 'Activo')}</select>
             </div>
             <div class="field">
+              <label>Visibilidad para alumnos</label>
+              <select id="editCourseVisibleField">
+                <option value="true"${isCourseVisible(course) ? ' selected' : ''}>Visible</option>
+                <option value="false"${isCourseVisible(course) ? '' : ' selected'}>No visible</option>
+              </select>
+            </div>
+            <div class="field">
               <label>Precio del curso</label>
               <div class="money-input-wrap">
                 <span>COP</span>
@@ -8966,6 +9023,7 @@ function renderPlayer(courseId){
       const title = document.getElementById('editCourseTitleField')?.value.trim() || '';
       const category = document.getElementById('editCourseCategoryField')?.value || 'Ventas';
       const status = document.getElementById('editCourseStatusField')?.value || 'Activo';
+      const visibleForStudents = (document.getElementById('editCourseVisibleField')?.value || 'true') === 'true' && status !== 'Oculto';
       const description = document.getElementById('editCourseDescField')?.value.trim() || '';
       const cover = document.getElementById('editCourseCoverField')?.value.trim() || '';
       const price = Math.max(0, Number(document.getElementById('editCoursePriceField')?.value || 0));
@@ -8988,6 +9046,7 @@ function renderPlayer(courseId){
       course.title = title;
       course.category = category;
       course.status = status;
+      course.visible = visibleForStudents;
       course.description = description;
       course.cover = cover;
       course.price = price;
@@ -9011,6 +9070,36 @@ function renderPlayer(courseId){
       addActivity(`Se editó el curso ${previousTitle || title}.`);
       closeModal();
       toast('Curso actualizado correctamente.');
+    }
+
+    function toggleCourseVisibility(id){
+      const course = courseById(id);
+      if(!course){ toast('No se encontró el curso.'); return; }
+      const nextVisible = !isCourseVisible(course);
+      course.visible = nextVisible;
+      if(nextVisible && String(course.status || '').trim() === 'Oculto'){
+        course.status = 'Activo';
+      }
+      if(!nextVisible){
+        course.status = 'Oculto';
+      }
+      course.updatedAt = new Date().toISOString();
+      saveState();
+      renderAdminCourses();
+      renderAdminDashboard();
+      renderStudentDiscover();
+      renderStudentAssignedCourses();
+      renderStudentProgress();
+      renderStudentResources();
+      renderStudentCertificates();
+      renderStudentHistory();
+      if(state.currentUser && state.currentUser.role === 'student' && Number(state.currentCourseId) === Number(id) && !nextVisible){
+        const firstVisible = getStudentCourses()[0];
+        state.currentCourseId = firstVisible ? firstVisible.id : 0;
+        state.currentLessonIndex = 0;
+      }
+      addActivity(`${nextVisible ? 'Se hizo visible' : 'Se ocultó'} el curso ${course.title}.`);
+      toast(nextVisible ? 'Curso visible para alumnos.' : 'Curso oculto para alumnos.');
     }
 
     function viewCourseStructure(id){
@@ -9403,6 +9492,12 @@ function openPaymentHistoryModal(id){
     function prepareCourseCheckout(courseId, containerId){
       const course = courseById(courseId);
       if(!course) return;
+      if(state.currentUser && state.currentUser.role === 'student' && !isCourseVisible(course)){
+        toast('Este curso ya no está visible para compra.');
+        renderStudentDiscover();
+        closeModal();
+        return;
+      }
       const checkoutConfig = buildWompiCheckoutConfig(course);
       markCoursePurchaseIntent(course, checkoutConfig);
       renderWompiCheckoutPlaceholder(containerId, checkoutConfig, true);
@@ -9414,6 +9509,11 @@ function openPaymentHistoryModal(id){
     function openCoursePurchaseModal(courseId){
       const course = courseById(courseId);
       if(!course) return;
+      if(state.currentUser && state.currentUser.role === 'student' && !isCourseVisible(course)){
+        toast('Este curso no está visible para compra en este momento.');
+        renderStudentDiscover();
+        return;
+      }
       const price = estimateCoursePrice(course);
       const existingPurchase = findOpenCoursePurchase(courseId);
       const checkoutConfig = buildWompiCheckoutConfig(course);
@@ -9472,7 +9572,8 @@ function openPaymentHistoryModal(id){
 
     function openCoursePlayer(courseId){
       if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(courseId)){
-        toast('Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
+        const course = courseById(courseId);
+        toast(!isCourseVisible(course) ? 'Este curso no está visible para alumnos en este momento.' : 'Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
         showTab('student-courses');
         return;
       }
@@ -9871,6 +9972,7 @@ function bindButtons(){
         const title = byId('courseTitleField').value.trim();
         const category = byId('courseCategoryField').value;
         const status = byId('courseStatusField').value;
+        const visible = (byId('courseVisibleField')?.value || 'true') === 'true' && status !== 'Oculto';
         const description = byId('courseDescField').value.trim();
         const cover = getSelectedCourseCover();
         const price = Number(byId('coursePriceField')?.value || 0);
@@ -9881,7 +9983,7 @@ function bindButtons(){
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
         const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }];
         state.courses.unshift({
-          id: Date.now(), title, category, status, description, cover, createdAt: '2026-04-06',
+          id: Date.now(), title, category, status, visible, description, cover, createdAt: new Date().toISOString(),
           progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
         });
         state.pendingLessons = [];
@@ -9890,6 +9992,7 @@ function bindButtons(){
         byId('courseDescField').value = '';
         if(byId('coursePriceField')) byId('coursePriceField').value = '';
         if(byId('coursePaymentTypeField')) byId('coursePaymentTypeField').value = 'Único';
+        if(byId('courseVisibleField')) byId('courseVisibleField').value = 'true';
         if(byId('courseAllowPartialField')) byId('courseAllowPartialField').value = 'true';
         if(byId('courseInstallmentsField')) byId('courseInstallmentsField').value = '1';
         resetCourseCoverInputs();
@@ -10096,6 +10199,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     }
 
     function refreshAllViews(){
+      normalizeCourseVisibility();
       fillCourseSelects();
       renderAdminCourses();
       renderUsersTable();
