@@ -4335,6 +4335,301 @@
       }
     }
 
+  
+
+    /* === Header reorganizado: más aire visual y navegación presentable === */
+    #appShell .topbar{
+      background:
+        radial-gradient(circle at top left, rgba(61,107,255,.18), transparent 34%),
+        linear-gradient(180deg,#0b0f17 0%, #090b0f 100%);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      box-shadow:0 16px 36px rgba(0,0,0,.18);
+    }
+    #appShell .topbar-inner{
+      width:min(1480px,96%);
+      padding:16px 0 12px;
+      display:grid;
+      grid-template-columns:minmax(320px,1fr) auto;
+      align-items:center;
+      gap:18px;
+    }
+    #appShell .top-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:13px;
+      padding:10px 14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    #appShell .top-left .brand-badge{
+      flex:0 0 44px;
+      box-shadow:none!important;
+      background:linear-gradient(135deg,#ffffff 0%,#dfe6ff 100%)!important;
+      color:#101827!important;
+      border:1px solid rgba(255,255,255,.22);
+    }
+    #appShell .top-title{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+    #appShell .top-title strong{
+      color:#ffffff;
+      font-size:16px;
+      line-height:1.2;
+      letter-spacing:-.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #appShell .top-title small{
+      color:#aeb8cc;
+      font-size:12px;
+      line-height:1.35;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #appShell .top-right{
+      margin-left:0;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:12px;
+      flex-wrap:nowrap;
+      min-width:0;
+      padding:9px 10px;
+      border-radius:18px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    #appShell #roleChip{
+      display:none!important;
+    }
+    #appShell .header-user-meta{
+      align-items:flex-start;
+      min-width:165px;
+      max-width:260px;
+    }
+    #appShell .header-user-meta strong{
+      color:#ffffff;
+      font-size:13px;
+      line-height:1.25;
+      max-width:260px;
+    }
+    #appShell .header-user-meta small{
+      color:#aeb8cc;
+      font-size:12px;
+      line-height:1.25;
+      max-width:260px;
+    }
+    #appShell .topbar #sideRoleBadge{
+      flex:0 0 auto;
+      padding:7px 11px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.02em;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.15);
+      color:#ffffff;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+    #appShell .avatar{
+      width:38px;
+      height:38px;
+      flex:0 0 38px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#ffffff 0%,#e7ecf5 100%);
+      color:#111827;
+      border:1px solid rgba(255,255,255,.22);
+      box-shadow:none;
+    }
+    #appShell .top-right .btn-soft{
+      min-height:38px;
+      padding:10px 14px;
+      border-radius:12px;
+      white-space:nowrap;
+      background:#ffffff;
+      color:#111827;
+      border:1px solid #ffffff;
+      font-size:13px;
+      box-shadow:0 10px 20px rgba(0,0,0,.16);
+    }
+    #appShell .top-right .btn-soft:hover{
+      background:#eef2ff;
+      border-color:#eef2ff;
+      color:#111827;
+      transform:translateY(-1px);
+    }
+    #appShell .top-nav-wrap{
+      width:min(1480px,96%);
+      margin:0 auto;
+      padding:0 0 14px;
+    }
+    #appShell .top-nav-scroll{
+      width:100%;
+      padding:8px;
+      border-radius:18px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.08);
+      overflow-x:auto;
+      overflow-y:hidden;
+      scrollbar-width:thin;
+      -webkit-overflow-scrolling:touch;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    #appShell .topbar .menu.top-nav-menu,
+    #appShell .topbar #menuAdmin,
+    #appShell .topbar #menuStudent{
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      gap:7px;
+      width:max-content;
+      min-width:100%;
+      margin:0;
+      padding:0;
+      border:0;
+      background:transparent;
+      box-shadow:none;
+    }
+    #appShell .topbar .menu.top-nav-menu.hidden,
+    #appShell .topbar #menuAdmin.hidden,
+    #appShell .topbar #menuStudent.hidden{
+      display:none!important;
+    }
+    #appShell .topbar .menu.top-nav-menu button,
+    #appShell .topbar #menuAdmin button,
+    #appShell .topbar #menuStudent button{
+      min-height:41px;
+      padding:10px 15px;
+      border-radius:13px;
+      border:1px solid transparent;
+      background:transparent;
+      color:#c7d0e1;
+      font-size:13px;
+      font-weight:800;
+      white-space:nowrap;
+      box-shadow:none;
+      transform:none;
+    }
+    #appShell .topbar #menuAdmin button::before,
+    #appShell .topbar #menuStudent button::before{
+      display:none!important;
+    }
+    #appShell .topbar .menu.top-nav-menu button:hover,
+    #appShell .topbar #menuAdmin button:hover,
+    #appShell .topbar #menuStudent button:hover{
+      background:rgba(255,255,255,.10);
+      border-color:rgba(255,255,255,.12);
+      color:#ffffff;
+      transform:translateY(-1px);
+    }
+    #appShell .topbar .menu.top-nav-menu button.active,
+    #appShell .topbar #menuAdmin button.active,
+    #appShell .topbar #menuStudent button.active{
+      background:#ffffff;
+      color:#111827;
+      border-color:#ffffff;
+      box-shadow:0 10px 20px rgba(0,0,0,.18);
+    }
+    #appShell .layout.layout-full,
+    #appShell .layout{
+      margin-top:22px;
+    }
+    #appShell .player-side-card{
+      top:158px;
+    }
+    @media (max-width:1180px){
+      #appShell .topbar-inner{
+        grid-template-columns:1fr;
+        gap:12px;
+      }
+      #appShell .top-right{
+        width:100%;
+        justify-content:space-between;
+      }
+      #appShell .header-user-meta{
+        flex:1 1 auto;
+        max-width:none;
+      }
+      #appShell .header-user-meta strong,
+      #appShell .header-user-meta small{
+        max-width:100%;
+      }
+    }
+    @media (max-width:760px){
+      #appShell .topbar-inner,
+      #appShell .top-nav-wrap{
+        width:min(100%,94%);
+      }
+      #appShell .topbar-inner{
+        padding:12px 0 10px;
+      }
+      #appShell .top-left{
+        width:100%;
+        padding:10px 12px;
+        border-radius:16px;
+      }
+      #appShell .top-title strong{
+        font-size:15px;
+      }
+      #appShell .top-title small{
+        white-space:normal;
+      }
+      #appShell .top-right{
+        display:grid;
+        grid-template-columns:auto minmax(0,1fr) auto;
+        gap:10px;
+        align-items:center;
+        padding:10px 12px;
+        border-radius:16px;
+      }
+      #appShell .topbar #sideRoleBadge{
+        grid-column:1 / 2;
+        grid-row:1;
+        font-size:10px;
+        padding:7px 9px;
+      }
+      #appShell .header-user-meta{
+        grid-column:2 / 3;
+        grid-row:1;
+        min-width:0;
+      }
+      #appShell .avatar{
+        grid-column:3 / 4;
+        grid-row:1;
+      }
+      #appShell .top-right .btn-soft{
+        grid-column:1 / -1;
+        width:100%;
+        justify-content:center;
+        box-shadow:none;
+      }
+      #appShell .top-nav-scroll{
+        padding:7px;
+        border-radius:16px;
+      }
+      #appShell .topbar .menu.top-nav-menu button,
+      #appShell .topbar #menuAdmin button,
+      #appShell .topbar #menuStudent button{
+        min-height:39px;
+        padding:9px 12px;
+        font-size:12px;
+        border-radius:12px;
+      }
+      #appShell .layout.layout-full,
+      #appShell .layout{
+        margin-top:16px;
+      }
+    }
+
   </style>
 </head>
 <body>
