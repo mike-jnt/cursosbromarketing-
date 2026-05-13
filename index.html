@@ -6252,7 +6252,9 @@ function applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess = false,
 }
 
 function normalizeUserRecord(user, index = 0){
-  const selectedCourseId = Number(user.courseId) || (state.courses[0] ? state.courses[0].id : 0);
+  const hasExplicitAssignedList = Array.isArray(user.assignedCourseIds);
+  const selectedCourseId = Number(user.courseId)
+    || (hasExplicitAssignedList ? Number(user.assignedCourseIds[0]) || 0 : (state.courses[0] ? state.courses[0].id : 0));
   const course = courseById(selectedCourseId) || state.courses[0] || {};
   const defaults = getCourseFinancialDefaults(course);
   const requestedStatus = user.accessStatus || user.status;
@@ -7420,6 +7422,11 @@ function renderAdminDashboard(){
     function renderAdminCourses(){
       const grid = document.getElementById('adminCoursesGrid');
       if(!grid) return;
+      if(!Array.isArray(state.courses) || !state.courses.length){
+        grid.innerHTML = `<div class="empty-state">Todavía no hay cursos creados. Usa el botón "Crear curso" para publicar el primero.</div>`;
+        fillCourseSelects();
+        return;
+      }
       grid.innerHTML = state.courses.map(course => `
         <div class="course-card">
           ${renderCourseCover(course)}
@@ -7437,6 +7444,7 @@ function renderAdminDashboard(){
           <div class="course-actions-row">
             <button class="btn btn-soft" onclick="editCourse(${course.id})">Editar</button>
             <button class="btn btn-dark" onclick="viewCourseStructure(${course.id})">Ver estructura</button>
+            <button class="btn btn-danger" onclick="openDeleteCourseConfirm(${course.id})">Eliminar curso</button>
           </div>
         </div>
       `).join('');
@@ -8790,6 +8798,7 @@ function renderPlayer(courseId){
           </div>
 
           <div class="course-edit-actions">
+            <button class="btn btn-danger" type="button" onclick="openDeleteCourseConfirm(${Number(course.id)})">Eliminar curso completo</button>
             <button class="btn btn-soft" type="button" onclick="closeModal()">Cancelar</button>
             <button class="btn btn-primary" type="button" onclick="saveEditedCourse(${Number(course.id)})">Guardar cambios</button>
           </div>
@@ -9006,11 +9015,122 @@ function renderPlayer(courseId){
 
     function viewCourseStructure(id){
       const course = courseById(id);
+      if(!course){ toast('No se encontró el curso.'); return; }
       openModal('Estructura del curso', `
         <div class="stack">
           ${course.lessons.map((ls, i) => `<div class="list-item"><div><strong>${i+1}. ${ls.title}</strong><small>${ls.module}</small></div><span class="pill-note">Clase</span></div>`).join('')}
         </div>
       `);
+    }
+
+    function getCourseDeletionImpact(courseId){
+      const id = Number(courseId);
+      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).includes(id));
+      const payments = (state.payments || []).filter(payment => Number(payment.courseId) === id);
+      const resources = (state.resources || []).filter(resource => Number(resource.courseId) === id);
+      const certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) === id);
+      const requests = (state.accessRequests || []).filter(request => Number(request.courseId) === id);
+      return { users, payments, resources, certificates, requests };
+    }
+
+    function openDeleteCourseConfirm(id){
+      const course = courseById(Number(id));
+      if(!course){ toast('No se encontró el curso.'); return; }
+      const impact = getCourseDeletionImpact(course.id);
+      openModal('Eliminar curso completo', `
+        <div class="stack">
+          <div class="mini-note">
+            Vas a eliminar el curso <strong>${escapeHtml(course.title)}</strong>. Esta acción quitará el curso de la plataforma y limpiará sus clases, recursos, solicitudes, certificados y pagos vinculados.
+          </div>
+          <div class="grid grid-2">
+            <div class="mini-note"><strong>${impact.users.length}</strong><br>Alumno${impact.users.length === 1 ? '' : 's'} con este curso asignado</div>
+            <div class="mini-note"><strong>${impact.payments.length}</strong><br>Pago${impact.payments.length === 1 ? '' : 's'} asociado${impact.payments.length === 1 ? '' : 's'}</div>
+            <div class="mini-note"><strong>${impact.resources.length}</strong><br>Recurso${impact.resources.length === 1 ? '' : 's'} vinculado${impact.resources.length === 1 ? '' : 's'}</div>
+            <div class="mini-note"><strong>${impact.certificates.length}</strong><br>Certificado${impact.certificates.length === 1 ? '' : 's'} generado${impact.certificates.length === 1 ? '' : 's'}</div>
+          </div>
+          <div class="error" style="margin-top:0">
+            Esta acción no se puede deshacer desde la interfaz. Si solo quieres ocultarlo, cambia el estado del curso a "Oculto" desde Editar.
+          </div>
+          <div class="course-edit-actions">
+            <button class="btn btn-soft" type="button" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-danger" type="button" onclick="deleteCourse(${Number(course.id)})">Sí, eliminar definitivamente</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function deleteCourse(id){
+      const courseId = Number(id);
+      const course = courseById(courseId);
+      if(!course){ toast('No se encontró el curso.'); return; }
+      const courseTitle = course.title || 'Curso';
+
+      state.courses = (state.courses || []).filter(item => Number(item.id) !== courseId);
+      state.resources = (state.resources || []).filter(resource => Number(resource.courseId) !== courseId);
+      state.certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) !== courseId);
+      state.accessRequests = (state.accessRequests || []).filter(request => Number(request.courseId) !== courseId);
+      state.payments = (state.payments || []).filter(payment => Number(payment.courseId) !== courseId);
+      state.favorites = (state.favorites || []).map(Number).filter(item => item !== courseId);
+
+      const fallbackCourse = (state.courses || [])[0] || null;
+      const fallbackId = fallbackCourse ? Number(fallbackCourse.id) : 0;
+
+      (state.users || []).forEach(user => {
+        const remainingAssigned = Array.from(new Set([
+          ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+          Number(user.courseId) || 0
+        ].map(Number).filter(item => item && item !== courseId)));
+
+        user.assignedCourseIds = remainingAssigned;
+        if(Number(user.courseId) === courseId){
+          user.courseId = remainingAssigned[0] || 0;
+        }
+        if(!user.courseId && fallbackId && remainingAssigned.includes(fallbackId)){
+          user.courseId = fallbackId;
+        }
+        if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
+          delete user.completedLessonsByCourse[courseId];
+        }
+        if(user.progressByCourse && typeof user.progressByCourse === 'object'){
+          delete user.progressByCourse[courseId];
+        }
+        if(!user.assignedCourseIds.length){
+          user.progress = 0;
+          user.lastLesson = 'Sin curso asignado';
+          user.totalToPay = 0;
+          user.totalPaid = 0;
+          user.balance = 0;
+          user.financialStatus = 'Sin cobrar';
+          user.collectorNote = `El curso ${courseTitle} fue eliminado. Asigna un nuevo curso si deseas reactivar este acceso.`;
+        }
+      });
+
+      if(Number(state.currentCourseId) === courseId){
+        state.currentCourseId = fallbackId;
+        state.currentLessonIndex = 0;
+      }
+      if(state.currentUser && Number(state.currentUser.courseId) === courseId){
+        state.currentUser.courseId = state.currentCourseId || 0;
+      }
+
+      syncUsersState();
+      saveState();
+      renderAdminCourses();
+      renderAdminDashboard();
+      renderUsersTable();
+      renderAdminUsersSummary();
+      renderAccountingSection();
+      renderStudentDiscover();
+      renderStudentAssignedCourses();
+      renderStudentProgress();
+      renderStudentResources();
+      renderStudentCertificates();
+      renderStudentHistory();
+      renderPlayer(state.currentCourseId);
+      fillCourseSelects();
+      addActivity(`Se eliminó el curso ${courseTitle}.`);
+      closeModal();
+      toast('Curso eliminado correctamente.');
     }
 
 function editUser(id){
@@ -10016,6 +10136,8 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
     window.showTab = showTab;
     window.editCourse = editCourse;
+    window.openDeleteCourseConfirm = openDeleteCourseConfirm;
+    window.deleteCourse = deleteCourse;
     window.saveEditedCourse = saveEditedCourse;
     window.addCourseEditLesson = addCourseEditLesson;
     window.deleteCourseEditLesson = deleteCourseEditLesson;
