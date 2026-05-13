@@ -3551,6 +3551,74 @@
     #tab-admin-users .user-actions .btn{
       flex:0 0 auto;
     }
+
+    #tab-admin-users .user-course-assignment{
+      padding:14px;
+      border-radius:16px;
+      background:linear-gradient(180deg,#f8faff 0%, #f3f7ff 100%);
+      border:1px solid #dfe7f7;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    #tab-admin-users .user-course-assignment-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    #tab-admin-users .user-course-assignment-head strong{
+      color:#203355;
+      font-size:14px;
+      line-height:1.35;
+      display:block;
+    }
+    #tab-admin-users .user-course-assignment-head small{
+      display:block;
+      color:#6b7c96;
+      margin-top:4px;
+      line-height:1.45;
+      font-size:12px;
+    }
+    #tab-admin-users .user-course-assign-select{
+      width:100%;
+      min-height:44px;
+      border-radius:12px;
+      border:1px solid #d6e1f2;
+      background:#ffffff;
+      color:#203355;
+      padding:11px 12px;
+      outline:none;
+      font-weight:700;
+    }
+    #tab-admin-users .user-course-assign-select:focus{
+      border-color:#9fb5eb;
+      box-shadow:0 0 0 4px rgba(91,91,214,.10);
+    }
+    #tab-admin-users .assigned-course-list{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:2px;
+    }
+    #tab-admin-users .assigned-course-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid #d8defa;
+      background:#eef2ff;
+      color:#304aa0;
+      font-size:11px;
+      font-weight:800;
+      line-height:1.2;
+    }
+    #tab-admin-users .assigned-course-chip.is-primary{
+      background:#ecfdf5;
+      border-color:#b7e4cf;
+      color:#047857;
+    }
     @media (max-width: 1180px){
       #tab-admin-users .admin-user-stats,
       #tab-admin-users .users-finance-kpis{
@@ -5672,10 +5740,12 @@ function getFilteredUsers(){
   return [...state.users]
     .filter(user => {
       const course = courseById(user.courseId);
-      const haystack = [user.name, user.email, course?.title || '', user.lastLesson || '', user.collectorNote || '', user.financialStatus || ''].join(' ').toLowerCase();
+      const assignedIds = getUserAssignedCourseIds(user);
+      const assignedCourseTitles = assignedIds.map(id => courseById(id)?.title || '').join(' ');
+      const haystack = [user.name, user.email, course?.title || '', assignedCourseTitles, user.lastLesson || '', user.collectorNote || '', user.financialStatus || ''].join(' ').toLowerCase();
       const matchesSearch = !search || haystack.includes(search);
       const matchesStatus = statusFilter === 'Todos' || user.status === statusFilter;
-      const matchesCourse = !courseFilter || Number(user.courseId) === courseFilter;
+      const matchesCourse = !courseFilter || assignedIds.includes(courseFilter);
       const matchesFinancial = financialFilter === 'Todos' || user.financialStatus === financialFilter;
       return matchesSearch && matchesStatus && matchesCourse && matchesFinancial;
     })
@@ -6283,6 +6353,75 @@ function financeStatusClass(status){
   return 'status-finance-pending';
 }
 
+
+function getUserAssignedCourseIds(user){
+  return Array.from(new Set([
+    ...(Array.isArray(user?.assignedCourseIds) ? user.assignedCourseIds : []),
+    Number(user?.courseId) || 0
+  ].map(Number).filter(Boolean)));
+}
+
+function renderUserCourseOptions(user){
+  const selectedId = Number(user?.courseId) || 0;
+  if(!Array.isArray(state.courses) || !state.courses.length){
+    return '<option value="">No hay cursos creados</option>';
+  }
+  return state.courses.map(course => {
+    const selected = Number(course.id) === selectedId ? ' selected' : '';
+    return `<option value="${course.id}"${selected}>${escapeHtml(course.title)}</option>`;
+  }).join('');
+}
+
+function renderAssignedCourseChips(user){
+  const ids = getUserAssignedCourseIds(user);
+  if(!ids.length) return '<span class="assigned-course-chip">Sin cursos visibles</span>';
+  return ids.map(id => {
+    const course = courseById(id);
+    if(!course) return '';
+    const isPrimary = Number(user.courseId) === Number(id);
+    return `<span class="assigned-course-chip ${isPrimary ? 'is-primary' : ''}">${isPrimary ? 'Principal: ' : ''}${escapeHtml(course.title)}</span>`;
+  }).filter(Boolean).join('') || '<span class="assigned-course-chip">Sin cursos visibles</span>';
+}
+
+async function assignCourseToExistingUser(userId, courseId, event){
+  event?.stopPropagation?.();
+  const user = state.users.find(u => Number(u.id) === Number(userId));
+  const course = courseById(Number(courseId));
+  if(!user || !course){
+    toast('No se pudo asignar el curso.');
+    return;
+  }
+
+  const previousCourseId = Number(user.courseId) || 0;
+  user.courseId = Number(course.id);
+  user.assignedCourseIds = Array.from(new Set([
+    ...getUserAssignedCourseIds(user),
+    Number(course.id)
+  ].map(Number).filter(Boolean)));
+
+  if(!user.completedLessonsByCourse || typeof user.completedLessonsByCourse !== 'object') user.completedLessonsByCourse = {};
+  if(!user.progressByCourse || typeof user.progressByCourse !== 'object') user.progressByCourse = {};
+  if(!Array.isArray(user.completedLessonsByCourse[course.id])) user.completedLessonsByCourse[course.id] = [];
+  if(user.progressByCourse[course.id] === undefined) user.progressByCourse[course.id] = 0;
+  user.progress = Number(user.progressByCourse[course.id]) || 0;
+  user.lastLesson = user.progress > 0 ? (user.lastLesson || 'Clase en progreso') : 'Sin avance';
+
+  const defaults = getCourseFinancialDefaults(course);
+  if(!Number(user.totalToPay)) user.totalToPay = defaults.price || 0;
+  user.paymentPlan = user.paymentPlan || (defaults.installments > 1 ? `${defaults.installments} cuotas` : (defaults.paymentType || 'Único'));
+  user.accessPolicy = user.accessPolicy || (defaults.allowPartial ? 'abono' : 'pago_completo');
+  user.lastAccess = previousCourseId === Number(course.id)
+    ? (user.lastAccess || 'Curso actualizado por admin')
+    : 'Curso asignado por admin';
+
+  const snapshot = buildUserFinancialSnapshot(user);
+  applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: false });
+  addActivity(`Se asignó el curso ${course.title} a ${user.name}`);
+  if (typeof saveState === 'function') await saveState();
+  refreshUsersSection();
+  toast('Curso asignado a ' + user.name);
+}
+
 function renderUsersTable(){
   const body = document.getElementById('usersTableBody');
   if(!body) return;
@@ -6351,6 +6490,19 @@ function renderUsersTable(){
               <small>Ingreso: ${formatDateLabel(user.joinedAt)} · Política: ${user.accessPolicy === 'pago_completo' ? 'Pago completo' : user.accessPolicy === 'inmediato' ? 'Acceso inmediato' : 'Con abono'}</small>
             </div>
             <span class="user-mini-tag">${course?.category || 'General'}</span>
+          </div>
+
+          <div class="user-course-assignment">
+            <div class="user-course-assignment-head">
+              <div>
+                <strong>Asignar curso al alumno</strong>
+                <small>Selecciona un curso y quedará como principal. También aparecerá en el panel del alumno.</small>
+              </div>
+            </div>
+            <select class="user-course-assign-select" onchange="assignCourseToExistingUser(${user.id}, this.value, event)">
+              ${renderUserCourseOptions(user)}
+            </select>
+            <div class="assigned-course-list">${renderAssignedCourseChips(user)}</div>
           </div>
 
           <div class="user-finance-strip">
@@ -7335,7 +7487,7 @@ function sendAccess(id){
       <div class="mini-note"><strong>${user.name}</strong> ya puede ingresar con estos datos si su estado está activo.</div>
       <div class="mini-note">Correo: <strong>${user.email}</strong></div>
       <div class="mini-note">Contraseña: <strong>${user.password}</strong></div>
-      <div class="mini-note">Curso asignado: <strong>${(courseById(user.courseId) || {}).title || 'Curso'}</strong></div>
+      <div class="mini-note">Cursos visibles: <strong>${getUserAssignedCourseIds(user).map(id => courseById(id)?.title || '').filter(Boolean).join(', ') || 'Curso'}</strong></div>
     </div>
   `);
   toast('Acceso listo para ' + user.name);
