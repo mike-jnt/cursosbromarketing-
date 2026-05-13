@@ -9590,14 +9590,83 @@ function openPaymentHistoryModal(id){
       toast('Progreso actualizado');
     }
 
+function scrollToPanelElement(elementId){
+      const target = document.getElementById(elementId);
+      if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function focusFieldAfterNavigation(fieldId){
+      setTimeout(() => {
+        const field = document.getElementById(fieldId);
+        if(field){
+          field.focus();
+          field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 120);
+    }
+
+    function quickCreateUser(){
+      openUserFormModal();
+    }
+
+    function quickPublishCourse(){
+      showTab('admin-create');
+      setCreateCourseStep('info');
+      focusFieldAfterNavigation('courseTitleField');
+      toast('Completa la información del curso para publicarlo.');
+    }
+
+    function quickAssignAccess(){
+      showTab('admin-users');
+      fillCourseSelects();
+      renderUsersTable();
+
+      setTimeout(() => {
+        const firstCard = document.querySelector('#tab-admin-users .user-card');
+        if(firstCard){
+          const userId = Number(String(firstCard.id || '').replace('userCard-', ''));
+          if(userId) toggleUserCard(userId);
+          firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          toast('Selecciona el curso del alumno o reenvía sus accesos desde esta ficha.');
+        }else{
+          toast('Primero crea un alumno para poder asignarle acceso.');
+          openUserFormModal();
+        }
+      }, 180);
+    }
+
+    function quickEditCover(){
+      showTab('admin-courses');
+      renderAdminCourses();
+
+      setTimeout(() => {
+        if(!state.courses.length){
+          toast('Primero crea un curso para poder editar su portada.');
+          showTab('admin-create');
+          setCreateCourseStep('info');
+          focusFieldAfterNavigation('courseTitleField');
+          return;
+        }
+
+        if(state.courses.length === 1){
+          editCourse(state.courses[0].id);
+          toast('Edita la portada del curso desde este formulario.');
+          return;
+        }
+
+        scrollToPanelElement('adminCoursesGrid');
+        toast('Elige el curso y presiona “Editar” para cambiar su portada.');
+      }, 180);
+    }
+
 function bindButtons(){
       const byId = id => document.getElementById(id);
       byId('btnHeroCreateCourse')?.addEventListener('click', () => showTab('admin-create'));
       byId('btnHeroManageUsers')?.addEventListener('click', () => showTab('admin-users'));
-      byId('btnQuickCreateUser')?.addEventListener('click', () => openUserFormModal());
-      byId('btnQuickPublishCourse')?.addEventListener('click', () => showTab('admin-create'));
-      byId('btnQuickAssignAccess')?.addEventListener('click', () => showTab('admin-requests'));
-      byId('btnQuickEditCover')?.addEventListener('click', () => showTab('admin-courses'));
+      byId('btnQuickCreateUser')?.addEventListener('click', quickCreateUser);
+      byId('btnQuickPublishCourse')?.addEventListener('click', quickPublishCourse);
+      byId('btnQuickAssignAccess')?.addEventListener('click', quickAssignAccess);
+      byId('btnQuickEditCover')?.addEventListener('click', quickEditCover);
       byId('btnNewCourseTop')?.addEventListener('click', () => showTab('admin-create'));
       byId('btnCreateUserTop')?.addEventListener('click', () => openUserFormModal());
 
