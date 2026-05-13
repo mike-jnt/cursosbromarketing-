@@ -4816,6 +4816,7 @@
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
   <script>
@@ -4843,9 +4844,13 @@
 
     let firebaseApp = null;
     let firebaseDb = null;
+    let firebaseAuth = null;
+    let firebaseSecondaryApp = null;
+    let firebaseSecondaryAuth = null;
     let firebaseAnalytics = null;
     let firebaseRemoteLoaded = false;
     let firebaseSaveTimer = null;
+    let firebaseAuthSyncStarted = false;
     const FIREBASE_COLLECTION = 'campus';
     const FIREBASE_STATE_DOC = 'mainState';
 
@@ -4870,6 +4875,9 @@
       currentLessonIndex: 0,
       pendingLessons: [],
       favorites: [1],
+      admins: [
+        { id: 1, name: 'Admin Principal', email: 'admin@campus.com', role: 'admin', status: 'Activo' }
+      ],
       resources: [
         { id: 1, title: 'Guía rápida de mensajes', type: 'PDF', courseId: 1 },
         { id: 2, title: 'Plantilla de catálogo', type: 'Plantilla', courseId: 2 },
@@ -5027,6 +5035,7 @@
           currentLessonIndex: state.currentLessonIndex,
           pendingLessons: state.pendingLessons || [],
           favorites: state.favorites || [],
+          admins: state.admins || [],
           resources: state.resources || [],
           certificates: state.certificates || [],
           activityLog: state.activityLog || [],
@@ -5047,6 +5056,7 @@
         currentLessonIndex: state.currentLessonIndex,
         pendingLessons: state.pendingLessons || [],
         favorites: state.favorites || [],
+        admins: state.admins || [],
         resources: state.resources || [],
         certificates: state.certificates || [],
         activityLog: state.activityLog || [],
@@ -5091,6 +5101,15 @@
           : firebase.initializeApp(firebaseConfig);
         firebaseDb = firebase.firestore();
         firebaseDb.settings({ ignoreUndefinedProperties: true });
+        if(firebase.auth){
+          firebaseAuth = firebase.auth(firebaseApp);
+          firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error => {
+            console.warn('No se pudo configurar persistencia de Auth.', error);
+          });
+          firebaseSecondaryApp = firebase.apps.find(app => app.name === 'campusAuthCreator')
+            || firebase.initializeApp(firebaseConfig, 'campusAuthCreator');
+          firebaseSecondaryAuth = firebase.auth(firebaseSecondaryApp);
+        }
         try{
           if(firebase.analytics && firebaseConfig.measurementId){
             firebaseAnalytics = firebase.analytics();
@@ -5102,6 +5121,8 @@
       }catch(error){
         console.warn('No se pudo iniciar Firebase. El sistema queda usando localStorage.', error);
         firebaseDb = null;
+        firebaseAuth = null;
+        firebaseSecondaryAuth = null;
         return false;
       }
     }
@@ -5372,7 +5393,10 @@ function normalizeUserRecord(user, index = 0){
     latestPaymentMethod: latestPayment?.method || '',
     latestPaymentStatus: latestPayment?.status || '',
     accessEnabled: accessStatus === 'Activo',
-    accessLockedByAdmin: Boolean(user.accessLockedByAdmin)
+    accessLockedByAdmin: Boolean(user.accessLockedByAdmin),
+    authUid: user.authUid || '',
+    authSyncedAt: user.authSyncedAt || '',
+    authSyncStatus: user.authSyncStatus || ''
   };
 }
 
@@ -5443,6 +5467,30 @@ function ensureDefaultStudentUser(){
 function syncUsersState(){
   state.users = (state.users || []).map((user, index) => normalizeUserRecord(user, index));
   ensureDefaultStudentUser();
+  ensureDefaultAdminProfile();
+}
+
+function ensureDefaultAdminProfile(){
+  if(!Array.isArray(state.admins)) state.admins = [];
+  const adminEmail = normalizeEmail(DEMO_USERS.admin.email);
+  let admin = state.admins.find(item => normalizeEmail(item.email) === adminEmail);
+  if(!admin){
+    admin = { id: 1, name: DEMO_USERS.admin.name, email: adminEmail, role: 'admin', status: 'Activo' };
+    state.admins.unshift(admin);
+  }else{
+    admin.name = admin.name || DEMO_USERS.admin.name;
+    admin.email = adminEmail;
+    admin.role = 'admin';
+    admin.status = admin.status || 'Activo';
+  }
+  return admin;
+}
+
+function isAdminEmail(email){
+  const target = normalizeEmail(email);
+  if(!target) return false;
+  if(target === normalizeEmail(DEMO_USERS.admin.email)) return true;
+  return (state.admins || []).some(admin => normalizeEmail(admin.email) === target && admin.status !== 'Bloqueado');
 }
 
 function getCurrentStudentRecord(){
@@ -5580,7 +5628,11 @@ function resetUserForm(){
   const dueField = document.getElementById('userDueDateField');
   if(dueField) dueField.value = addDays('2026-04-06', 7);
   const saveBtn = document.getElementById('btnSaveUserInline');
-  if(saveBtn) delete saveBtn.dataset.editingId;
+  if(saveBtn){
+    delete saveBtn.dataset.editingId;
+    delete saveBtn.dataset.originalEmail;
+    delete saveBtn.dataset.originalPassword;
+  }
   setUserFormMode(false);
   applyCourseDefaultsToUserForm(true);
 }
@@ -6902,6 +6954,7 @@ function renderPlayer(courseId){
         document.getElementById('tab-admin-dashboard').classList.remove('hidden');
         renderAdminCourses();
         renderUsersTable();
+        setTimeout(() => syncExistingStudentsToFirebaseAuth({ silent: false }), 800);
       }else{
         roleChip.textContent = 'ALUMNO';
         sideRoleBadge.textContent = 'Alumno';
@@ -6928,6 +6981,7 @@ function renderPlayer(courseId){
     }
 
     function logout(){
+      try{ if(firebaseAuth && firebaseAuth.currentUser) firebaseAuth.signOut(); }catch(error){ console.warn('No se pudo cerrar sesión Firebase Auth.', error); }
       state.currentUser = null;
       saveState();
       appShell.style.display = 'none';
@@ -6946,42 +7000,259 @@ function renderPlayer(courseId){
       loginError.textContent = '';
     }
 
-    function authenticateSavedStudent(email, password){
-      syncUsersState();
-      const user = findStudentUserByEmail(email);
-      if(!user) return { ok: false, reason: 'not_found' };
-      const expectedPassword = String(user.password || DEMO_USERS.student.password || '123456');
-      if(String(password) !== expectedPassword) return { ok: false, reason: 'password' };
+    function validateStudentAccessForLogin(user){
       if(user.financialStatus === 'Cancelado' || user.status === 'Bloqueado' || user.accessStatus === 'Bloqueado'){
         return { ok: false, reason: 'blocked', user };
       }
       if(!(user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo')){
         return { ok: false, reason: 'pending', user };
       }
+      return { ok: true, user };
+    }
+
+    function buildStudentSessionUser(user){
       return {
-        ok: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: 'student',
-          courseId: user.courseId
-        }
+        id: user.id,
+        name: user.name,
+        email: normalizeEmail(user.email),
+        role: 'student',
+        courseId: user.courseId
       };
     }
 
-    loginForm.addEventListener('submit', function(e){
+    function getFirebaseAuthMessage(error){
+      const code = error && error.code ? String(error.code) : '';
+      if(code.includes('auth/user-not-found') || code.includes('auth/invalid-credential') || code.includes('auth/wrong-password')) return 'Correo o contraseña no válidos en Firebase Authentication.';
+      if(code.includes('auth/email-already-in-use')) return 'Ese correo ya existe en Firebase Authentication.';
+      if(code.includes('auth/weak-password')) return 'La contraseña debe tener mínimo 6 caracteres.';
+      if(code.includes('auth/too-many-requests')) return 'Firebase bloqueó temporalmente el intento por seguridad. Intenta más tarde.';
+      if(code.includes('auth/network-request-failed')) return 'No hay conexión con Firebase Authentication.';
+      return (error && error.message) ? error.message : 'Error desconocido de Firebase Authentication.';
+    }
+
+    async function signOutSecondaryAuth(){
+      try{
+        if(firebaseSecondaryAuth && firebaseSecondaryAuth.currentUser){
+          await firebaseSecondaryAuth.signOut();
+        }
+      }catch(error){
+        console.warn('No se pudo cerrar sesión secundaria de Auth.', error);
+      }
+    }
+
+    async function ensureFirebaseAuthUserForAccount({ email, password, name, role = 'student' }, previous = {}){
+      if(!firebaseSecondaryAuth) return { ok: false, reason: 'not_ready', message: 'Firebase Auth no está listo.' };
+      const cleanEmail = normalizeEmail(email);
+      const cleanPassword = String(password || '').trim();
+      if(!cleanEmail || !cleanPassword) return { ok: false, reason: 'missing', message: 'Falta correo o contraseña.' };
+      if(cleanPassword.length < 6) return { ok: false, reason: 'weak', message: 'La contraseña debe tener mínimo 6 caracteres.' };
+
+      await signOutSecondaryAuth();
+      try{
+        const credential = await firebaseSecondaryAuth.createUserWithEmailAndPassword(cleanEmail, cleanPassword);
+        if(credential.user && credential.user.updateProfile){
+          await credential.user.updateProfile({ displayName: name || cleanEmail });
+        }
+        await signOutSecondaryAuth();
+        return { ok: true, created: true, uid: credential.user ? credential.user.uid : '', message: `${role === 'admin' ? 'Admin' : 'Alumno'} creado en Authentication.` };
+      }catch(createError){
+        if(!(createError && createError.code === 'auth/email-already-in-use')){
+          await signOutSecondaryAuth();
+          return { ok: false, reason: 'create_failed', message: getFirebaseAuthMessage(createError), error: createError };
+        }
+
+        const previousEmail = normalizeEmail(previous.email || cleanEmail);
+        const previousPassword = String(previous.password || '').trim();
+        if(previousPassword){
+          try{
+            const credential = await firebaseSecondaryAuth.signInWithEmailAndPassword(previousEmail, previousPassword);
+            if(credential.user && credential.user.updateProfile){
+              await credential.user.updateProfile({ displayName: name || cleanEmail });
+            }
+            if(previousEmail !== cleanEmail && credential.user && credential.user.updateEmail){
+              await credential.user.updateEmail(cleanEmail);
+            }
+            if(previousPassword !== cleanPassword && credential.user && credential.user.updatePassword){
+              await credential.user.updatePassword(cleanPassword);
+            }
+            await signOutSecondaryAuth();
+            return { ok: true, updated: true, uid: credential.user ? credential.user.uid : '', message: `${role === 'admin' ? 'Admin' : 'Alumno'} actualizado en Authentication.` };
+          }catch(updateError){
+            await signOutSecondaryAuth();
+            return { ok: true, exists: true, warning: true, message: 'El usuario ya existe en Authentication, pero no se pudo actualizar su contraseña desde el frontend. Si cambiaste la clave, actualízala también en Firebase Authentication o usa el flujo con backend Admin SDK.', error: updateError };
+          }
+        }
+
+        await signOutSecondaryAuth();
+        return { ok: true, exists: true, message: `${role === 'admin' ? 'Admin' : 'Alumno'} ya existe en Authentication.` };
+      }
+    }
+
+    async function ensureDefaultAdminAuthAccount(){
+      if(!firebaseSecondaryAuth) return;
+      const admin = ensureDefaultAdminProfile();
+      const result = await ensureFirebaseAuthUserForAccount({
+        email: admin.email,
+        password: DEMO_USERS.admin.password,
+        name: admin.name || DEMO_USERS.admin.name,
+        role: 'admin'
+      }, { email: admin.email, password: DEMO_USERS.admin.password });
+      if(result.ok){
+        admin.authUid = result.uid || admin.authUid || '';
+        admin.authSyncedAt = new Date().toISOString();
+        admin.authSyncStatus = result.message || 'Admin sincronizado con Authentication.';
+      }
+      return result;
+    }
+
+    async function syncExistingStudentsToFirebaseAuth(options = {}){
+      const silent = Boolean(options.silent);
+      if(firebaseAuthSyncStarted) return;
+      if(!firebaseSecondaryAuth || !state.currentUser || state.currentUser.role !== 'admin') return;
+      firebaseAuthSyncStarted = true;
+      let createdOrSynced = 0;
+      let warnings = 0;
+      try{
+        await ensureDefaultAdminAuthAccount();
+        const students = (state.users || []).filter(user => normalizeEmail(user.email) && String(user.password || '').trim().length >= 6);
+        for(const user of students){
+          const result = await ensureFirebaseAuthUserForAccount({
+            email: user.email,
+            password: user.password,
+            name: user.name,
+            role: 'student'
+          }, { email: user.email, password: user.password });
+          if(result && result.ok){
+            createdOrSynced += 1;
+            user.authUid = result.uid || user.authUid || '';
+            user.authSyncedAt = new Date().toISOString();
+            user.authSyncStatus = result.message || 'Sincronizado con Authentication.';
+          }else if(result){
+            warnings += 1;
+            user.authSyncStatus = result.message || 'No se pudo sincronizar con Authentication.';
+          }
+          if(result && result.warning){
+            warnings += 1;
+            user.authSyncStatus = result.message;
+          }
+        }
+        saveState();
+        if(!silent){
+          toast(`Authentication sincronizado: ${createdOrSynced} usuarios listos${warnings ? ` · ${warnings} avisos` : ''}.`);
+        }
+      }catch(error){
+        console.warn('No se pudo sincronizar usuarios existentes con Authentication.', error);
+        if(!silent) toast('No se pudo sincronizar todos los usuarios con Authentication. Revisa consola y reglas.');
+      }finally{
+        firebaseAuthSyncStarted = false;
+      }
+    }
+
+    async function authenticateWithFirebaseAuth(email, password){
+      if(!firebaseAuth){
+        initFirebaseConnection();
+      }
+      if(!firebaseAuth) return { ok: false, reason: 'auth_not_ready' };
+      try{
+        const credential = await firebaseAuth.signInWithEmailAndPassword(normalizeEmail(email), password);
+        const authEmail = normalizeEmail(credential.user && credential.user.email ? credential.user.email : email);
+        if(isAdminEmail(authEmail)){
+          const admin = ensureDefaultAdminProfile();
+          admin.authUid = credential.user ? credential.user.uid : admin.authUid || '';
+          admin.authSyncedAt = new Date().toISOString();
+          return {
+            ok: true,
+            user: {
+              id: admin.id || 1,
+              name: admin.name || DEMO_USERS.admin.name,
+              email: authEmail,
+              role: 'admin',
+              courseId: 0
+            }
+          };
+        }
+        syncUsersState();
+        const user = findStudentUserByEmail(authEmail);
+        if(!user){
+          return { ok: false, reason: 'no_profile' };
+        }
+        const access = validateStudentAccessForLogin(user);
+        if(!access.ok) return access;
+        user.authUid = credential.user ? credential.user.uid : user.authUid || '';
+        user.lastAccess = 'Último ingreso autenticado';
+        saveState();
+        return { ok: true, user: buildStudentSessionUser(user) };
+      }catch(error){
+        return { ok: false, reason: 'firebase_error', error, message: getFirebaseAuthMessage(error) };
+      }
+    }
+
+    function authenticateSavedStudent(email, password){
+      syncUsersState();
+      const user = findStudentUserByEmail(email);
+      if(!user) return { ok: false, reason: 'not_found' };
+      const expectedPassword = String(user.password || DEMO_USERS.student.password || '123456');
+      if(String(password) !== expectedPassword) return { ok: false, reason: 'password' };
+      const access = validateStudentAccessForLogin(user);
+      if(!access.ok) return access;
+      return {
+        ok: true,
+        user: buildStudentSessionUser(user)
+      };
+    }
+
+    loginForm.addEventListener('submit', async function(e){
       e.preventDefault();
       const email = normalizeEmail(emailInput.value);
       const password = passwordInput.value.trim();
+      loginError.classList.add('hidden');
+      loginError.textContent = '';
+
+      const firebaseLogin = await authenticateWithFirebaseAuth(email, password);
+      if(firebaseLogin.ok){
+        enterApp(firebaseLogin.user);
+        return;
+      }
+
+      if(firebaseLogin.reason === 'blocked'){
+        loginError.textContent = 'Tu acceso está bloqueado o cancelado. Comunícate con el administrador para reactivarlo.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+      if(firebaseLogin.reason === 'pending'){
+        loginError.textContent = 'Tu acceso todavía está pendiente. El administrador debe activarlo o confirmar tu pago.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+      if(firebaseLogin.reason === 'no_profile'){
+        loginError.textContent = 'Tu correo existe en Authentication, pero todavía no tiene ficha de alumno activa en el campus.';
+        loginError.classList.remove('hidden');
+        return;
+      }
 
       if(email === normalizeEmail(DEMO_USERS.admin.email) && password === DEMO_USERS.admin.password){
+        const adminSync = await ensureDefaultAdminAuthAccount();
+        if(adminSync && !adminSync.ok){
+          loginError.textContent = 'No se pudo crear/iniciar el admin en Firebase Authentication: ' + (adminSync.message || 'revisa Firebase.');
+          loginError.classList.remove('hidden');
+          return;
+        }
         enterApp(DEMO_USERS.admin);
         return;
       }
 
       const studentAuth = authenticateSavedStudent(email, password);
       if(studentAuth.ok){
+        const userRecord = findStudentUserByEmail(email);
+        if(userRecord){
+          const syncResult = await ensureFirebaseAuthUserForAccount({ email: userRecord.email, password: userRecord.password, name: userRecord.name, role: 'student' }, { email: userRecord.email, password: userRecord.password });
+          if(syncResult && syncResult.ok){
+            userRecord.authUid = syncResult.uid || userRecord.authUid || '';
+            userRecord.authSyncedAt = new Date().toISOString();
+            userRecord.authSyncStatus = syncResult.message || 'Sincronizado con Authentication.';
+            saveState();
+          }
+        }
         enterApp(studentAuth.user);
         return;
       }
@@ -6990,6 +7261,8 @@ function renderPlayer(courseId){
         loginError.textContent = 'Tu acceso está bloqueado o cancelado. Comunícate con el administrador para reactivarlo.';
       } else if(studentAuth.reason === 'pending'){
         loginError.textContent = 'Tu acceso todavía está pendiente. El administrador debe activarlo o confirmar tu pago.';
+      } else if(firebaseLogin.reason === 'firebase_error'){
+        loginError.textContent = firebaseLogin.message || 'Correo o contraseña no válidos en Firebase Authentication.';
       } else {
         loginError.textContent = 'Correo o contraseña no válidos. Verifica los datos creados por el administrador.';
       }
@@ -7035,7 +7308,11 @@ function editUser(id){
   document.getElementById('userAccessPolicyField').value = user.accessPolicy || 'abono';
   document.getElementById('userCollectorNoteField').value = user.collectorNote || '';
   const saveBtn = document.getElementById('btnSaveUserInline');
-  if(saveBtn) saveBtn.dataset.editingId = String(user.id);
+  if(saveBtn){
+    saveBtn.dataset.editingId = String(user.id);
+    saveBtn.dataset.originalEmail = normalizeEmail(user.email || '');
+    saveBtn.dataset.originalPassword = String(user.password || user.tempPassword || '123456');
+  }
   setUserFormMode(true);
   focusUserForm();
   toast('Editando a ' + user.name);
@@ -7726,8 +8003,11 @@ byId('btnCancelUserEdit')?.addEventListener('click', () => {
   toast('Edición cancelada');
 });
 
-byId('btnSaveUserInline')?.addEventListener('click', () => {
+byId('btnSaveUserInline')?.addEventListener('click', async () => {
   const editingId = getUserFormEditingId();
+  const saveBtn = byId('btnSaveUserInline');
+  const originalEmail = normalizeEmail(saveBtn?.dataset.originalEmail || '');
+  const originalPassword = String(saveBtn?.dataset.originalPassword || '');
   const name = byId('userNameField').value.trim();
   const email = byId('userEmailField').value.trim();
   const password = byId('userPasswordField').value.trim();
@@ -7744,14 +8024,19 @@ byId('btnSaveUserInline')?.addEventListener('click', () => {
   if(!name || !email || !courseId){ toast('Completa nombre, correo y curso.'); return; }
   if(!emailRegex.test(email)){ toast('Ingresa un correo válido.'); return; }
   if(!editingId && !password){ toast('Agrega o genera una contraseña temporal.'); return; }
+  if(password && password.length < 6){ toast('La contraseña debe tener mínimo 6 caracteres para Firebase Authentication.'); return; }
   if(totalToPay <= 0){ toast('Define un valor acordado para el alumno.'); return; }
 
   const duplicated = state.users.some(user => user.email.toLowerCase() === email.toLowerCase() && user.id !== editingId);
   if(duplicated){ toast('Ya existe un usuario con ese correo.'); return; }
 
+  let savedUser = null;
+  let authPrevious = { email: originalEmail || normalizeEmail(email), password: originalPassword || password };
+
   if(editingId){
     const user = state.users.find(u => u.id === editingId);
     if(!user) return;
+    authPrevious = { email: originalEmail || normalizeEmail(user.email), password: originalPassword || String(user.password || '') };
     user.name = name;
     user.email = normalizeEmail(email);
     if(password) user.password = password;
@@ -7769,10 +8054,10 @@ byId('btnSaveUserInline')?.addEventListener('click', () => {
     user.lastAccess = status === 'Pendiente'
       ? 'Pendiente de ingreso'
       : user.lastAccess || 'Actualizado por admin';
+    savedUser = user;
     addActivity('Se actualizó el usuario ' + name + ' y su ficha contable.');
-    toast('Usuario actualizado');
   } else {
-    state.users.unshift(normalizeUserRecord({
+    savedUser = normalizeUserRecord({
       id: Date.now(),
       name,
       email: normalizeEmail(email),
@@ -7792,9 +8077,26 @@ byId('btnSaveUserInline')?.addEventListener('click', () => {
       paymentPlan,
       accessPolicy,
       collectorNote
-    }));
+    });
+    state.users.unshift(savedUser);
     addActivity('Se creó el usuario ' + name + ' con ficha financiera.');
-    toast('Usuario creado');
+  }
+
+  const authResult = await ensureFirebaseAuthUserForAccount({
+    email: savedUser.email,
+    password: savedUser.password,
+    name: savedUser.name,
+    role: 'student'
+  }, authPrevious);
+  if(authResult && authResult.ok){
+    savedUser.authUid = authResult.uid || savedUser.authUid || '';
+    savedUser.authSyncedAt = new Date().toISOString();
+    savedUser.authSyncStatus = authResult.message || 'Sincronizado con Firebase Authentication.';
+    toast(editingId ? 'Usuario actualizado y sincronizado con Authentication' : 'Usuario creado en campus y Authentication');
+    if(authResult.warning) toast(authResult.message);
+  }else if(authResult){
+    savedUser.authSyncStatus = authResult.message || 'No se pudo crear en Authentication.';
+    toast('Usuario guardado en el campus, pero no se creó en Authentication: ' + savedUser.authSyncStatus);
   }
 
   if (typeof saveState === 'function') saveState();
