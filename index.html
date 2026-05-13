@@ -4660,8 +4660,9 @@
             </div>
           </div>
 
-          <div class="grid grid-2" style="margin-top:18px">
-            <div class="mini-card">
+          <div class="create-course-flow" style="margin-top:18px;display:grid;grid-template-columns:1fr;gap:18px">
+            <div class="mini-card" id="createCourseInfoStep">
+              <h3 style="margin:0 0 12px;color:#172033">Paso 1 · Información del curso</h3>
               <div class="admin-callout">Define bien el título, la categoría y el estado. Eso te ayuda a mantener el campus ordenado desde el principio.</div>
               <div class="grid grid-2 admin-form-grid-tight" style="margin-top:16px">
                 <div class="field">
@@ -4732,10 +4733,13 @@
                 <textarea id="courseDescField" placeholder="Explica qué resultado logrará el alumno con este curso"></textarea>
               </div>
               <div class="finance-source-note">Consejo contable: define aquí el precio y tipo de cobro. Así cada alumno heredará un valor base y el resumen financiero dejará de trabajar con estimaciones.</div>
+              <div class="admin-inline-actions" style="justify-content:flex-end">
+                <button class="btn btn-primary" id="btnCreateCourseNext">Siguiente · Agregar clases</button>
+              </div>
             </div>
 
-            <div class="mini-card">
-              <h3>Estructura del curso</h3>
+            <div class="mini-card hidden" id="createCourseLessonsStep">
+              <h3>Paso 2 · Estructura del curso</h3>
               <div class="admin-callout">Agrega las clases en el orden correcto para que el recorrido del alumno se vea claro, profesional y fácil de seguir.</div>
               <div class="grid admin-form-grid-tight" style="margin-top:14px">
                 <div class="field">
@@ -4754,6 +4758,7 @@
               </div>
               <div class="mini-note" id="lessonsPreviewBox">Aún no has agregado clases para este curso.</div>
               <div class="admin-inline-actions">
+                <button class="btn btn-soft" id="btnCreateCourseBack">← Volver a información</button>
                 <button class="btn btn-dark" id="btnAddLessonInline">+ Agregar clase</button>
                 <button class="btn btn-primary" id="btnSaveCourseInline">Guardar curso</button>
               </div>
@@ -7515,6 +7520,17 @@ function renderPlayer(courseId){
       }
     }
 
+    function setCreateCourseStep(step){
+      const infoStep = document.getElementById('createCourseInfoStep');
+      const lessonsStep = document.getElementById('createCourseLessonsStep');
+      if(!infoStep || !lessonsStep) return;
+      const showLessons = step === 'lessons';
+      infoStep.classList.toggle('hidden', showLessons);
+      lessonsStep.classList.toggle('hidden', !showLessons);
+      if(showLessons) renderLessonsPreview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function setCoverMode(mode){
       document.querySelectorAll('[data-cover-mode]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.coverMode === mode);
@@ -7593,6 +7609,7 @@ function renderPlayer(courseId){
         if(autoBtn) autoBtn.classList.add('active');
       }
 
+      if(tabId === 'admin-create') setCreateCourseStep('info');
       if(tabId === 'admin-courses') renderAdminCourses();
       if(tabId === 'admin-accounting') renderAccountingSection();
       if(tabId === 'admin-users') renderUsersTable();
@@ -8953,6 +8970,16 @@ function bindButtons(){
         reader.readAsDataURL(file);
       });
 
+      byId('btnCreateCourseNext')?.addEventListener('click', () => {
+        const title = byId('courseTitleField')?.value.trim() || '';
+        if(!title){ toast('Agrega el título del curso antes de continuar.'); return; }
+        setCreateCourseStep('lessons');
+      });
+
+      byId('btnCreateCourseBack')?.addEventListener('click', () => {
+        setCreateCourseStep('info');
+      });
+
       byId('btnAddLessonInline')?.addEventListener('click', () => {
         const module = byId('lessonModuleField').value.trim();
         const title = byId('lessonTitleField').value.trim();
@@ -8991,6 +9018,7 @@ function bindButtons(){
         if(byId('courseAllowPartialField')) byId('courseAllowPartialField').value = 'true';
         if(byId('courseInstallmentsField')) byId('courseInstallmentsField').value = '1';
         resetCourseCoverInputs();
+        setCreateCourseStep('info');
         renderLessonsPreview(); renderAdminCourses(); renderStudentDiscover(); fillCourseSelects(); renderAdminDashboard();
         addActivity('Se creó el curso ' + title + ' con precio definido.');
         toast('Curso creado');
