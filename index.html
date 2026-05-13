@@ -2893,6 +2893,25 @@
       font-size:13px;
       overflow-wrap:anywhere;
     }
+    #tab-admin-users .user-password-value{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    #tab-admin-users .user-password-value strong{
+      font-size:15px;
+      color:#111827;
+      letter-spacing:.02em;
+      word-break:break-word;
+    }
+    #tab-admin-users .btn-copy-password{
+      min-width:auto;
+      padding:7px 10px;
+      border-radius:10px;
+      font-size:12px;
+    }
     #tab-admin-users .user-progress-card{
       padding:14px;
       border-radius:16px;
@@ -4191,7 +4210,7 @@
           <input type="email" id="userEmailField" placeholder="correo@ejemplo.com">
         </div>
         <div class="field">
-          <label>Contraseña temporal</label>
+          <label>Contraseña / clave de acceso</label>
           <div class="user-password-row">
             <input type="text" id="userPasswordField" placeholder="Creada por admin">
             <button class="btn btn-soft btn-sm" type="button" id="btnGeneratePassword">Generar</button>
@@ -4796,6 +4815,9 @@
 
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
   <script>
     const authScreen = document.getElementById('authScreen');
     const appShell = document.getElementById('appShell');
@@ -4808,6 +4830,24 @@
     const modalBody = document.getElementById('modalBody');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
     const toastWrap = document.getElementById('toastWrap');
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCyM6oHwKa65EYsL8BDwSB0snVGofW6_sA",
+      authDomain: "cursos-a9c7f.firebaseapp.com",
+      projectId: "cursos-a9c7f",
+      storageBucket: "cursos-a9c7f.firebasestorage.app",
+      messagingSenderId: "931108295512",
+      appId: "1:931108295512:web:caf0ae2b197debc51ecb2d",
+      measurementId: "G-TPXMMLD2EB"
+    };
+
+    let firebaseApp = null;
+    let firebaseDb = null;
+    let firebaseAnalytics = null;
+    let firebaseRemoteLoaded = false;
+    let firebaseSaveTimer = null;
+    const FIREBASE_COLLECTION = 'campus';
+    const FIREBASE_STATE_DOC = 'mainState';
 
     const DEMO_USERS = {
       admin: {
@@ -5001,11 +5041,94 @@
       };
     }
 
-    function saveState(){
+    function getSharedPersistableState(){
+      const shared = clonePlain({
+        currentCourseId: state.currentCourseId,
+        currentLessonIndex: state.currentLessonIndex,
+        pendingLessons: state.pendingLessons || [],
+        favorites: state.favorites || [],
+        resources: state.resources || [],
+        certificates: state.certificates || [],
+        activityLog: state.activityLog || [],
+        courses: state.courses || [],
+        users: state.users || [],
+        payments: state.payments || [],
+        accessRequests: state.accessRequests || []
+      });
+      return shared;
+    }
+
+    function applyStatePayload(parsed, options = {}){
+      const includeCurrentUser = Boolean(options.includeCurrentUser);
+      Object.keys(INITIAL_STATE).forEach(key => {
+        if(key === 'currentUser' && !includeCurrentUser) return;
+        const baseValue = INITIAL_STATE[key];
+        const incomingValue = parsed ? parsed[key] : undefined;
+        state[key] = incomingValue !== undefined ? incomingValue : clonePlain(baseValue);
+      });
+      if(includeCurrentUser && parsed && parsed.currentUser){
+        state.currentUser = {
+          id: Number(parsed.currentUser.id) || 0,
+          name: parsed.currentUser.name || '',
+          email: normalizeEmail(parsed.currentUser.email || ''),
+          role: parsed.currentUser.role || 'student',
+          courseId: Number(parsed.currentUser.courseId) || 0
+        };
+      } else if(includeCurrentUser) {
+        state.currentUser = null;
+      }
+      syncUsersState();
+    }
+
+    function initFirebaseConnection(){
+      try{
+        if(!window.firebase){
+          console.warn('Firebase SDK no cargó. El sistema queda usando localStorage.');
+          return false;
+        }
+        firebaseApp = firebase.apps && firebase.apps.length
+          ? firebase.app()
+          : firebase.initializeApp(firebaseConfig);
+        firebaseDb = firebase.firestore();
+        firebaseDb.settings({ ignoreUndefinedProperties: true });
+        try{
+          if(firebase.analytics && firebaseConfig.measurementId){
+            firebaseAnalytics = firebase.analytics();
+          }
+        }catch(analyticsError){
+          console.warn('Analytics no se pudo iniciar, la base de datos sigue funcionando.', analyticsError);
+        }
+        return true;
+      }catch(error){
+        console.warn('No se pudo iniciar Firebase. El sistema queda usando localStorage.', error);
+        firebaseDb = null;
+        return false;
+      }
+    }
+
+    function scheduleFirebaseSave(){
+      if(!firebaseDb || !firebaseRemoteLoaded) return;
+      clearTimeout(firebaseSaveTimer);
+      firebaseSaveTimer = setTimeout(async () => {
+        try{
+          const payload = getSharedPersistableState();
+          payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+          await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+        }catch(error){
+          console.warn('No se pudo guardar en Firestore. Se conserva la copia local.', error);
+          toast('No se pudo sincronizar con Firebase. Revisa reglas o conexión.');
+        }
+      }, 650);
+    }
+
+    function saveState(options = {}){
       try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistableState()));
       }catch(error){
         console.warn('No se pudo guardar el estado en localStorage.', error);
+      }
+      if(!options.localOnly){
+        scheduleFirebaseSave();
       }
     }
 
@@ -5014,27 +5137,11 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if(!raw){
           syncUsersState();
-          saveState();
+          saveState({ localOnly: true });
           return false;
         }
         const parsed = JSON.parse(raw);
-        Object.keys(INITIAL_STATE).forEach(key => {
-          const baseValue = INITIAL_STATE[key];
-          const incomingValue = parsed[key];
-          state[key] = incomingValue !== undefined ? incomingValue : clonePlain(baseValue);
-        });
-        if(parsed.currentUser){
-          state.currentUser = {
-            id: Number(parsed.currentUser.id) || 0,
-            name: parsed.currentUser.name || '',
-            email: normalizeEmail(parsed.currentUser.email || ''),
-            role: parsed.currentUser.role || 'student',
-            courseId: Number(parsed.currentUser.courseId) || 0
-          };
-        } else {
-          state.currentUser = null;
-        }
-        syncUsersState();
+        applyStatePayload(parsed, { includeCurrentUser: true });
         return true;
       }catch(error){
         console.warn('No se pudo cargar el estado desde localStorage. Se restaura la demo base.', error);
@@ -5042,7 +5149,33 @@
           state[key] = clonePlain(INITIAL_STATE[key]);
         });
         syncUsersState();
+        saveState({ localOnly: true });
+        return false;
+      }
+    }
+
+    async function loadFirebaseState(){
+      if(!initFirebaseConnection()) return false;
+      try{
+        const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).get();
+        if(doc.exists){
+          const currentLocalUser = state.currentUser ? clonePlain(state.currentUser) : null;
+          applyStatePayload(doc.data(), { includeCurrentUser: false });
+          state.currentUser = currentLocalUser;
+          saveState({ localOnly: true });
+          firebaseRemoteLoaded = true;
+          if(typeof refreshAllViews === 'function') refreshAllViews();
+          toast('Base de datos Firebase sincronizada.');
+          return true;
+        }
+        firebaseRemoteLoaded = true;
         saveState();
+        toast('Base de datos Firebase creada con el estado inicial.');
+        return true;
+      }catch(error){
+        firebaseRemoteLoaded = false;
+        console.warn('No se pudo cargar Firestore. Se usará la copia local.', error);
+        toast('Firebase no cargó datos. Revisa que Firestore esté activo y las reglas permitan acceso.');
         return false;
       }
     }
@@ -5058,6 +5191,7 @@
     }
 
     loadState();
+    loadFirebaseState();
 
 function getTodayDate(){
   return new Date('2026-04-06T00:00:00');
@@ -5240,6 +5374,15 @@ function normalizeUserRecord(user, index = 0){
     accessEnabled: accessStatus === 'Activo',
     accessLockedByAdmin: Boolean(user.accessLockedByAdmin)
   };
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function normalizeEmail(email){
@@ -6169,6 +6312,13 @@ function renderUsersTable(){
 
           <div class="user-meta-grid">
             <div class="user-meta-card">
+              <small>Clave de acceso</small>
+              <div class="user-password-value">
+                <strong>${escapeHtml(user.password || user.tempPassword || '123456')}</strong>
+                <button class="btn btn-soft btn-sm btn-copy-password" type="button" onclick="copyUserPassword(${user.id}, event)">Copiar</button>
+              </div>
+            </div>
+            <div class="user-meta-card">
               <small>Último acceso</small>
               <span>${user.lastAccess || 'Aún no ingresa'}</span>
             </div>
@@ -6199,6 +6349,20 @@ function renderUsersTable(){
       </div>
     </article>`;
   }).join('');
+}
+
+function copyUserPassword(userId, event){
+  event?.stopPropagation?.();
+  const user = state.users.find(u => u.id === userId);
+  if(!user) return;
+  const password = String(user.password || user.tempPassword || '123456');
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(password)
+      .then(() => toast('Contraseña copiada'))
+      .catch(() => toast('Contraseña: ' + password));
+  } else {
+    toast('Contraseña: ' + password);
+  }
 }
 
 function toggleUserCard(userId, event){
@@ -6861,7 +7025,7 @@ function editUser(id){
   showTab('admin-users');
   document.getElementById('userNameField').value = user.name || '';
   document.getElementById('userEmailField').value = user.email || '';
-  document.getElementById('userPasswordField').value = '';
+  document.getElementById('userPasswordField').value = user.password || user.tempPassword || '123456';
   document.getElementById('userCourseField').value = String(user.courseId || '');
   document.getElementById('userStatusField').value = user.status || 'Pendiente';
   document.getElementById('userFinancialStatusField').value = user.financialStatus || 'Auto';
@@ -7717,6 +7881,24 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       });
     }
 
+    function refreshAllViews(){
+      fillCourseSelects();
+      renderAdminCourses();
+      renderUsersTable();
+      renderAdminUsersSummary();
+      renderStudentAssignedCourses();
+      renderStudentDiscover();
+      renderStudentProgress();
+      renderStudentResources();
+      renderStudentCertificates();
+      renderStudentHistory();
+      renderPlayer(state.currentCourseId);
+      updateStudentDesire();
+      if(state.currentUser && state.currentUser.role){
+        enterApp(state.currentUser);
+      }
+    }
+
     bindButtons();
     fillCourseSelects();
     resetUserForm();
@@ -7743,6 +7925,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.sendAccess = sendAccess;
     window.unlockUser = unlockUser;
     window.toggleUserStatus = toggleUserStatus;
+    window.copyUserPassword = copyUserPassword;
     window.deleteUser = deleteUser;
     window.requestAccess = requestAccess;
     window.openCoursePlayer = openCoursePlayer;
