@@ -3758,6 +3758,56 @@
       .course-edit-modal .course-edit-actions .btn{width:100%}
     }
 
+
+    /* === Usuarios admin: formulario en modal para optimizar espacio === */
+    .modal.modal-user-form{
+      width:min(980px,94vw);
+    }
+    .user-modal-form{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .user-modal-form .user-form-head{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      padding:16px;
+      border:1px solid #dee5f2;
+      border-radius:18px;
+      background:linear-gradient(180deg,#ffffff 0%,#f8faff 100%);
+    }
+    .user-modal-form .user-form-head h3{
+      margin:0;
+      font-size:22px;
+      color:#1b2b4d;
+    }
+    .user-modal-form .user-form-head p{
+      margin:6px 0 0;
+      color:#667791;
+      line-height:1.6;
+    }
+    .user-modal-form .user-password-row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .user-modal-form .user-password-row input{
+      flex:1 1 auto;
+      min-width:0;
+    }
+    .user-modal-form .user-form-actions{
+      margin-top:2px;
+    }
+    .user-modal-form .finance-callout{
+      margin-top:0;
+    }
+    @media (max-width:760px){
+      .user-modal-form .user-password-row{flex-direction:column;align-items:stretch;}
+    }
+
   </style>
 </head>
 <body>
@@ -4297,102 +4347,7 @@
   </div>
 
   <div class="grid grid-2 users-control-grid" style="margin-top:18px">
-    <div class="mini-card user-form-card">
-      <div class="user-form-head">
-        <div>
-          <h3 id="userFormTitle">Crear nuevo usuario</h3>
-          <p id="userFormSubtitle">Completa los datos del alumno y déjale el acceso listo desde el inicio.</p>
-        </div>
-        <span class="pill-note" id="userEditBadge">Modo creación</span>
-      </div>
-
-      <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
-        <div class="field">
-          <label>Nombre completo</label>
-          <input type="text" id="userNameField" placeholder="Nombre del alumno">
-        </div>
-        <div class="field">
-          <label>Correo</label>
-          <input type="email" id="userEmailField" placeholder="correo@ejemplo.com">
-        </div>
-        <div class="field">
-          <label>Contraseña / clave de acceso</label>
-          <div class="user-password-row">
-            <input type="text" id="userPasswordField" placeholder="Creada por admin">
-            <button class="btn btn-soft btn-sm" type="button" id="btnGeneratePassword">Generar</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Curso asignado</label>
-          <select id="userCourseField"></select>
-        </div>
-        <div class="field">
-          <label>Estado de acceso</label>
-          <select id="userStatusField">
-            <option value="Pendiente">Pendiente</option>
-            <option value="Activo">Activo</option>
-            <option value="Bloqueado">Bloqueado</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Estado financiero</label>
-          <select id="userFinancialStatusField">
-            <option value="Auto">Auto</option>
-            <option value="Sin cobrar">Sin cobrar</option>
-            <option value="Abono parcial">Abono parcial</option>
-            <option value="Pagado">Pagado</option>
-            <option value="Vencido">Vencido</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="finance-inline-grid">
-        <div class="field">
-          <label>Valor acordado</label>
-          <div class="money-input-wrap">
-            <span>COP</span>
-            <input type="number" id="userTotalToPayField" min="0" step="1000" placeholder="57000">
-          </div>
-        </div>
-        <div class="field">
-          <label>Plan de pago</label>
-          <select id="userPaymentPlanField">
-            <option value="Único">Único</option>
-            <option value="2 cuotas">2 cuotas</option>
-            <option value="3 cuotas">3 cuotas</option>
-            <option value="Mensual">Mensual</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Fecha de vencimiento</label>
-          <input type="date" id="userDueDateField">
-        </div>
-        <div class="field">
-          <label>Política de acceso</label>
-          <select id="userAccessPolicyField">
-            <option value="abono">Con abono mínimo</option>
-            <option value="pago_completo">Solo pago completo</option>
-            <option value="inmediato">Acceso inmediato</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field" style="margin-top:14px">
-        <label>Nota de cartera / seguimiento</label>
-        <textarea id="userCollectorNoteField" placeholder="Ej: prometió pagar saldo el viernes, validar comprobante o reenviar recordatorio."></textarea>
-      </div>
-
-      <div class="finance-callout">Este formulario ya deja creado el flujo académico y contable: curso, valor acordado, vencimiento, política de acceso y estado financiero. Luego podrás registrar pagos y ver quién debe sin salir de Usuarios.</div>
-
-      <div class="admin-inline-actions user-form-actions">
-        <button class="btn btn-primary" id="btnSaveUserInline">Guardar usuario</button>
-        <button class="btn btn-dark" id="btnSendAccessInline">Enviar acceso</button>
-        <button class="btn btn-soft hidden" id="btnCancelUserEdit">Cancelar edición</button>
-      </div>
-    </div>
-
-    <div class="mini-card user-toolbar-card">
+    <div class="mini-card user-toolbar-card" style="grid-column:1 / -1">
       <div class="user-toolbar-head">
         <div>
           <h3>Filtrar y organizar</h3>
@@ -5759,6 +5714,280 @@ function applyCourseDefaultsToUserForm(force = false){
   if(policyField && (!editing || force)) policyField.value = defaults.allowPartial ? 'abono' : 'pago_completo';
 }
 
+
+function getUserFormModalHtml(){
+  return `
+    <div class="user-modal-form">
+      <div class="user-form-head">
+        <div>
+          <h3 id="userFormTitle">Crear nuevo usuario</h3>
+          <p id="userFormSubtitle">Completa los datos del alumno y déjale el acceso listo desde el inicio.</p>
+        </div>
+        <span class="pill-note" id="userEditBadge">Modo creación</span>
+      </div>
+
+      <div class="grid grid-2 admin-form-grid-tight">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="userNameField" placeholder="Nombre del alumno">
+        </div>
+        <div class="field">
+          <label>Correo</label>
+          <input type="email" id="userEmailField" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="field">
+          <label>Contraseña / clave de acceso</label>
+          <div class="user-password-row">
+            <input type="text" id="userPasswordField" placeholder="Creada por admin">
+            <button class="btn btn-soft btn-sm" type="button" id="btnGeneratePassword">Generar</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Curso asignado</label>
+          <select id="userCourseField"></select>
+        </div>
+        <div class="field">
+          <label>Estado de acceso</label>
+          <select id="userStatusField">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Activo">Activo</option>
+            <option value="Bloqueado">Bloqueado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estado financiero</label>
+          <select id="userFinancialStatusField">
+            <option value="Auto">Auto</option>
+            <option value="Sin cobrar">Sin cobrar</option>
+            <option value="Abono parcial">Abono parcial</option>
+            <option value="Pagado">Pagado</option>
+            <option value="Vencido">Vencido</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="finance-inline-grid">
+        <div class="field">
+          <label>Valor acordado</label>
+          <div class="money-input-wrap">
+            <span>COP</span>
+            <input type="number" id="userTotalToPayField" min="0" step="1000" placeholder="57000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Plan de pago</label>
+          <select id="userPaymentPlanField">
+            <option value="Único">Único</option>
+            <option value="2 cuotas">2 cuotas</option>
+            <option value="3 cuotas">3 cuotas</option>
+            <option value="Mensual">Mensual</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fecha de vencimiento</label>
+          <input type="date" id="userDueDateField">
+        </div>
+        <div class="field">
+          <label>Política de acceso</label>
+          <select id="userAccessPolicyField">
+            <option value="abono">Con abono mínimo</option>
+            <option value="pago_completo">Solo pago completo</option>
+            <option value="inmediato">Acceso inmediato</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nota de cartera / seguimiento</label>
+        <textarea id="userCollectorNoteField" placeholder="Ej: prometió pagar saldo el viernes, validar comprobante o reenviar recordatorio."></textarea>
+      </div>
+
+      <div class="finance-callout">Este formulario ya deja creado el flujo académico y contable: curso, valor acordado, vencimiento, política de acceso y estado financiero. Luego podrás registrar pagos y ver quién debe sin salir de Usuarios.</div>
+
+      <div class="admin-inline-actions user-form-actions">
+        <button class="btn btn-primary" type="button" id="btnSaveUserInline">Guardar usuario</button>
+        <button class="btn btn-dark" type="button" id="btnSendAccessInline">Enviar acceso</button>
+        <button class="btn btn-soft hidden" type="button" id="btnCancelUserEdit">Cancelar edición</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindUserFormModalEvents(){
+  const byId = id => document.getElementById(id);
+  byId('btnGeneratePassword')?.addEventListener('click', () => {
+    const pwd = generateTempPassword();
+    if(byId('userPasswordField')) byId('userPasswordField').value = pwd;
+    toast('Contraseña temporal generada');
+  });
+  byId('btnCancelUserEdit')?.addEventListener('click', () => {
+    resetUserForm();
+    closeModal();
+    toast('Edición cancelada');
+  });
+  byId('userCourseField')?.addEventListener('change', () => applyCourseDefaultsToUserForm());
+  byId('btnSaveUserInline')?.addEventListener('click', handleUserFormSave);
+  byId('btnSendAccessInline')?.addEventListener('click', handleUserFormSendAccess);
+}
+
+function openUserFormModal(userId = 0){
+  showTab('admin-users');
+  const editing = Number(userId) > 0;
+  openModal(editing ? 'Editar usuario' : 'Crear usuario', getUserFormModalHtml());
+  const modalPanel = modalBackdrop.querySelector('.modal');
+  if(modalPanel) modalPanel.classList.add('modal-user-form');
+  fillCourseSelects();
+  bindUserFormModalEvents();
+  if(editing){
+    populateUserFormForEdit(Number(userId));
+  }else{
+    resetUserForm();
+  }
+  setTimeout(focusUserForm, 80);
+}
+
+function populateUserFormForEdit(id){
+  const user = state.users.find(u => u.id === id);
+  if(!user) return;
+  document.getElementById('userNameField').value = user.name || '';
+  document.getElementById('userEmailField').value = user.email || '';
+  document.getElementById('userPasswordField').value = user.password || user.tempPassword || '123456';
+  document.getElementById('userCourseField').value = String(user.courseId || '');
+  document.getElementById('userStatusField').value = user.status || 'Pendiente';
+  document.getElementById('userFinancialStatusField').value = user.financialStatus || 'Auto';
+  document.getElementById('userTotalToPayField').value = String(user.totalToPay || '');
+  document.getElementById('userPaymentPlanField').value = user.paymentPlan || 'Único';
+  document.getElementById('userDueDateField').value = user.dueDate || addDays('2026-04-06', 7);
+  document.getElementById('userAccessPolicyField').value = user.accessPolicy || 'abono';
+  document.getElementById('userCollectorNoteField').value = user.collectorNote || '';
+  const saveBtn = document.getElementById('btnSaveUserInline');
+  if(saveBtn){
+    saveBtn.dataset.editingId = String(user.id);
+    saveBtn.dataset.originalEmail = normalizeEmail(user.email || '');
+    saveBtn.dataset.originalPassword = String(user.password || user.tempPassword || '123456');
+  }
+  setUserFormMode(true);
+}
+
+async function handleUserFormSave(){
+  const byId = id => document.getElementById(id);
+  const editingId = getUserFormEditingId();
+  const saveBtn = byId('btnSaveUserInline');
+  const originalEmail = normalizeEmail(saveBtn?.dataset.originalEmail || '');
+  const originalPassword = String(saveBtn?.dataset.originalPassword || '');
+  const name = byId('userNameField').value.trim();
+  const email = byId('userEmailField').value.trim();
+  const password = byId('userPasswordField').value.trim();
+  const courseId = Number(byId('userCourseField').value);
+  const status = byId('userStatusField').value || 'Pendiente';
+  const financialStatus = byId('userFinancialStatusField').value || 'Auto';
+  const totalToPay = Number(byId('userTotalToPayField').value || 0);
+  const paymentPlan = byId('userPaymentPlanField').value || 'Único';
+  const dueDate = byId('userDueDateField').value || addDays('2026-04-06', 7);
+  const accessPolicy = byId('userAccessPolicyField').value || 'abono';
+  const collectorNote = byId('userCollectorNoteField').value.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if(!name || !email || !courseId){ toast('Completa nombre, correo y curso.'); return; }
+  if(!emailRegex.test(email)){ toast('Ingresa un correo válido.'); return; }
+  if(!editingId && !password){ toast('Agrega o genera una contraseña temporal.'); return; }
+  if(password && password.length < 6){ toast('La contraseña debe tener mínimo 6 caracteres para Firebase Authentication.'); return; }
+  if(totalToPay <= 0){ toast('Define un valor acordado para el alumno.'); return; }
+
+  const duplicated = state.users.some(user => user.email.toLowerCase() === email.toLowerCase() && user.id !== editingId);
+  if(duplicated){ toast('Ya existe un usuario con ese correo.'); return; }
+
+  let savedUser = null;
+  let authPrevious = { email: originalEmail || normalizeEmail(email), password: originalPassword || password };
+
+  if(editingId){
+    const user = state.users.find(u => u.id === editingId);
+    if(!user) return;
+    authPrevious = { email: originalEmail || normalizeEmail(user.email), password: originalPassword || String(user.password || '') };
+    user.name = name;
+    user.email = normalizeEmail(email);
+    if(password) user.password = password;
+    user.courseId = courseId;
+    user.assignedCourseIds = [courseId];
+    user.status = status;
+    user.accessStatus = status;
+    user.accessLockedByAdmin = status === 'Bloqueado';
+    user.financialStatus = financialStatus;
+    user.totalToPay = totalToPay;
+    user.paymentPlan = paymentPlan;
+    user.dueDate = dueDate;
+    user.accessPolicy = accessPolicy;
+    user.collectorNote = collectorNote;
+    user.lastAccess = status === 'Pendiente'
+      ? 'Pendiente de ingreso'
+      : user.lastAccess || 'Actualizado por admin';
+    savedUser = user;
+    addActivity('Se actualizó el usuario ' + name + ' y su ficha contable.');
+  } else {
+    savedUser = normalizeUserRecord({
+      id: Date.now(),
+      name,
+      email: normalizeEmail(email),
+      password,
+      courseId,
+      assignedCourseIds: [courseId],
+      status,
+      accessStatus: status,
+      accessLockedByAdmin: status === 'Bloqueado',
+      financialStatus,
+      lastAccess: status === 'Pendiente' ? 'Aún no ingresa' : 'Acceso creado hoy',
+      progress: 0,
+      lastLesson: 'Sin avance',
+      joinedAt: '2026-04-06',
+      dueDate,
+      totalToPay,
+      paymentPlan,
+      accessPolicy,
+      collectorNote
+    });
+    state.users.unshift(savedUser);
+    addActivity('Se creó el usuario ' + name + ' con ficha financiera.');
+  }
+
+  const authResult = await ensureFirebaseAuthUserForAccount({
+    email: savedUser.email,
+    password: savedUser.password,
+    name: savedUser.name,
+    role: 'student'
+  }, authPrevious);
+  if(authResult && authResult.ok){
+    savedUser.authUid = authResult.uid || savedUser.authUid || '';
+    savedUser.authSyncedAt = new Date().toISOString();
+    savedUser.authSyncStatus = authResult.message || 'Sincronizado con Firebase Authentication.';
+    toast(editingId ? 'Usuario actualizado y sincronizado con Authentication' : 'Usuario creado en campus y Authentication');
+    if(authResult.warning) toast(authResult.message);
+  }else if(authResult){
+    savedUser.authSyncStatus = authResult.message || 'No se pudo crear en Authentication.';
+    toast('Usuario guardado en el campus, pero no se creó en Authentication: ' + savedUser.authSyncStatus);
+  }
+
+  if (typeof saveState === 'function') saveState();
+  resetUserForm();
+  closeModal();
+  refreshUsersSection();
+}
+
+function handleUserFormSendAccess(){
+  const byId = id => document.getElementById(id);
+  const editingId = getUserFormEditingId();
+  if(editingId){
+    sendAccess(editingId);
+    return;
+  }
+  const email = byId('userEmailField')?.value.trim();
+  if(!email){
+    toast('Agrega el correo del alumno para simular el envío.');
+    return;
+  }
+  toast('Simulación: acceso enviado a ' + email);
+}
+
 function focusUserForm(){
   const field = document.getElementById('userNameField');
   if(field){
@@ -5961,6 +6190,10 @@ syncUsersState();
     function openModal(title, htmlContent){
       modalTitle.textContent = title;
       modalBody.innerHTML = htmlContent;
+      const modalPanel = modalBackdrop.querySelector('.modal');
+      if(modalPanel){
+        modalPanel.classList.remove('modal-user-form');
+      }
       modalBackdrop.classList.add('show');
     }
 
@@ -7797,26 +8030,7 @@ function renderPlayer(courseId){
 function editUser(id){
   const user = state.users.find(u => u.id === id);
   if(!user) return;
-  showTab('admin-users');
-  document.getElementById('userNameField').value = user.name || '';
-  document.getElementById('userEmailField').value = user.email || '';
-  document.getElementById('userPasswordField').value = user.password || user.tempPassword || '123456';
-  document.getElementById('userCourseField').value = String(user.courseId || '');
-  document.getElementById('userStatusField').value = user.status || 'Pendiente';
-  document.getElementById('userFinancialStatusField').value = user.financialStatus || 'Auto';
-  document.getElementById('userTotalToPayField').value = String(user.totalToPay || '');
-  document.getElementById('userPaymentPlanField').value = user.paymentPlan || 'Único';
-  document.getElementById('userDueDateField').value = user.dueDate || addDays('2026-04-06', 7);
-  document.getElementById('userAccessPolicyField').value = user.accessPolicy || 'abono';
-  document.getElementById('userCollectorNoteField').value = user.collectorNote || '';
-  const saveBtn = document.getElementById('btnSaveUserInline');
-  if(saveBtn){
-    saveBtn.dataset.editingId = String(user.id);
-    saveBtn.dataset.originalEmail = normalizeEmail(user.email || '');
-    saveBtn.dataset.originalPassword = String(user.password || user.tempPassword || '123456');
-  }
-  setUserFormMode(true);
-  focusUserForm();
+  openUserFormModal(id);
   toast('Editando a ' + user.name);
 }
 
@@ -8394,12 +8608,12 @@ function bindButtons(){
       const byId = id => document.getElementById(id);
       byId('btnHeroCreateCourse')?.addEventListener('click', () => showTab('admin-create'));
       byId('btnHeroManageUsers')?.addEventListener('click', () => showTab('admin-users'));
-      byId('btnQuickCreateUser')?.addEventListener('click', () => showTab('admin-users'));
+      byId('btnQuickCreateUser')?.addEventListener('click', () => openUserFormModal());
       byId('btnQuickPublishCourse')?.addEventListener('click', () => showTab('admin-create'));
       byId('btnQuickAssignAccess')?.addEventListener('click', () => showTab('admin-requests'));
       byId('btnQuickEditCover')?.addEventListener('click', () => showTab('admin-courses'));
       byId('btnNewCourseTop')?.addEventListener('click', () => showTab('admin-create'));
-      byId('btnCreateUserTop')?.addEventListener('click', () => { showTab('admin-users'); resetUserForm(); setTimeout(focusUserForm, 80); });
+      byId('btnCreateUserTop')?.addEventListener('click', () => openUserFormModal());
 
       byId('courseSearchInput')?.addEventListener('input', renderAdminCourses);
       byId('courseFilterStatus')?.addEventListener('change', renderAdminCourses);
@@ -8729,6 +8943,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.deleteCourseEditLesson = deleteCourseEditLesson;
     window.viewCourseStructure = viewCourseStructure;
     window.editUser = editUser;
+    window.openUserFormModal = openUserFormModal;
     window.sendAccess = sendAccess;
     window.unlockUser = unlockUser;
     window.toggleUserStatus = toggleUserStatus;
