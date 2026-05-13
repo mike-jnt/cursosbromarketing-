@@ -3808,6 +3808,87 @@
       .user-modal-form .user-password-row{flex-direction:column;align-items:stretch;}
     }
 
+
+    #tab-admin-accounting{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      background:linear-gradient(180deg,#fbfcff 0%, #f6f8fd 100%);
+      border-radius:24px;
+      padding:24px;
+    }
+    #tab-admin-accounting.hidden{display:none!important}
+    #tab-admin-accounting .users-dashboard-grid{margin-top:0}
+    #tab-admin-accounting .accounting-card{padding:16px 18px}
+
+    #tab-admin-accounting .users-finance-panel,
+    #tab-admin-accounting .users-insights-card,
+    #tab-admin-accounting .users-ranking-card,
+    #tab-admin-accounting .user-toolbar-card,
+    #tab-admin-accounting .user-list-shell{
+      border-radius:20px;
+      border:1px solid #dfe6f2;
+      background:linear-gradient(180deg,#ffffff 0%, #f9fbff 100%);
+      box-shadow:0 16px 32px rgba(23,37,84,.06);
+      overflow:hidden;
+      position:relative;
+    }
+    #tab-admin-accounting .users-finance-panel::before,
+    #tab-admin-accounting .users-insights-card::before,
+    #tab-admin-accounting .users-ranking-card::before,
+    #tab-admin-accounting .user-toolbar-card::before,
+    #tab-admin-accounting .user-list-shell::before{
+      content:""; position:absolute; inset:0 0 auto 0; height:4px;
+      background:linear-gradient(90deg,#5b5bd6 0%, #7a8cff 45%, #93b9ff 100%);
+    }
+    #tab-admin-accounting .users-finance-panel,
+    #tab-admin-accounting .users-insights-card,
+    #tab-admin-accounting .users-ranking-card,
+    #tab-admin-accounting .user-toolbar-card,
+    #tab-admin-accounting .user-list-shell{padding:20px}
+    #tab-admin-accounting .users-finance-head,
+    #tab-admin-accounting .user-toolbar-head,
+    #tab-admin-accounting .user-list-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+    #tab-admin-accounting .users-finance-head h3,
+    #tab-admin-accounting .users-insights-card h3,
+    #tab-admin-accounting .users-ranking-card h3,
+    #tab-admin-accounting .user-toolbar-head h3,
+    #tab-admin-accounting .user-list-head h3{margin:6px 0 8px;color:#1b2b4d;font-size:20px;letter-spacing:-.03em}
+    #tab-admin-accounting .users-finance-head p,
+    #tab-admin-accounting .users-insights-card p,
+    #tab-admin-accounting .users-ranking-card p,
+    #tab-admin-accounting .user-toolbar-head p,
+    #tab-admin-accounting .user-list-head p{margin:0;color:#667892;line-height:1.6}
+    #tab-admin-accounting .users-finance-sync{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #d9dafe;color:#3347b0;font-size:12px;font-weight:800;white-space:nowrap}
+    #tab-admin-accounting .users-finance-sync::before{content:'';width:8px;height:8px;border-radius:999px;background:#4f46e5;box-shadow:0 0 0 6px rgba(79,70,229,.12)}
+    #tab-admin-accounting .users-finance-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+    #tab-admin-accounting .users-finance-kpi{min-height:108px;border-radius:18px;padding:14px 15px;border:1px solid #e3e8f5;background:#fff;box-shadow:0 10px 20px rgba(15,23,42,.04);min-width:0}
+    #tab-admin-accounting .users-finance-kpi small{display:block;color:#72839d;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+    #tab-admin-accounting .users-finance-kpi strong{display:block;color:#18294a;font-size:26px;letter-spacing:-.03em;line-height:1.1;overflow-wrap:anywhere}
+    #tab-admin-accounting .users-finance-kpi span{display:block;color:#6a7b95;line-height:1.5;margin-top:8px;font-size:12px}
+    #tab-admin-accounting .users-finance-kpi.is-primary{background:linear-gradient(135deg,#f1f3ff 0%, #e8edff 100%);border-color:#d7dcfb}
+    #tab-admin-accounting .users-finance-kpi.is-soft{background:linear-gradient(135deg,#f8f9ff 0%, #eef3ff 100%);border-color:#e1e6f7}
+    #tab-admin-accounting .users-finance-progress-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+    #tab-admin-accounting .users-finance-progress-card{padding:16px;border-radius:18px;border:1px solid #e4e9f6;background:#fff;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+    #tab-admin-accounting .users-finance-progress-top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+    #tab-admin-accounting .users-finance-progress-track{height:10px;border-radius:999px;background:#dfe8f8;overflow:hidden}
+    #tab-admin-accounting .users-finance-progress-track span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#4d65dc 0%, #7d8dff 100%);box-shadow:0 8px 16px rgba(91,91,214,.18);transition:width .45s ease}
+    #tab-admin-accounting .users-insights-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;margin-top:16px}
+    #tab-admin-accounting .users-toggle-card{padding:0;overflow:hidden}
+    #tab-admin-accounting .users-toggle-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border:none;background:transparent;cursor:pointer;text-align:left}
+    #tab-admin-accounting .users-toggle-copy{min-width:0;display:flex;flex-direction:column;gap:6px}
+    #tab-admin-accounting .users-toggle-copy strong{color:#1b2b4d;font-size:17px;letter-spacing:-.02em;line-height:1.25}
+    #tab-admin-accounting .users-toggle-copy small{color:#6b7d98;line-height:1.55;font-size:12px}
+    #tab-admin-accounting .users-toggle-pill{display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border-radius:999px;background:#eef2ff;border:1px solid #d8defa;color:#3047aa;font-size:12px;font-weight:800;white-space:nowrap;flex-shrink:0}
+    #tab-admin-accounting .users-toggle-body{display:none;padding:0 22px 22px;border-top:1px solid #e7ebf5;animation:fadeSlideIn .24s ease both}
+    #tab-admin-accounting .users-toggle-card.is-open .users-toggle-body{display:block}
+    #tab-admin-accounting .users-insight-mini-grid, #tab-admin-accounting .users-ranking-list{display:grid;gap:12px;margin-top:16px}
+    #tab-admin-accounting .users-insight-mini-item, #tab-admin-accounting .users-ranking-item{padding:14px 16px;border-radius:16px;background:#f7f9ff;border:1px solid #dfe6f4}
+    #tab-admin-accounting .users-ranking-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+    #tab-admin-accounting .users-ranking-value{text-align:right;min-width:120px}
+    @media (max-width:1180px){#tab-admin-accounting .users-finance-kpis,#tab-admin-accounting .users-finance-progress-grid,#tab-admin-accounting .users-insights-panel{grid-template-columns:1fr}}
+    @media (max-width:760px){#tab-admin-accounting{padding:18px;gap:14px}#tab-admin-accounting .users-finance-head,#tab-admin-accounting .user-list-head{flex-direction:column;align-items:flex-start}#tab-admin-accounting .users-ranking-item{grid-template-columns:1fr}#tab-admin-accounting .users-ranking-value{text-align:left;min-width:0}}
+
   </style>
 </head>
 <body>
@@ -3885,6 +3966,7 @@
           <button class="active" data-tab="admin-dashboard" onclick="showTab('admin-dashboard', this)">Resumen</button>
           <button data-tab="admin-courses" onclick="showTab('admin-courses', this)">Cursos</button>
           <button data-tab="admin-users" onclick="showTab('admin-users', this)">Usuarios</button>
+          <button data-tab="admin-accounting" onclick="showTab('admin-accounting', this)">Contabilidad</button>
           <button data-tab="admin-create" onclick="showTab('admin-create', this)">Crear curso</button>
           <button data-tab="admin-config" onclick="showTab('admin-config', this)">Configuración</button>
         </div>
@@ -4179,7 +4261,7 @@
     <div>
       <span class="admin-head-kicker">Control de accesos</span>
       <h2>Usuarios y accesos</h2>
-      <p>Gestiona alumnos, filtra rápido, cambia estados y actualiza accesos sin salir de esta vista.</p>
+      <p>Gestiona alumnos, cursos asignados, claves de acceso y estados operativos sin mezclar datos contables.</p>
     </div>
     <button class="btn btn-success" id="btnCreateUserTop">+ Crear alumno</button>
   </div>
@@ -4224,6 +4306,68 @@
         <strong id="userStatBlocked">0</strong>
         <span>Acceso restringido</span>
       </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2 users-control-grid" style="margin-top:18px">
+    <div class="mini-card user-toolbar-card" style="grid-column:1 / -1">
+      <div class="user-toolbar-head">
+        <div>
+          <h3>Filtrar y organizar</h3>
+          <p>Busca por nombre, correo o curso y mantén esta vista enfocada en el acceso del alumno.</p>
+        </div>
+        <span class="pill-note" id="userFilterResultCount">0 usuarios</span>
+      </div>
+
+      <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
+        <div class="field" style="grid-column:1 / -1">
+          <label>Buscar usuario</label>
+          <input type="text" id="userSearchInput" placeholder="Ej: Laura, correo o nombre del curso">
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="userFilterStatus">
+            <option value="Todos">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Bloqueado">Bloqueado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Curso</label>
+          <select id="userCourseFilter"></select>
+        </div>
+      </div>
+
+      <div class="admin-inline-actions user-toolbar-actions">
+        <button class="btn btn-soft" id="btnClearUserFilters">Limpiar filtros</button>
+      </div>
+
+      <div class="admin-callout" style="margin-top:14px">
+        Consejo: usa “Pendiente” para accesos recién creados, “Activo” para alumnos en marcha y “Bloqueado” cuando quieras pausar su entrada sin borrar el registro.
+      </div>
+    </div>
+  </div>
+
+  <div class="user-list-shell">
+    <div class="user-list-head">
+      <div>
+        <h3>Base de alumnos</h3>
+        <p>Revisa cada usuario con sus datos de acceso, contraseña, curso asignado y avance académico.</p>
+      </div>
+      <span class="pill-note" id="userCardsResultCount">0 fichas</span>
+    </div>
+    <div id="usersTableBody" class="user-cards-grid"></div>
+  </div>
+</section>
+
+
+<section id="tab-admin-accounting" class="panel section-card tab-section hidden">
+  <div class="admin-head-row">
+    <div>
+      <span class="admin-head-kicker">Control contable</span>
+      <h2>Contabilidad</h2>
+      <p>Revisa cobros, saldos, pagos y cartera sin mezclarlo con la administración de usuarios.</p>
     </div>
   </div>
 
@@ -4346,37 +4490,30 @@
     </div>
   </div>
 
+
+
   <div class="grid grid-2 users-control-grid" style="margin-top:18px">
     <div class="mini-card user-toolbar-card" style="grid-column:1 / -1">
       <div class="user-toolbar-head">
         <div>
-          <h3>Filtrar y organizar</h3>
-          <p>Busca por nombre, correo o curso y limpia la vista en segundos.</p>
+          <h3>Filtrar cartera</h3>
+          <p>Busca alumnos por nombre, correo, curso o estado financiero para revisar pagos y saldos.</p>
         </div>
-        <span class="pill-note" id="userFilterResultCount">0 usuarios</span>
+        <span class="pill-note" id="accountingResultCount">0 registros</span>
       </div>
 
       <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
         <div class="field" style="grid-column:1 / -1">
-          <label>Buscar usuario</label>
-          <input type="text" id="userSearchInput" placeholder="Ej: Laura, correo o nombre del curso">
-        </div>
-        <div class="field">
-          <label>Estado</label>
-          <select id="userFilterStatus">
-            <option value="Todos">Todos</option>
-            <option value="Activo">Activo</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Bloqueado">Bloqueado</option>
-          </select>
+          <label>Buscar en contabilidad</label>
+          <input type="text" id="accountingSearchInput" placeholder="Ej: Laura, correo, curso o nota de cartera">
         </div>
         <div class="field">
           <label>Curso</label>
-          <select id="userCourseFilter"></select>
+          <select id="accountingCourseFilter"></select>
         </div>
-        <div class="field user-financial-filter" style="grid-column:1 / -1">
+        <div class="field">
           <label>Estado financiero</label>
-          <select id="userFinancialFilter">
+          <select id="accountingFinancialFilter">
             <option value="Todos">Todos</option>
             <option value="Pagado">Pagado</option>
             <option value="Abono parcial">Abono parcial</option>
@@ -4388,11 +4525,11 @@
       </div>
 
       <div class="admin-inline-actions user-toolbar-actions">
-        <button class="btn btn-soft" id="btnClearUserFilters">Limpiar filtros</button>
+        <button class="btn btn-soft" id="btnClearAccountingFilters">Limpiar filtros</button>
       </div>
 
       <div class="admin-callout" style="margin-top:14px">
-        Consejo: usa “Pendiente” para accesos recién creados, “Activo” para alumnos en marcha y “Bloqueado” cuando quieras pausar su entrada sin borrar el registro.
+        Esta sección concentra pagos, saldos, cartera y vencimientos. La sección Usuarios queda enfocada solo en datos, accesos y cursos asignados.
       </div>
     </div>
   </div>
@@ -4400,16 +4537,16 @@
   <div class="user-list-shell">
     <div class="user-list-head">
       <div>
-        <h3>Base de alumnos</h3>
-        <p>Revisa cada usuario en una tarjeta más clara, con curso, avance, acceso y acciones en un mismo bloque.</p>
+        <h3>Cartera de alumnos</h3>
+        <p>Consulta valores contratados, pagos registrados, saldos pendientes y acciones contables por alumno.</p>
       </div>
-      <span class="pill-note" id="userCardsResultCount">0 fichas</span>
+      <span class="pill-note" id="accountingCardsResultCount">0 fichas</span>
     </div>
-    <div id="usersTableBody" class="user-cards-grid"></div>
+    <div id="accountingUsersList" class="user-cards-grid"></div>
   </div>
 </section>
 
-        <section id="tab-admin-create" class="panel section-card tab-section hidden">
+                <section id="tab-admin-create" class="panel section-card tab-section hidden">
           <div class="admin-head-row">
             <div>
               <span class="admin-head-kicker">Producción de contenido</span>
@@ -5661,8 +5798,8 @@ function setUserFormMode(editing = false){
   const cancelBtn = document.getElementById('btnCancelUserEdit');
   if(title) title.textContent = editing ? 'Editar usuario' : 'Crear nuevo usuario';
   if(subtitle) subtitle.textContent = editing
-    ? 'Actualiza el acceso, la cartera y la política de cobro sin salir del panel.'
-    : 'Completa los datos del alumno y déjale listo el flujo académico y contable.';
+    ? 'Actualiza datos, acceso y curso asignado sin mezclar información contable.'
+    : 'Completa los datos del alumno y déjale listo el flujo académico.';
   if(badge) badge.textContent = editing ? 'Modo edición' : 'Modo creación';
   if(saveBtn) saveBtn.textContent = editing ? 'Guardar cambios' : 'Guardar usuario';
   if(sendBtn) sendBtn.textContent = editing ? 'Reenviar acceso' : 'Enviar acceso';
@@ -5726,7 +5863,7 @@ function getUserFormModalHtml(){
         <span class="pill-note" id="userEditBadge">Modo creación</span>
       </div>
 
-      <div class="grid grid-2 admin-form-grid-tight">
+      <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
         <div class="field">
           <label>Nombre completo</label>
           <input type="text" id="userNameField" placeholder="Nombre del alumno">
@@ -5754,56 +5891,16 @@ function getUserFormModalHtml(){
             <option value="Bloqueado">Bloqueado</option>
           </select>
         </div>
-        <div class="field">
-          <label>Estado financiero</label>
-          <select id="userFinancialStatusField">
-            <option value="Auto">Auto</option>
-            <option value="Sin cobrar">Sin cobrar</option>
-            <option value="Abono parcial">Abono parcial</option>
-            <option value="Pagado">Pagado</option>
-            <option value="Vencido">Vencido</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
       </div>
 
-      <div class="finance-inline-grid">
-        <div class="field">
-          <label>Valor acordado</label>
-          <div class="money-input-wrap">
-            <span>COP</span>
-            <input type="number" id="userTotalToPayField" min="0" step="1000" placeholder="57000">
-          </div>
-        </div>
-        <div class="field">
-          <label>Plan de pago</label>
-          <select id="userPaymentPlanField">
-            <option value="Único">Único</option>
-            <option value="2 cuotas">2 cuotas</option>
-            <option value="3 cuotas">3 cuotas</option>
-            <option value="Mensual">Mensual</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Fecha de vencimiento</label>
-          <input type="date" id="userDueDateField">
-        </div>
-        <div class="field">
-          <label>Política de acceso</label>
-          <select id="userAccessPolicyField">
-            <option value="abono">Con abono mínimo</option>
-            <option value="pago_completo">Solo pago completo</option>
-            <option value="inmediato">Acceso inmediato</option>
-          </select>
-        </div>
-      </div>
+      <input type="hidden" id="userFinancialStatusField" value="Auto">
+      <input type="hidden" id="userTotalToPayField" value="">
+      <input type="hidden" id="userPaymentPlanField" value="Único">
+      <input type="hidden" id="userDueDateField" value="">
+      <input type="hidden" id="userAccessPolicyField" value="abono">
+      <input type="hidden" id="userCollectorNoteField" value="">
 
-      <div class="field">
-        <label>Nota de cartera / seguimiento</label>
-        <textarea id="userCollectorNoteField" placeholder="Ej: prometió pagar saldo el viernes, validar comprobante o reenviar recordatorio."></textarea>
-      </div>
-
-      <div class="finance-callout">Este formulario ya deja creado el flujo académico y contable: curso, valor acordado, vencimiento, política de acceso y estado financiero. Luego podrás registrar pagos y ver quién debe sin salir de Usuarios.</div>
+      <div class="admin-callout" style="margin-top:14px">Este formulario queda enfocado en datos del alumno, acceso y curso asignado. Los pagos, saldos y cartera se gestionan desde Contabilidad.</div>
 
       <div class="admin-inline-actions user-form-actions">
         <button class="btn btn-primary" type="button" id="btnSaveUserInline">Guardar usuario</button>
@@ -5882,7 +5979,7 @@ async function handleUserFormSave(){
   const courseId = Number(byId('userCourseField').value);
   const status = byId('userStatusField').value || 'Pendiente';
   const financialStatus = byId('userFinancialStatusField').value || 'Auto';
-  const totalToPay = Number(byId('userTotalToPayField').value || 0);
+  let totalToPay = Number(byId('userTotalToPayField').value || 0);
   const paymentPlan = byId('userPaymentPlanField').value || 'Único';
   const dueDate = byId('userDueDateField').value || addDays('2026-04-06', 7);
   const accessPolicy = byId('userAccessPolicyField').value || 'abono';
@@ -5893,7 +5990,10 @@ async function handleUserFormSave(){
   if(!emailRegex.test(email)){ toast('Ingresa un correo válido.'); return; }
   if(!editingId && !password){ toast('Agrega o genera una contraseña temporal.'); return; }
   if(password && password.length < 6){ toast('La contraseña debe tener mínimo 6 caracteres para Firebase Authentication.'); return; }
-  if(totalToPay <= 0){ toast('Define un valor acordado para el alumno.'); return; }
+  if(totalToPay <= 0){
+    const selectedCourse = courseById(courseId);
+    totalToPay = Math.max(0, Number(getCourseFinancialDefaults(selectedCourse || {}).price || selectedCourse?.price || 0));
+  }
 
   const duplicated = state.users.some(user => user.email.toLowerCase() === email.toLowerCase() && user.id !== editingId);
   if(duplicated){ toast('Ya existe un usuario con ese correo.'); return; }
@@ -5923,7 +6023,7 @@ async function handleUserFormSave(){
       ? 'Pendiente de ingreso'
       : user.lastAccess || 'Actualizado por admin';
     savedUser = user;
-    addActivity('Se actualizó el usuario ' + name + ' y su ficha contable.');
+    addActivity('Se actualizó el usuario ' + name + ' y su acceso.');
   } else {
     savedUser = normalizeUserRecord({
       id: Date.now(),
@@ -5947,7 +6047,7 @@ async function handleUserFormSave(){
       collectorNote
     });
     state.users.unshift(savedUser);
-    addActivity('Se creó el usuario ' + name + ' con ficha financiera.');
+    addActivity('Se creó el usuario ' + name + ' con acceso académico.');
   }
 
   const authResult = await ensureFirebaseAuthUserForAccount({
@@ -6000,8 +6100,30 @@ function getFilteredUsers(){
   const search = (document.getElementById('userSearchInput')?.value || '').trim().toLowerCase();
   const statusFilter = document.getElementById('userFilterStatus')?.value || 'Todos';
   const courseFilter = Number(document.getElementById('userCourseFilter')?.value || 0);
-  const financialFilter = document.getElementById('userFinancialFilter')?.value || 'Todos';
   const statusOrder = { Pendiente: 0, Activo: 1, Bloqueado: 2 };
+
+  return [...state.users]
+    .filter(user => {
+      const course = courseById(user.courseId);
+      const assignedIds = getUserAssignedCourseIds(user);
+      const assignedCourseTitles = assignedIds.map(id => courseById(id)?.title || '').join(' ');
+      const haystack = [user.name, user.email, course?.title || '', assignedCourseTitles, user.lastLesson || ''].join(' ').toLowerCase();
+      const matchesSearch = !search || haystack.includes(search);
+      const matchesStatus = statusFilter === 'Todos' || user.status === statusFilter;
+      const matchesCourse = !courseFilter || assignedIds.includes(courseFilter);
+      return matchesSearch && matchesStatus && matchesCourse;
+    })
+    .sort((a, b) => {
+      const statusCompare = (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+      if(statusCompare !== 0) return statusCompare;
+      return (b.id || 0) - (a.id || 0);
+    });
+}
+
+function getFilteredAccountingUsers(){
+  const search = (document.getElementById('accountingSearchInput')?.value || '').trim().toLowerCase();
+  const courseFilter = Number(document.getElementById('accountingCourseFilter')?.value || 0);
+  const financialFilter = document.getElementById('accountingFinancialFilter')?.value || 'Todos';
   const financeOrder = { 'Vencido': 0, 'Sin cobrar': 1, 'Abono parcial': 2, 'Pagado': 3, 'Cancelado': 4 };
 
   return [...state.users]
@@ -6009,19 +6131,16 @@ function getFilteredUsers(){
       const course = courseById(user.courseId);
       const assignedIds = getUserAssignedCourseIds(user);
       const assignedCourseTitles = assignedIds.map(id => courseById(id)?.title || '').join(' ');
-      const haystack = [user.name, user.email, course?.title || '', assignedCourseTitles, user.lastLesson || '', user.collectorNote || '', user.financialStatus || ''].join(' ').toLowerCase();
+      const haystack = [user.name, user.email, course?.title || '', assignedCourseTitles, user.collectorNote || '', user.financialStatus || '', user.paymentPlan || ''].join(' ').toLowerCase();
       const matchesSearch = !search || haystack.includes(search);
-      const matchesStatus = statusFilter === 'Todos' || user.status === statusFilter;
       const matchesCourse = !courseFilter || assignedIds.includes(courseFilter);
       const matchesFinancial = financialFilter === 'Todos' || user.financialStatus === financialFilter;
-      return matchesSearch && matchesStatus && matchesCourse && matchesFinancial;
+      return matchesSearch && matchesCourse && matchesFinancial;
     })
     .sort((a, b) => {
       const financeCompare = (financeOrder[a.financialStatus] ?? 9) - (financeOrder[b.financialStatus] ?? 9);
       if(financeCompare !== 0) return financeCompare;
-      const statusCompare = (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
-      if(statusCompare !== 0) return statusCompare;
-      return (b.id || 0) - (a.id || 0);
+      return Number(b.balance || 0) - Number(a.balance || 0);
     });
 }
 
@@ -6163,6 +6282,7 @@ function refreshUsersSection(){
   fillCourseSelects();
   renderUsersTable();
   renderAdminUsersSummary();
+  renderAccountingSection();
   renderAdminDashboard();
   renderAdminProgress();
 }
@@ -6612,6 +6732,10 @@ function fillCourseSelects(){
   if(filterSelect){
     filterSelect.innerHTML = `<option value="0">Todos los cursos</option>` + state.courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
   }
+  const accountingFilterSelect = document.getElementById('accountingCourseFilter');
+  if(accountingFilterSelect){
+    accountingFilterSelect.innerHTML = `<option value="0">Todos los cursos</option>` + state.courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+  }
   applyCourseDefaultsToUserForm();
 }
 
@@ -6693,12 +6817,77 @@ async function assignCourseToExistingUser(userId, courseId, event){
   toast('Curso asignado a ' + user.name);
 }
 
+function renderAccountingUsersList(users = getFilteredAccountingUsers()){
+  const list = document.getElementById('accountingUsersList');
+  const countBadge = document.getElementById('accountingCardsResultCount');
+  const resultBadge = document.getElementById('accountingResultCount');
+  if(countBadge) countBadge.textContent = `${users.length} ${users.length === 1 ? 'ficha' : 'fichas'}`;
+  if(resultBadge) resultBadge.textContent = `${users.length} ${users.length === 1 ? 'registro' : 'registros'}`;
+  if(!list) return;
+  if(!users.length){
+    list.innerHTML = `<div class="user-empty">No encontramos registros contables con esos filtros.</div>`;
+    return;
+  }
+  list.innerHTML = users.map(user => {
+    const course = courseById(user.courseId) || {};
+    const overdue = daysPastDue(user.dueDate);
+    const balance = Number(user.balance || 0);
+    return `
+      <article class="user-card accounting-card">
+        <div class="user-card-details-inner">
+          <div class="user-card-top">
+            <div class="user-card-identity">
+              <div class="user-card-name">
+                <strong>${escapeHtml(user.name || 'Alumno')}</strong>
+                <small>${escapeHtml(user.email || '')}</small>
+              </div>
+            </div>
+            <div class="user-chip-row">
+              <span class="status ${normalizeStatusClass(user.status)}">${escapeHtml(user.status || 'Pendiente')}</span>
+              <span class="status-soft ${financeStatusClass(user.financialStatus)}">${escapeHtml(user.financialStatus || 'Sin cobrar')}</span>
+            </div>
+          </div>
+
+          <div class="user-card-course">
+            <div>
+              <strong>${escapeHtml(course.title || 'Sin curso asignado')}</strong>
+              <small>Ingreso: ${formatDateLabel(user.joinedAt)} · Plan: ${escapeHtml(user.paymentPlan || 'Único')}</small>
+            </div>
+            <span class="user-mini-tag">${escapeHtml(course.category || 'General')}</span>
+          </div>
+
+          <div class="user-finance-strip">
+            <div class="user-finance-card"><small>Valor contratado</small><strong>${formatCurrencyCOP(user.totalToPay)}</strong></div>
+            <div class="user-finance-card"><small>Pagado</small><strong>${formatCurrencyCOP(user.totalPaid)}</strong></div>
+            <div class="user-finance-card"><small>Saldo</small><strong>${formatCurrencyCOP(user.balance)}</strong></div>
+            <div class="user-finance-card"><small>Vencimiento</small><span>${formatDateLabel(user.dueDate)}</span></div>
+          </div>
+
+          <div class="user-debt-note">${balance <= 0 ? 'Cuenta al día. Puedes mantener el acceso activo y emitir comprobante o certificado cuando corresponda.' : overdue > 0 ? `Tiene saldo pendiente y va ${overdue} día${overdue === 1 ? '' : 's'} vencido. Conviene hacer seguimiento y definir si reactivas el acceso al pagar.` : `Aún debe ${formatCurrencyCOP(balance)}. Próximo vencimiento: ${formatDateLabel(user.dueDate)}.`}${user.collectorNote ? `<br><strong>Nota:</strong> ${escapeHtml(user.collectorNote)}` : ''}</div>
+
+          <div class="user-actions">
+            <button class="btn btn-primary btn-sm" onclick="openRegisterPaymentModal(${user.id})">Registrar pago</button>
+            <button class="btn btn-dark btn-sm" onclick="openPaymentHistoryModal(${user.id})">Historial</button>
+            <button class="btn btn-soft btn-sm" onclick="openUserFormModal(${user.id})">Editar alumno</button>
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function renderAccountingSection(){
+  syncUsersState();
+  fillCourseSelects();
+  const users = getFilteredAccountingUsers();
+  renderUsersDashboard(users);
+  renderAccountingUsersList(users);
+}
+
 function renderUsersTable(){
   const body = document.getElementById('usersTableBody');
   if(!body) return;
   const users = getFilteredUsers();
   renderAdminUsersSummary(users);
-  renderUsersDashboard(users);
   const countBadge = document.getElementById('userCardsResultCount');
   if(countBadge) countBadge.textContent = `${users.length} ${users.length === 1 ? 'ficha' : 'fichas'}`;
 
@@ -6751,14 +6940,13 @@ function renderUsersTable(){
             </div>
             <div class="user-chip-row">
               <span class="status ${normalizeStatusClass(user.status)}">${user.status}</span>
-              <span class="status-soft ${financeStatusClass(user.financialStatus)}">${user.financialStatus}</span>
             </div>
           </div>
 
           <div class="user-card-course">
             <div>
               <strong>${course ? course.title : 'Sin curso asignado'}</strong>
-              <small>Ingreso: ${formatDateLabel(user.joinedAt)} · Política: ${user.accessPolicy === 'pago_completo' ? 'Pago completo' : user.accessPolicy === 'inmediato' ? 'Acceso inmediato' : 'Con abono'}</small>
+              <small>Ingreso: ${formatDateLabel(user.joinedAt)} · Estado operativo: ${user.accessStatus || user.status}</small>
             </div>
             <span class="user-mini-tag">${course?.category || 'General'}</span>
           </div>
@@ -6775,15 +6963,6 @@ function renderUsersTable(){
             </select>
             <div class="assigned-course-list">${renderAssignedCourseChips(user)}</div>
           </div>
-
-          <div class="user-finance-strip">
-            <div class="user-finance-card"><small>Valor contratado</small><strong>${formatCurrencyCOP(user.totalToPay)}</strong></div>
-            <div class="user-finance-card"><small>Pagado</small><strong>${formatCurrencyCOP(user.totalPaid)}</strong></div>
-            <div class="user-finance-card"><small>Saldo</small><strong>${formatCurrencyCOP(user.balance)}</strong></div>
-            <div class="user-finance-card"><small>Vencimiento</small><span>${formatDateLabel(user.dueDate)}</span></div>
-          </div>
-
-          <div class="user-debt-note">${user.balance <= 0 ? 'Cuenta al día. Puedes mantener el acceso activo y emitir comprobante o certificado cuando corresponda.' : overdue > 0 ? `Tiene saldo pendiente y va ${overdue} día${overdue === 1 ? '' : 's'} vencido. Conviene hacer seguimiento y definir si reactivas el acceso al pagar.` : `Aún debe ${formatCurrencyCOP(user.balance)}. Próximo vencimiento: ${formatDateLabel(user.dueDate)}. Plan: ${user.paymentPlan}.`}${user.collectorNote ? `<br><strong>Nota:</strong> ${user.collectorNote}` : ''}</div>
 
           <div class="user-meta-grid">
             <div class="user-meta-card">
@@ -6813,8 +6992,6 @@ function renderUsersTable(){
           </div>
 
           <div class="user-actions">
-            <button class="btn btn-primary btn-sm" onclick="openRegisterPaymentModal(${user.id})">Registrar pago</button>
-            <button class="btn btn-dark btn-sm" onclick="openPaymentHistoryModal(${user.id})">Historial</button>
             <button class="btn btn-soft btn-sm" onclick="editUser(${user.id})">Editar</button>
             ${resendAction}
             ${statusAction}
@@ -7312,6 +7489,7 @@ function renderPlayer(courseId){
       }
 
       if(tabId === 'admin-courses') renderAdminCourses();
+      if(tabId === 'admin-accounting') renderAccountingSection();
       if(tabId === 'admin-users') renderUsersTable();
       if(tabId === 'student-courses') renderStudentAssignedCourses();
       if(tabId === 'student-discover') renderStudentDiscover();
@@ -8620,14 +8798,21 @@ function bindButtons(){
       byId('userSearchInput')?.addEventListener('input', renderUsersTable);
       byId('userFilterStatus')?.addEventListener('change', renderUsersTable);
       byId('userCourseFilter')?.addEventListener('change', renderUsersTable);
-      byId('userFinancialFilter')?.addEventListener('change', renderUsersTable);
       byId('userCourseField')?.addEventListener('change', () => applyCourseDefaultsToUserForm());
       byId('btnClearUserFilters')?.addEventListener('click', () => {
         if(byId('userSearchInput')) byId('userSearchInput').value = '';
         if(byId('userFilterStatus')) byId('userFilterStatus').value = 'Todos';
         if(byId('userCourseFilter')) byId('userCourseFilter').value = '0';
-        if(byId('userFinancialFilter')) byId('userFinancialFilter').value = 'Todos';
         renderUsersTable();
+      });
+      byId('accountingSearchInput')?.addEventListener('input', renderAccountingSection);
+      byId('accountingCourseFilter')?.addEventListener('change', renderAccountingSection);
+      byId('accountingFinancialFilter')?.addEventListener('change', renderAccountingSection);
+      byId('btnClearAccountingFilters')?.addEventListener('click', () => {
+        if(byId('accountingSearchInput')) byId('accountingSearchInput').value = '';
+        if(byId('accountingCourseFilter')) byId('accountingCourseFilter').value = '0';
+        if(byId('accountingFinancialFilter')) byId('accountingFinancialFilter').value = 'Todos';
+        renderAccountingSection();
       });
 
       document.querySelectorAll('[data-cover-mode]').forEach(btn => {
@@ -8730,7 +8915,7 @@ byId('btnSaveUserInline')?.addEventListener('click', async () => {
   const courseId = Number(byId('userCourseField').value);
   const status = byId('userStatusField').value || 'Pendiente';
   const financialStatus = byId('userFinancialStatusField').value || 'Auto';
-  const totalToPay = Number(byId('userTotalToPayField').value || 0);
+  let totalToPay = Number(byId('userTotalToPayField').value || 0);
   const paymentPlan = byId('userPaymentPlanField').value || 'Único';
   const dueDate = byId('userDueDateField').value || addDays('2026-04-06', 7);
   const accessPolicy = byId('userAccessPolicyField').value || 'abono';
@@ -8741,7 +8926,10 @@ byId('btnSaveUserInline')?.addEventListener('click', async () => {
   if(!emailRegex.test(email)){ toast('Ingresa un correo válido.'); return; }
   if(!editingId && !password){ toast('Agrega o genera una contraseña temporal.'); return; }
   if(password && password.length < 6){ toast('La contraseña debe tener mínimo 6 caracteres para Firebase Authentication.'); return; }
-  if(totalToPay <= 0){ toast('Define un valor acordado para el alumno.'); return; }
+  if(totalToPay <= 0){
+    const selectedCourse = courseById(courseId);
+    totalToPay = Math.max(0, Number(getCourseFinancialDefaults(selectedCourse || {}).price || selectedCourse?.price || 0));
+  }
 
   const duplicated = state.users.some(user => user.email.toLowerCase() === email.toLowerCase() && user.id !== editingId);
   if(duplicated){ toast('Ya existe un usuario con ese correo.'); return; }
@@ -8771,7 +8959,7 @@ byId('btnSaveUserInline')?.addEventListener('click', async () => {
       ? 'Pendiente de ingreso'
       : user.lastAccess || 'Actualizado por admin';
     savedUser = user;
-    addActivity('Se actualizó el usuario ' + name + ' y su ficha contable.');
+    addActivity('Se actualizó el usuario ' + name + ' y su acceso.');
   } else {
     savedUser = normalizeUserRecord({
       id: Date.now(),
@@ -8795,7 +8983,7 @@ byId('btnSaveUserInline')?.addEventListener('click', async () => {
       collectorNote
     });
     state.users.unshift(savedUser);
-    addActivity('Se creó el usuario ' + name + ' con ficha financiera.');
+    addActivity('Se creó el usuario ' + name + ' con acceso académico.');
   }
 
   const authResult = await ensureFirebaseAuthUserForAccount({
@@ -8904,6 +9092,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       renderAdminCourses();
       renderUsersTable();
       renderAdminUsersSummary();
+      renderAccountingSection();
       renderStudentAssignedCourses();
       renderStudentDiscover();
       renderStudentProgress();
@@ -8923,6 +9112,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     renderAdminCourses();
     renderUsersTable();
     renderAdminUsersSummary();
+    renderAccountingSection();
     renderStudentAssignedCourses();
     renderStudentDiscover();
     renderStudentProgress();
