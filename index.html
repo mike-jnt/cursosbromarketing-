@@ -3857,6 +3857,94 @@
     #tab-admin-accounting.hidden{display:none!important}
     #tab-admin-accounting .users-dashboard-grid{margin-top:0}
     #tab-admin-accounting .accounting-card{padding:16px 18px}
+    #tab-admin-accounting .accounting-table-container{
+      width:100%;
+      margin-top:0;
+    }
+    #tab-admin-accounting .accounting-table-wrap{
+      width:100%;
+      overflow:auto;
+      border:1px solid #dfe6f2;
+      border-radius:18px;
+      background:#ffffff;
+      box-shadow:0 10px 24px rgba(23,37,84,.05);
+    }
+    #tab-admin-accounting .accounting-table{
+      width:100%;
+      min-width:1080px;
+      border-collapse:separate;
+      border-spacing:0;
+      background:#ffffff;
+    }
+    #tab-admin-accounting .accounting-table thead{
+      background:linear-gradient(135deg,#3347b0 0%, #5b5bd6 100%);
+      color:#ffffff;
+    }
+    #tab-admin-accounting .accounting-table th{
+      padding:14px 16px;
+      color:#ffffff;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.045em;
+      white-space:nowrap;
+      border:none;
+    }
+    #tab-admin-accounting .accounting-table td{
+      padding:14px 16px;
+      vertical-align:top;
+      border-top:1px solid #edf1f7;
+      color:#24324b;
+      background:#ffffff;
+    }
+    #tab-admin-accounting .accounting-table tbody tr:hover td{
+      background:#f8faff;
+    }
+    #tab-admin-accounting .accounting-student-cell strong,
+    #tab-admin-accounting .accounting-course-cell strong,
+    #tab-admin-accounting .accounting-money strong{
+      display:block;
+      color:#172033;
+      font-size:14px;
+      line-height:1.35;
+    }
+    #tab-admin-accounting .accounting-student-cell small,
+    #tab-admin-accounting .accounting-course-cell small,
+    #tab-admin-accounting .accounting-money small,
+    #tab-admin-accounting .accounting-date-cell small{
+      display:block;
+      margin-top:4px;
+      color:#6b7d98;
+      line-height:1.45;
+      font-size:12px;
+      overflow-wrap:anywhere;
+    }
+    #tab-admin-accounting .accounting-money{
+      white-space:nowrap;
+    }
+    #tab-admin-accounting .accounting-money.is-paid strong{color:#166534}
+    #tab-admin-accounting .accounting-money.is-pending strong{color:#92400e}
+    #tab-admin-accounting .accounting-money.is-zero strong{color:#475569}
+    #tab-admin-accounting .accounting-note-cell{
+      min-width:210px;
+      max-width:300px;
+      color:#5f6f8d;
+      font-size:13px;
+      line-height:1.5;
+    }
+    #tab-admin-accounting .accounting-status-stack{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+    }
+    #tab-admin-accounting .accounting-empty{
+      padding:28px 18px;
+      border:1px dashed #d8e1f2;
+      border-radius:18px;
+      background:#fbfcff;
+      text-align:center;
+      color:#6f809a;
+    }
 
     #tab-admin-accounting .users-finance-panel,
     #tab-admin-accounting .users-insights-card,
@@ -4679,12 +4767,12 @@
   <div class="user-list-shell">
     <div class="user-list-head">
       <div>
-        <h3>Detalle de cartera</h3>
-        <p>Consulta valores contratados, pagos registrados, saldos pendientes y vencimientos. La edición del alumno y el registro de pagos se gestionan desde Usuarios.</p>
+        <h3>Tabla de pagos y cartera</h3>
+        <p>Consulta en una sola tabla los alumnos, valores contratados, pagos realizados, saldos pendientes, vencimientos y estado financiero.</p>
       </div>
-      <span class="pill-note" id="accountingCardsResultCount">0 fichas</span>
+      <span class="pill-note" id="accountingCardsResultCount">0 registros</span>
     </div>
-    <div id="accountingUsersList" class="user-cards-grid"></div>
+    <div id="accountingUsersList" class="accounting-table-container"></div>
   </div>
 </section>
 
@@ -6968,56 +7056,112 @@ function renderAccountingUsersList(users = getFilteredAccountingUsers()){
   const list = document.getElementById('accountingUsersList');
   const countBadge = document.getElementById('accountingCardsResultCount');
   const resultBadge = document.getElementById('accountingResultCount');
-  if(countBadge) countBadge.textContent = `${users.length} ${users.length === 1 ? 'ficha' : 'fichas'}`;
+  if(countBadge) countBadge.textContent = `${users.length} ${users.length === 1 ? 'registro' : 'registros'}`;
   if(resultBadge) resultBadge.textContent = `${users.length} ${users.length === 1 ? 'registro' : 'registros'}`;
   if(!list) return;
   if(!users.length){
-    list.innerHTML = `<div class="user-empty">No encontramos registros contables con esos filtros.</div>`;
+    list.innerHTML = `<div class="accounting-empty">No encontramos registros contables con esos filtros.</div>`;
     return;
   }
-  list.innerHTML = users.map(user => {
+
+  const getLatestPayment = (userId) => {
+    const payments = [...getUserPayments(userId, { includePending: true })]
+      .sort((a,b) => String(b.date || '').localeCompare(String(a.date || '')) || (b.id || 0) - (a.id || 0));
+    return payments[0] || null;
+  };
+
+  const rows = users.map(user => {
     const course = courseById(user.courseId) || {};
     const overdue = daysPastDue(user.dueDate);
+    const total = Number(user.totalToPay || 0);
+    const paid = Number(user.totalPaid || 0);
     const balance = Number(user.balance || 0);
+    const paymentCount = getUserPayments(user.id, { includePending: true }).length;
+    const latestPayment = getLatestPayment(user.id);
+    const pendingText = balance <= 0
+      ? 'Al día'
+      : overdue > 0
+        ? `${overdue} día${overdue === 1 ? '' : 's'} vencido`
+        : `Debe ${formatCurrencyCOP(balance)}`;
+    const noteText = user.collectorNote
+      ? escapeHtml(user.collectorNote)
+      : balance <= 0
+        ? 'Pago completo o sin saldo pendiente.'
+        : 'Pendiente de seguimiento desde Usuarios.';
+
     return `
-      <article class="user-card accounting-card">
-        <div class="user-card-details-inner">
-          <div class="user-card-top">
-            <div class="user-card-identity">
-              <div class="user-card-name">
-                <strong>${escapeHtml(user.name || 'Alumno')}</strong>
-                <small>${escapeHtml(user.email || '')}</small>
-              </div>
-            </div>
-            <div class="user-chip-row">
-              <span class="status ${normalizeStatusClass(user.status)}">${escapeHtml(user.status || 'Pendiente')}</span>
-              <span class="status-soft ${financeStatusClass(user.financialStatus)}">${escapeHtml(user.financialStatus || 'Sin cobrar')}</span>
-            </div>
+      <tr>
+        <td>
+          <div class="accounting-student-cell">
+            <strong>${escapeHtml(user.name || 'Alumno')}</strong>
+            <small>${escapeHtml(user.email || '')}</small>
           </div>
-
-          <div class="user-card-course">
-            <div>
-              <strong>${escapeHtml(course.title || 'Sin curso asignado')}</strong>
-              <small>Ingreso: ${formatDateLabel(user.joinedAt)} · Plan: ${escapeHtml(user.paymentPlan || 'Único')}</small>
-            </div>
-            <span class="user-mini-tag">${escapeHtml(course.category || 'General')}</span>
+        </td>
+        <td>
+          <div class="accounting-course-cell">
+            <strong>${escapeHtml(course.title || 'Sin curso asignado')}</strong>
+            <small>${escapeHtml(course.category || 'General')} · Plan: ${escapeHtml(user.paymentPlan || 'Único')}</small>
           </div>
-
-          <div class="user-finance-strip">
-            <div class="user-finance-card"><small>Valor contratado</small><strong>${formatCurrencyCOP(user.totalToPay)}</strong></div>
-            <div class="user-finance-card"><small>Pagado</small><strong>${formatCurrencyCOP(user.totalPaid)}</strong></div>
-            <div class="user-finance-card"><small>Saldo</small><strong>${formatCurrencyCOP(user.balance)}</strong></div>
-            <div class="user-finance-card"><small>Vencimiento</small><span>${formatDateLabel(user.dueDate)}</span></div>
+        </td>
+        <td>
+          <div class="accounting-money">
+            <strong>${formatCurrencyCOP(total)}</strong>
+            <small>Valor contratado</small>
           </div>
-
-          <div class="user-debt-note">${balance <= 0 ? 'Cuenta al día. Puedes mantener el acceso activo y emitir comprobante o certificado cuando corresponda.' : overdue > 0 ? `Tiene saldo pendiente y va ${overdue} día${overdue === 1 ? '' : 's'} vencido. Conviene hacer seguimiento y definir si reactivas el acceso al pagar.` : `Aún debe ${formatCurrencyCOP(balance)}. Próximo vencimiento: ${formatDateLabel(user.dueDate)}.`}${user.collectorNote ? `<br><strong>Nota:</strong> ${escapeHtml(user.collectorNote)}` : ''}</div>
-
-          <div class="user-actions">
-            <span class="pill-note">Gestión individual desde Usuarios</span>
+        </td>
+        <td>
+          <div class="accounting-money is-paid">
+            <strong>${formatCurrencyCOP(paid)}</strong>
+            <small>${paymentCount} movimiento${paymentCount === 1 ? '' : 's'}</small>
           </div>
-        </div>
-      </article>`;
+        </td>
+        <td>
+          <div class="accounting-money ${balance <= 0 ? 'is-zero' : 'is-pending'}">
+            <strong>${formatCurrencyCOP(balance)}</strong>
+            <small>${escapeHtml(pendingText)}</small>
+          </div>
+        </td>
+        <td>
+          <div class="accounting-date-cell">
+            <strong>${formatDateLabel(user.dueDate)}</strong>
+            <small>Ingreso: ${formatDateLabel(user.joinedAt)}</small>
+          </div>
+        </td>
+        <td>
+          <div class="accounting-status-stack">
+            <span class="status-soft ${financeStatusClass(user.financialStatus)}">${escapeHtml(user.financialStatus || 'Sin cobrar')}</span>
+            <span class="status ${normalizeStatusClass(user.status)}">${escapeHtml(user.status || 'Pendiente')}</span>
+          </div>
+        </td>
+        <td>
+          <div class="accounting-date-cell">
+            <strong>${latestPayment ? formatCurrencyCOP(latestPayment.amount) : 'Sin pagos'}</strong>
+            <small>${latestPayment ? `${escapeHtml(latestPayment.type || 'Pago')} · ${formatDateLabel(latestPayment.date)} · ${escapeHtml(latestPayment.status || '')}` : 'No registra movimientos'}</small>
+          </div>
+        </td>
+        <td class="accounting-note-cell">${noteText}</td>
+      </tr>`;
   }).join('');
+
+  list.innerHTML = `
+    <div class="accounting-table-wrap">
+      <table class="accounting-table">
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Curso / plan</th>
+            <th>Valor</th>
+            <th>Pagos realizados</th>
+            <th>Pendiente</th>
+            <th>Fechas</th>
+            <th>Estado</th>
+            <th>Último pago</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderAccountingSection(){
