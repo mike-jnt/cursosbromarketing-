@@ -3889,7 +3889,138 @@
     @media (max-width:1180px){#tab-admin-accounting .users-finance-kpis,#tab-admin-accounting .users-finance-progress-grid,#tab-admin-accounting .users-insights-panel{grid-template-columns:1fr}}
     @media (max-width:760px){#tab-admin-accounting{padding:18px;gap:14px}#tab-admin-accounting .users-finance-head,#tab-admin-accounting .user-list-head{flex-direction:column;align-items:flex-start}#tab-admin-accounting .users-ranking-item{grid-template-columns:1fr}#tab-admin-accounting .users-ranking-value{text-align:left;min-width:0}}
 
-  </style>
+  
+
+    /* === Filtros compactos horizontales para Usuarios y Contabilidad === */
+    .compact-filter-shell{
+      margin-top:14px;
+    }
+    .compact-filter-bar{
+      display:grid;
+      grid-template-columns:minmax(135px,.55fr) minmax(250px,1.35fr) minmax(155px,.75fr) minmax(190px,.85fr) auto;
+      align-items:end;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid #dfe6f2;
+      background:linear-gradient(180deg,#ffffff 0%, #f9fbff 100%);
+      box-shadow:0 14px 28px rgba(23,37,84,.055);
+      position:relative;
+      overflow:hidden;
+    }
+    .compact-filter-bar::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:3px;
+      background:linear-gradient(90deg,#5b5bd6 0%, #7a8cff 45%, #93b9ff 100%);
+    }
+    .compact-filter-title{
+      min-width:0;
+      padding-bottom:3px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .compact-filter-title strong{
+      color:#1b2b4d;
+      font-size:15px;
+      line-height:1.2;
+      letter-spacing:-.01em;
+    }
+    .compact-filter-title span{
+      width:max-content;
+      max-width:100%;
+      display:inline-flex;
+      align-items:center;
+      padding:5px 9px;
+      border-radius:999px;
+      background:#eef2ff;
+      border:1px solid #d8defa;
+      color:#304aa0;
+      font-size:11px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .compact-filter-field{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+    }
+    .compact-filter-field label{
+      color:#5e6d85;
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      line-height:1;
+    }
+    .compact-filter-field input,
+    .compact-filter-field select{
+      width:100%;
+      height:42px;
+      min-height:42px;
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid #dce4f0;
+      background:#fbfcff;
+      color:#172033;
+      outline:none;
+      font-size:13px;
+    }
+    .compact-filter-field input:focus,
+    .compact-filter-field select:focus{
+      border-color:#b8c3fa;
+      box-shadow:0 0 0 4px rgba(91,91,214,.10);
+      background:#ffffff;
+    }
+    .compact-filter-btn{
+      min-height:42px !important;
+      height:42px;
+      padding:9px 14px !important;
+      border-radius:12px !important;
+      white-space:nowrap;
+      align-self:end;
+    }
+    @media (max-width:1180px){
+      .compact-filter-bar{
+        grid-template-columns:1fr 1.4fr 1fr 1fr auto;
+      }
+    }
+    @media (max-width:960px){
+      .compact-filter-bar{
+        grid-template-columns:1fr 1fr;
+        align-items:end;
+      }
+      .compact-filter-title,
+      .compact-filter-search{
+        grid-column:1 / -1;
+      }
+      .compact-filter-btn{
+        width:100%;
+      }
+    }
+    @media (max-width:640px){
+      .compact-filter-bar{
+        grid-template-columns:1fr;
+        padding:12px;
+        gap:9px;
+      }
+      .compact-filter-title{
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+      }
+      .compact-filter-field input,
+      .compact-filter-field select,
+      .compact-filter-btn{
+        height:40px;
+        min-height:40px !important;
+      }
+    }
+</style>
 </head>
 <body>
 
@@ -4309,43 +4440,30 @@
     </div>
   </div>
 
-  <div class="grid grid-2 users-control-grid" style="margin-top:18px">
-    <div class="mini-card user-toolbar-card" style="grid-column:1 / -1">
-      <div class="user-toolbar-head">
-        <div>
-          <h3>Filtrar y organizar</h3>
-          <p>Busca por nombre, correo o curso y mantén esta vista enfocada en el acceso del alumno.</p>
-        </div>
-        <span class="pill-note" id="userFilterResultCount">0 usuarios</span>
+  <div class="compact-filter-shell">
+    <div class="compact-filter-bar compact-filter-users">
+      <div class="compact-filter-title">
+        <strong>Filtrar usuarios</strong>
+        <span id="userFilterResultCount">0 usuarios</span>
       </div>
-
-      <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
-        <div class="field" style="grid-column:1 / -1">
-          <label>Buscar usuario</label>
-          <input type="text" id="userSearchInput" placeholder="Ej: Laura, correo o nombre del curso">
-        </div>
-        <div class="field">
-          <label>Estado</label>
-          <select id="userFilterStatus">
-            <option value="Todos">Todos</option>
-            <option value="Activo">Activo</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Bloqueado">Bloqueado</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Curso</label>
-          <select id="userCourseFilter"></select>
-        </div>
+      <div class="compact-filter-field compact-filter-search">
+        <label for="userSearchInput">Buscar</label>
+        <input type="text" id="userSearchInput" placeholder="Nombre, correo o curso">
       </div>
-
-      <div class="admin-inline-actions user-toolbar-actions">
-        <button class="btn btn-soft" id="btnClearUserFilters">Limpiar filtros</button>
+      <div class="compact-filter-field">
+        <label for="userFilterStatus">Estado</label>
+        <select id="userFilterStatus">
+          <option value="Todos">Todos</option>
+          <option value="Activo">Activo</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Bloqueado">Bloqueado</option>
+        </select>
       </div>
-
-      <div class="admin-callout" style="margin-top:14px">
-        Consejo: usa “Pendiente” para accesos recién creados, “Activo” para alumnos en marcha y “Bloqueado” cuando quieras pausar su entrada sin borrar el registro.
+      <div class="compact-filter-field">
+        <label for="userCourseFilter">Curso</label>
+        <select id="userCourseFilter"></select>
       </div>
+      <button class="btn btn-soft compact-filter-btn" id="btnClearUserFilters">Limpiar</button>
     </div>
   </div>
 
@@ -4492,45 +4610,32 @@
 
 
 
-  <div class="grid grid-2 users-control-grid" style="margin-top:18px">
-    <div class="mini-card user-toolbar-card" style="grid-column:1 / -1">
-      <div class="user-toolbar-head">
-        <div>
-          <h3>Filtrar cartera</h3>
-          <p>Busca alumnos por nombre, correo, curso o estado financiero para revisar pagos y saldos.</p>
-        </div>
-        <span class="pill-note" id="accountingResultCount">0 registros</span>
+  <div class="compact-filter-shell">
+    <div class="compact-filter-bar compact-filter-accounting">
+      <div class="compact-filter-title">
+        <strong>Filtrar cartera</strong>
+        <span id="accountingResultCount">0 registros</span>
       </div>
-
-      <div class="grid grid-2 admin-form-grid-tight" style="margin-top:14px">
-        <div class="field" style="grid-column:1 / -1">
-          <label>Buscar en contabilidad</label>
-          <input type="text" id="accountingSearchInput" placeholder="Ej: Laura, correo, curso o nota de cartera">
-        </div>
-        <div class="field">
-          <label>Curso</label>
-          <select id="accountingCourseFilter"></select>
-        </div>
-        <div class="field">
-          <label>Estado financiero</label>
-          <select id="accountingFinancialFilter">
-            <option value="Todos">Todos</option>
-            <option value="Pagado">Pagado</option>
-            <option value="Abono parcial">Abono parcial</option>
-            <option value="Sin cobrar">Sin cobrar</option>
-            <option value="Vencido">Vencido</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
+      <div class="compact-filter-field compact-filter-search">
+        <label for="accountingSearchInput">Buscar</label>
+        <input type="text" id="accountingSearchInput" placeholder="Nombre, correo, curso o nota">
       </div>
-
-      <div class="admin-inline-actions user-toolbar-actions">
-        <button class="btn btn-soft" id="btnClearAccountingFilters">Limpiar filtros</button>
+      <div class="compact-filter-field">
+        <label for="accountingCourseFilter">Curso</label>
+        <select id="accountingCourseFilter"></select>
       </div>
-
-      <div class="admin-callout" style="margin-top:14px">
-        Esta sección concentra pagos, saldos, cartera y vencimientos. La sección Usuarios queda enfocada solo en datos, accesos y cursos asignados.
+      <div class="compact-filter-field">
+        <label for="accountingFinancialFilter">Estado financiero</label>
+        <select id="accountingFinancialFilter">
+          <option value="Todos">Todos</option>
+          <option value="Pagado">Pagado</option>
+          <option value="Abono parcial">Abono parcial</option>
+          <option value="Sin cobrar">Sin cobrar</option>
+          <option value="Vencido">Vencido</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
       </div>
+      <button class="btn btn-soft compact-filter-btn" id="btnClearAccountingFilters">Limpiar</button>
     </div>
   </div>
 
