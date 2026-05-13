@@ -4425,8 +4425,9 @@
                   <input type="text" id="lessonTitleField" placeholder="Clase 1 · Bienvenida">
                 </div>
                 <div class="field">
-                  <label>Enlace de YouTube</label>
-                  <input type="text" id="lessonUrlField" placeholder="https://www.youtube.com/embed/...">
+                  <label>URL del video</label>
+                  <input type="text" id="lessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+                  <small class="cover-upload-meta">Acepta enlace de Cloudflare Stream, URL embed, iframe completo, YouTube, Vimeo, MP4 directo o manifest HLS.</small>
                 </div>
               </div>
               <div class="mini-note" id="lessonsPreviewBox">Aún no has agregado clases para este curso.</div>
@@ -4640,12 +4641,13 @@
             <div class="player-main-card">
               <div class="player-video-wrap" style="display:block;width:100%;">
                 <div class="video-frame">
-                  <iframe id="playerIframe" src="" title="Clase del curso" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;" allowfullscreen></iframe>
+                  <iframe id="playerIframe" src="" title="Clase del curso" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>
+                  <video id="playerVideo" controls preload="none" playsinline style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
                   <div class="placeholder" id="playerPlaceholder">
                     <div>
                       <strong id="playerTitleMain">Video de la clase</strong>
-                      <div style="color:#6b7280;line-height:1.7;max-width:560px">
-                        Aquí embebemos el video de YouTube privado o no listado para ahorrar costos de alojamiento.
+                      <div id="playerPlaceholderText" style="color:#6b7280;line-height:1.7;max-width:560px">
+                        Aquí puedes reproducir videos de Cloudflare Stream, YouTube, Vimeo, MP4 directo o HLS.
                       </div>
                     </div>
                   </div>
@@ -4793,6 +4795,7 @@
   <div class="toast-wrap" id="toastWrap"></div>
 
   
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const authScreen = document.getElementById('authScreen');
     const appShell = document.getElementById('appShell');
@@ -6147,30 +6150,154 @@ function toggleUserCard(userId, event){
     }
 
     
+    let activeHlsPlayer = null;
+
     function isLocalFileMode(){
       return window.location.protocol === 'file:';
     }
 
+    function extractIframeSrc(value){
+      const raw = String(value || '').trim();
+      const match = raw.match(/src=["']([^"']+)["']/i);
+      return match ? match[1].trim() : raw;
+    }
+
+    function getPathPartsFromUrl(url){
+      return url.pathname.split('/').filter(Boolean);
+    }
+
+    function normalizeVideoUrl(value){
+      let raw = extractIframeSrc(value);
+      if(!raw) return '';
+      raw = raw.replace(/&amp;/g, '&').trim();
+
+      try{
+        const url = new URL(raw);
+        const host = url.hostname.replace(/^www\./, '').toLowerCase();
+        const parts = getPathPartsFromUrl(url);
+
+        if(host === 'youtu.be' && parts[0]){
+          return `https://www.youtube.com/embed/${parts[0]}`;
+        }
+
+        if(host.includes('youtube.com')){
+          if(parts[0] === 'embed' && parts[1]) return raw;
+          if(parts[0] === 'shorts' && parts[1]) return `https://www.youtube.com/embed/${parts[1]}`;
+          const id = url.searchParams.get('v');
+          if(id) return `https://www.youtube.com/embed/${id}`;
+          return raw;
+        }
+
+        if(host === 'vimeo.com' && parts[0]){
+          return `https://player.vimeo.com/video/${parts[0]}`;
+        }
+
+        if(host === 'player.vimeo.com'){
+          return raw;
+        }
+
+        if(host.includes('videodelivery.net') || host.includes('cloudflarestream.com') || host.includes('stream.cloudflare.com')){
+          if(raw.includes('/manifest/video.m3u8') || raw.endsWith('.m3u8')) return raw;
+          if(host === 'iframe.videodelivery.net') return raw;
+          if(parts.includes('iframe')) return raw;
+          const streamId = parts.find(part => /^[a-z0-9]{20,}$/i.test(part)) || parts[0];
+          if(streamId) return `https://iframe.videodelivery.net/${streamId}`;
+          return raw;
+        }
+
+        return raw;
+      } catch(err){
+        return raw;
+      }
+    }
+
+    function isDirectVideoUrl(url){
+      const clean = String(url || '').split('?')[0].toLowerCase();
+      return clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.ogg') || clean.endsWith('.m3u8') || clean.includes('/manifest/video.m3u8');
+    }
+
+    function getVideoProviderLabel(url){
+      const normalized = normalizeVideoUrl(url);
+      const value = normalized.toLowerCase();
+      if(value.includes('videodelivery.net') || value.includes('cloudflarestream.com') || value.includes('stream.cloudflare.com')) return 'Cloudflare Stream';
+      if(value.includes('youtube.com') || value.includes('youtu.be')) return 'YouTube';
+      if(value.includes('vimeo.com')) return 'Vimeo';
+      if(value.endsWith('.m3u8') || value.includes('/manifest/video.m3u8')) return 'HLS';
+      if(isDirectVideoUrl(value)) return 'Video directo';
+      return 'URL externa';
+    }
+
+    function resetPlayerMedia(iframe, video){
+      if(activeHlsPlayer){
+        try{ activeHlsPlayer.destroy(); } catch(err){}
+        activeHlsPlayer = null;
+      }
+      if(iframe){
+        iframe.removeAttribute('src');
+        iframe.style.display = 'none';
+      }
+      if(video){
+        try{ video.pause(); } catch(err){}
+        video.removeAttribute('src');
+        video.style.display = 'none';
+        try{ video.load(); } catch(err){}
+      }
+    }
+
+    function showPlayerPlaceholder(placeholder, message){
+      const textNode = document.getElementById('playerPlaceholderText');
+      if(textNode && message) textNode.textContent = message;
+      if(placeholder) placeholder.style.display = 'grid';
+    }
+
     function safeSetPlayerSrc(iframe, placeholder, url){
+      const video = document.getElementById('playerVideo');
       const titleNode = document.getElementById('playerTitleMain');
       const localNote = document.getElementById('playerLocalNote');
+      const finalUrl = normalizeVideoUrl(url);
+
+      resetPlayerMedia(iframe, video);
 
       if(isLocalFileMode()){
-        iframe.removeAttribute('src');
-        if(placeholder) placeholder.style.display = 'grid';
         if(titleNode) titleNode.textContent = 'Vista previa bloqueada en archivo local';
         if(localNote) localNote.style.display = 'block';
+        showPlayerPlaceholder(placeholder, 'Para probar videos embebidos o HLS, publica la página en tu dominio o ábrela desde un servidor local.');
         return;
       }
 
       if(localNote) localNote.style.display = 'none';
 
-      if(url){
-        iframe.src = url;
+      if(!finalUrl){
+        showPlayerPlaceholder(placeholder, 'Agrega una URL de Cloudflare Stream, YouTube, Vimeo, MP4 o HLS para reproducir esta clase.');
+        return;
+      }
+
+      if(isDirectVideoUrl(finalUrl) && video){
+        if(finalUrl.toLowerCase().includes('.m3u8') || finalUrl.toLowerCase().includes('/manifest/video.m3u8')){
+          if(video.canPlayType('application/vnd.apple.mpegurl')){
+            video.src = finalUrl;
+          } else if(window.Hls && window.Hls.isSupported()){
+            activeHlsPlayer = new window.Hls();
+            activeHlsPlayer.loadSource(finalUrl);
+            activeHlsPlayer.attachMedia(video);
+          } else {
+            showPlayerPlaceholder(placeholder, 'Este navegador no puede reproducir HLS directamente. Usa el enlace iframe de Cloudflare Stream o abre la clase en un navegador compatible.');
+            return;
+          }
+        } else {
+          video.src = finalUrl;
+        }
+        video.style.display = 'block';
+        if(placeholder) placeholder.style.display = 'none';
+        return;
+      }
+
+      if(iframe){
+        iframe.src = finalUrl;
+        iframe.style.display = 'block';
         if(placeholder) placeholder.style.display = 'none';
       } else {
-        iframe.removeAttribute('src');
-        if(placeholder) placeholder.style.display = 'grid';
+        showPlayerPlaceholder(placeholder, 'No se encontró el reproductor para mostrar esta clase.');
       }
     }
 
@@ -6292,7 +6419,7 @@ function renderPlayer(courseId){
       if(state.pendingLessons.length === 0){
         box.innerHTML = 'Aún no has agregado clases para este curso.';
       } else {
-        box.innerHTML = state.pendingLessons.map((ls, idx) => `<div><strong>${idx+1}. ${ls.title}</strong> · <span class="muted-text">${ls.module}</span></div>`).join('');
+        box.innerHTML = state.pendingLessons.map((ls, idx) => `<div><strong>${idx+1}. ${ls.title}</strong> · <span class="muted-text">${ls.module}</span> · <span class="pill-note" style="padding:4px 8px;font-size:11px">${getVideoProviderLabel(ls.url)}</span></div>`).join('');
       }
     }
 
@@ -7111,11 +7238,12 @@ function bindButtons(){
         const module = byId('lessonModuleField').value.trim();
         const title = byId('lessonTitleField').value.trim();
         const url = byId('lessonUrlField').value.trim();
+        const normalizedUrl = normalizeVideoUrl(url);
         if(!module || !title){ toast('Agrega módulo y título.'); return; }
-        state.pendingLessons.push({ module, title, url: url || 'https://www.youtube.com/embed/dQw4w9WgXcQ' });
+        state.pendingLessons.push({ module, title, url: normalizedUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ' });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
-        renderLessonsPreview(); toast('Clase agregada');
+        renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}`);
       });
 
       byId('btnSaveCourseInline')?.addEventListener('click', () => {
