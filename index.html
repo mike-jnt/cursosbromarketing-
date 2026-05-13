@@ -4961,9 +4961,9 @@
         }
       ],
       users: [
-        { id: 1, name: 'Laura Martínez', email: 'laura@email.com', courseId: 1, status: 'Activo', accessStatus: 'Activo', financialStatus: 'Pagado', lastAccess: 'Hoy 8:14 a. m.', progress: 68, lastLesson: 'Objeciones frecuentes', joinedAt: '2026-03-20', dueDate: '2026-03-25', totalToPay: 57000, paymentPlan: 'Único', accessPolicy: 'abono', collectorNote: 'Pago confirmado y alumna al día.' },
-        { id: 2, name: 'Carlos Gómez', email: 'carlos@email.com', courseId: 2, status: 'Pendiente', accessStatus: 'Pendiente', financialStatus: 'Sin cobrar', lastAccess: 'Aún no ingresa', progress: 0, lastLesson: 'Sin avance', joinedAt: '2026-04-01', dueDate: '2026-04-09', totalToPay: 79000, paymentPlan: '2 cuotas', accessPolicy: 'abono', collectorNote: 'Enviar recordatorio de primera cuota y validar comprobante.' },
-        { id: 3, name: 'Ana Rojas', email: 'ana@email.com', courseId: 3, status: 'Bloqueado', accessStatus: 'Bloqueado', financialStatus: 'Vencido', lastAccess: 'Hace 12 días', progress: 24, lastLesson: 'Clase 2 en revisión', joinedAt: '2026-03-17', dueDate: '2026-03-28', totalToPay: 67000, paymentPlan: 'Único', accessPolicy: 'pago_completo', collectorNote: 'Bloqueada por mora. Requiere saldo para reactivar acceso.' }
+        { id: 1, name: 'Laura Martínez', email: 'laura@email.com', password: '123456', courseId: 1, status: 'Activo', accessStatus: 'Activo', financialStatus: 'Pagado', lastAccess: 'Hoy 8:14 a. m.', progress: 68, lastLesson: 'Objeciones frecuentes', joinedAt: '2026-03-20', dueDate: '2026-03-25', totalToPay: 57000, paymentPlan: 'Único', accessPolicy: 'abono', collectorNote: 'Pago confirmado y alumna al día.' },
+        { id: 2, name: 'Carlos Gómez', email: 'carlos@email.com', password: '123456', courseId: 2, status: 'Pendiente', accessStatus: 'Pendiente', financialStatus: 'Sin cobrar', lastAccess: 'Aún no ingresa', progress: 0, lastLesson: 'Sin avance', joinedAt: '2026-04-01', dueDate: '2026-04-09', totalToPay: 79000, paymentPlan: '2 cuotas', accessPolicy: 'abono', collectorNote: 'Enviar recordatorio de primera cuota y validar comprobante.' },
+        { id: 3, name: 'Ana Rojas', email: 'ana@email.com', password: '123456', courseId: 3, status: 'Bloqueado', accessStatus: 'Bloqueado', financialStatus: 'Vencido', lastAccess: 'Hace 12 días', progress: 24, lastLesson: 'Clase 2 en revisión', joinedAt: '2026-03-17', dueDate: '2026-03-28', totalToPay: 67000, paymentPlan: 'Único', accessPolicy: 'pago_completo', collectorNote: 'Bloqueada por mora. Requiere saldo para reactivar acceso.' }
       ],
       payments: [
         { id: 1001, userId: 1, courseId: 1, date: '2026-03-20', amount: 57000, method: 'Transferencia', reference: 'TRX-4L-103', registeredBy: 'Admin', type: 'Pago completo', status: 'Confirmado', note: 'Pago validado con soporte.' },
@@ -4996,7 +4996,7 @@
           accessRequests: state.accessRequests || []
         }),
         currentUser: state.currentUser
-          ? { name: state.currentUser.name, email: state.currentUser.email, role: state.currentUser.role }
+          ? { id: state.currentUser.id || 0, name: state.currentUser.name, email: state.currentUser.email, role: state.currentUser.role, courseId: state.currentUser.courseId || 0 }
           : null
       };
     }
@@ -5025,9 +5025,11 @@
         });
         if(parsed.currentUser){
           state.currentUser = {
+            id: Number(parsed.currentUser.id) || 0,
             name: parsed.currentUser.name || '',
-            email: parsed.currentUser.email || '',
-            role: parsed.currentUser.role || 'student'
+            email: normalizeEmail(parsed.currentUser.email || ''),
+            role: parsed.currentUser.role || 'student',
+            courseId: Number(parsed.currentUser.courseId) || 0
           };
         } else {
           state.currentUser = null;
@@ -5176,7 +5178,8 @@ function applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess = false,
 }
 
 function normalizeUserRecord(user, index = 0){
-  const course = courseById(user.courseId) || state.courses[0] || {};
+  const selectedCourseId = Number(user.courseId) || (state.courses[0] ? state.courses[0].id : 0);
+  const course = courseById(selectedCourseId) || state.courses[0] || {};
   const defaults = getCourseFinancialDefaults(course);
   const requestedStatus = user.accessStatus || user.status;
   const defaultProgress = typeof user.progress === 'number'
@@ -5193,16 +5196,35 @@ function normalizeUserRecord(user, index = 0){
   const financialStatus = deriveFinancialStatus(user, balance, totalPaid);
   const accessStatus = deriveAccessStatus({ ...user, accessPolicy }, financialStatus, balance, totalPaid);
   const latestPayment = getLatestUserPayment(user.id || 0);
+  const assignedCourseIds = Array.from(new Set([
+    selectedCourseId,
+    ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : [])
+  ].map(Number).filter(Boolean)));
+  const completedLessonsByCourse = user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'
+    ? { ...user.completedLessonsByCourse }
+    : {};
+  const progressByCourse = user.progressByCourse && typeof user.progressByCourse === 'object'
+    ? { ...user.progressByCourse }
+    : {};
+  assignedCourseIds.forEach(id => {
+    if(!Array.isArray(completedLessonsByCourse[id])) completedLessonsByCourse[id] = [];
+    if(progressByCourse[id] === undefined) progressByCourse[id] = id === selectedCourseId ? defaultProgress : 0;
+  });
   return {
     id: user.id || Date.now() + index,
+    role: 'student',
     name: user.name || 'Alumno sin nombre',
-    email: user.email || '',
-    courseId: Number(user.courseId) || (state.courses[0] ? state.courses[0].id : 0),
+    email: normalizeEmail(user.email || ''),
+    password: String(user.password || user.tempPassword || DEMO_USERS.student.password || '123456'),
+    courseId: selectedCourseId,
+    assignedCourseIds,
     status: accessStatus,
     accessStatus,
     financialStatus,
     lastAccess: user.lastAccess || 'Aún no ingresa',
-    progress: defaultProgress,
+    progress: Number(progressByCourse[selectedCourseId]) || defaultProgress,
+    progressByCourse,
+    completedLessonsByCourse,
     lastLesson: user.lastLesson || (defaultProgress > 0 ? 'Clase en progreso' : 'Sin avance'),
     joinedAt: normalizeDateInput(user.joinedAt || '2026-04-03', '2026-04-03'),
     dueDate: normalizeDateInput(user.dueDate || addDays(user.joinedAt || '2026-04-03', 7), addDays('2026-04-03', 7)),
@@ -5220,8 +5242,150 @@ function normalizeUserRecord(user, index = 0){
   };
 }
 
+function normalizeEmail(email){
+  return String(email || '').trim().toLowerCase();
+}
+
+function findStudentUserByEmail(email){
+  const target = normalizeEmail(email);
+  if(!target) return null;
+  return (state.users || []).find(user => normalizeEmail(user.email) === target) || null;
+}
+
+function ensureDefaultStudentUser(){
+  const demoEmail = normalizeEmail(DEMO_USERS.student.email);
+  const defaultCourseIds = [1, 2, 3].filter(id => courseById(id));
+  let user = findStudentUserByEmail(demoEmail);
+  if(!user){
+    user = normalizeUserRecord({
+      id: 9001,
+      name: DEMO_USERS.student.name,
+      email: demoEmail,
+      password: DEMO_USERS.student.password,
+      courseId: defaultCourseIds[0] || (state.courses[0] ? state.courses[0].id : 0),
+      assignedCourseIds: defaultCourseIds.length ? defaultCourseIds : undefined,
+      status: 'Activo',
+      accessStatus: 'Activo',
+      financialStatus: 'Pagado',
+      lastAccess: 'Acceso demo disponible',
+      progress: 0,
+      lastLesson: 'Sin avance',
+      joinedAt: '2026-04-06',
+      dueDate: addDays('2026-04-06', 30),
+      totalToPay: defaultCourseIds.reduce((sum, id) => sum + estimateCoursePrice(courseById(id)), 0) || estimateCoursePrice(state.courses[0]),
+      paymentPlan: 'Demo',
+      accessPolicy: 'inmediato',
+      collectorNote: 'Usuario demo alumno agregado al listado para que el login consulte usuarios guardados.'
+    }, 999);
+    state.users.unshift(user);
+  } else {
+    user.password = String(user.password || DEMO_USERS.student.password || '123456');
+    user.role = 'student';
+    user.name = user.name || DEMO_USERS.student.name;
+    user.courseId = Number(user.courseId) || defaultCourseIds[0] || (state.courses[0] ? state.courses[0].id : 0);
+    user.assignedCourseIds = Array.from(new Set([
+      ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+      ...(defaultCourseIds.length ? defaultCourseIds : [user.courseId])
+    ].map(Number).filter(Boolean)));
+    if(!user.completedLessonsByCourse) user.completedLessonsByCourse = {};
+    if(!user.progressByCourse) user.progressByCourse = {};
+    user.assignedCourseIds.forEach(id => {
+      if(!Array.isArray(user.completedLessonsByCourse[id])) user.completedLessonsByCourse[id] = [];
+      if(user.progressByCourse[id] === undefined) user.progressByCourse[id] = Number(user.progress) || 0;
+    });
+  }
+  return user;
+}
+
 function syncUsersState(){
   state.users = (state.users || []).map((user, index) => normalizeUserRecord(user, index));
+  ensureDefaultStudentUser();
+}
+
+function getCurrentStudentRecord(){
+  if(!state.currentUser || state.currentUser.role !== 'student') return null;
+  const user = findStudentUserByEmail(state.currentUser.email);
+  if(user) return user;
+  if(normalizeEmail(state.currentUser.email) === normalizeEmail(DEMO_USERS.student.email)) return ensureDefaultStudentUser();
+  return null;
+}
+
+function getStudentCourseIds(user = getCurrentStudentRecord()){
+  if(!user) return [];
+  return Array.from(new Set([
+    ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+    Number(user.courseId) || 0
+  ].map(Number).filter(Boolean)));
+}
+
+function getStudentCompletedLessons(courseId, user = getCurrentStudentRecord()){
+  if(!user) return [];
+  const saved = user.completedLessonsByCourse && user.completedLessonsByCourse[courseId];
+  return Array.isArray(saved) ? saved.map(Number).filter(Number.isFinite) : [];
+}
+
+function getStudentCourseProgress(course, user = getCurrentStudentRecord()){
+  if(!course || !user) return Number(course?.progress) || 0;
+  const saved = user.progressByCourse && user.progressByCourse[course.id];
+  if(saved !== undefined) return Math.max(0, Math.min(100, Math.round(Number(saved) || 0)));
+  const completed = getStudentCompletedLessons(course.id, user).length;
+  const total = Math.max(1, (course.lessons || []).length);
+  return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
+}
+
+function buildStudentCourseView(course, user = getCurrentStudentRecord()){
+  if(!course) return null;
+  const completedLessons = getStudentCompletedLessons(course.id, user);
+  return {
+    ...course,
+    assigned: true,
+    completedLessons,
+    progress: getStudentCourseProgress(course, user)
+  };
+}
+
+function getStudentCourses(){
+  const user = getCurrentStudentRecord();
+  if(!user) return [];
+  const ids = new Set(getStudentCourseIds(user));
+  return state.courses
+    .filter(course => ids.has(Number(course.id)))
+    .map(course => buildStudentCourseView(course, user))
+    .filter(Boolean);
+}
+
+function getStudentCourseForDisplay(courseId){
+  const course = courseById(courseId);
+  if(!course) return null;
+  if(state.currentUser && state.currentUser.role === 'student') return buildStudentCourseView(course, getCurrentStudentRecord());
+  return course;
+}
+
+function isCourseAssignedToCurrentStudent(courseId){
+  return getStudentCourseIds().includes(Number(courseId));
+}
+
+function canCurrentStudentOpenCourse(courseId){
+  const user = getCurrentStudentRecord();
+  if(!user) return false;
+  if(!isCourseAssignedToCurrentStudent(courseId)) return false;
+  return user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo';
+}
+
+function updateStudentCourseProgress(courseId, completedLessons){
+  const user = getCurrentStudentRecord();
+  const course = courseById(courseId);
+  if(!user || !course) return null;
+  if(!user.completedLessonsByCourse) user.completedLessonsByCourse = {};
+  if(!user.progressByCourse) user.progressByCourse = {};
+  user.completedLessonsByCourse[courseId] = Array.from(new Set((completedLessons || []).map(Number).filter(Number.isFinite))).sort((a,b) => a-b);
+  const total = Math.max(1, (course.lessons || []).length);
+  user.progressByCourse[courseId] = Math.max(0, Math.min(100, Math.round((user.completedLessonsByCourse[courseId].length / total) * 100)));
+  if(Number(user.courseId) === Number(courseId)){
+    user.progress = user.progressByCourse[courseId];
+    user.lastLesson = user.progress > 0 ? 'Clase en progreso' : 'Sin avance';
+  }
+  return user;
 }
 
 function generateTempPassword(){
@@ -6065,7 +6229,7 @@ function toggleUserCard(userId, event){
     function renderStudentAssignedCourses(){
       const grid = document.getElementById('studentAssignedCoursesGrid');
       if(!grid) return;
-      const courses = state.courses.filter(c => c.assigned).sort((a,b) => {
+      const courses = getStudentCourses().sort((a,b) => {
         const aPriority = a.progress > 0 && a.progress < 100 ? 0 : a.progress >= 100 ? 2 : 1;
         const bPriority = b.progress > 0 && b.progress < 100 ? 0 : b.progress >= 100 ? 2 : 1;
         return aPriority - bPriority || b.progress - a.progress;
@@ -6078,6 +6242,12 @@ function toggleUserCard(userId, event){
         if(course.progress > 0) return 'Ya comenzaste. No lo dejes a medias.';
         return 'Hoy puedes iniciar este curso y desbloquear tu progreso.';
       };
+
+      if(!courses.length){
+        grid.innerHTML = `<div class="empty-state">Aún no tienes cursos asignados. Cuando el administrador te asigne un curso activo, aparecerá aquí.</div>`;
+        updateStudentDesire();
+        return;
+      }
 
       grid.innerHTML = courses.map(course => {
         const completed = (course.completedLessons || []).length;
@@ -6122,11 +6292,12 @@ function toggleUserCard(userId, event){
 
       const renderCard = (course) => {
         const purchaseIntent = findOpenCoursePurchase(course.id);
+        const assigned = isCourseAssignedToCurrentStudent(course.id);
         return `
         <div class="course-card">
           ${renderCourseCover(course)}
           <div class="tags">
-            <span class="tag">${course.assigned ? 'Asignado' : purchaseIntent ? 'Compra iniciada' : 'Disponible'}</span>
+            <span class="tag">${assigned ? 'Asignado' : purchaseIntent ? 'Compra iniciada' : 'Disponible'}</span>
             <span class="tag">${course.category}</span>
             <span class="tag">${course.lessons.length} clases</span>
           </div>
@@ -6136,9 +6307,9 @@ function toggleUserCard(userId, event){
             <span class="course-price-pill">${course.allowPartial === false ? 'Sin abonos' : 'Permite abonos'}</span>
           </div>
           <p class="course-benefit">${course.benefit || course.description}</p>
-          <div class="micro-copy">${course.assigned ? 'Ya puedes entrar y seguir avanzando.' : purchaseIntent ? 'Tu compra ya fue iniciada. Abre el flujo para continuar con el checkout.' : 'Abre el flujo de compra y deja listo el checkout del curso que quieres adquirir.'}</div>
+          <div class="micro-copy">${assigned ? 'Ya puedes entrar y seguir avanzando.' : purchaseIntent ? 'Tu compra ya fue iniciada. Abre el flujo para continuar con el checkout.' : 'Abre el flujo de compra y deja listo el checkout del curso que quieres adquirir.'}</div>
           <div class="course-actions-row">
-            ${course.assigned
+            ${assigned
               ? `<button class="btn btn-dark" onclick="openCoursePlayer(${course.id})">Ya disponible</button>`
               : `<button class="btn btn-primary" onclick="openCoursePurchaseModal(${course.id})">${purchaseIntent ? 'Continuar compra' : 'Comprar curso'}</button>`}
           </div>
@@ -6312,7 +6483,7 @@ function toggleUserCard(userId, event){
     }
 
 function renderPlayer(courseId){
-      const course = courseById(courseId);
+      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
       if(!course) return;
       state.currentCourseId = courseId;
       if(state.currentLessonIndex >= course.lessons.length) state.currentLessonIndex = 0;
@@ -6516,12 +6687,32 @@ function renderPlayer(courseId){
     function enterApp(user){
       authScreen.style.display = 'none';
       appShell.style.display = 'block';
-      state.currentUser = { name: user.name, email: user.email, role: user.role };
+      const cleanUser = {
+        id: Number(user.id) || 0,
+        name: user.name || 'Usuario',
+        email: normalizeEmail(user.email || ''),
+        role: user.role || 'student',
+        courseId: Number(user.courseId) || 0
+      };
+      state.currentUser = cleanUser;
+
+      if(cleanUser.role === 'student'){
+        const studentRecord = getCurrentStudentRecord();
+        if(studentRecord){
+          cleanUser.id = studentRecord.id;
+          cleanUser.name = studentRecord.name;
+          cleanUser.email = normalizeEmail(studentRecord.email);
+          cleanUser.courseId = Number(studentRecord.courseId) || 0;
+          state.currentUser = cleanUser;
+          const firstCourse = getStudentCourses()[0];
+          if(firstCourse) state.currentCourseId = firstCourse.id;
+        }
+      }
       saveState();
 
-      document.getElementById('sideUserName').textContent = user.name;
-      document.getElementById('sideUserEmail').textContent = user.email;
-      document.getElementById('avatarText').textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById('sideUserName').textContent = cleanUser.name;
+      document.getElementById('sideUserEmail').textContent = cleanUser.email;
+      document.getElementById('avatarText').textContent = cleanUser.name.charAt(0).toUpperCase();
 
       const roleChip = document.getElementById('roleChip');
       const sideRoleBadge = document.getElementById('sideRoleBadge');
@@ -6534,7 +6725,7 @@ function renderPlayer(courseId){
       document.querySelectorAll('.tab-section').forEach(s => s.classList.add('hidden'));
       document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
 
-      if(user.role === 'admin'){
+      if(cleanUser.role === 'admin'){
         roleChip.textContent = 'ADMIN';
         sideRoleBadge.textContent = 'Administrador';
         sideRoleBadge.className = 'role role-admin';
@@ -6564,7 +6755,8 @@ function renderPlayer(courseId){
         renderStudentResources();
         renderStudentCertificates();
         renderStudentHistory();
-        renderPlayer(state.currentCourseId);
+        const firstCourse = getStudentCourses()[0];
+        if(firstCourse) renderPlayer(firstCourse.id);
         updateStudentDesire();
       }
       fillCourseSelects();
@@ -6590,22 +6782,53 @@ function renderPlayer(courseId){
       loginError.textContent = '';
     }
 
+    function authenticateSavedStudent(email, password){
+      syncUsersState();
+      const user = findStudentUserByEmail(email);
+      if(!user) return { ok: false, reason: 'not_found' };
+      const expectedPassword = String(user.password || DEMO_USERS.student.password || '123456');
+      if(String(password) !== expectedPassword) return { ok: false, reason: 'password' };
+      if(user.financialStatus === 'Cancelado' || user.status === 'Bloqueado' || user.accessStatus === 'Bloqueado'){
+        return { ok: false, reason: 'blocked', user };
+      }
+      if(!(user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo')){
+        return { ok: false, reason: 'pending', user };
+      }
+      return {
+        ok: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: 'student',
+          courseId: user.courseId
+        }
+      };
+    }
+
     loginForm.addEventListener('submit', function(e){
       e.preventDefault();
-      const email = emailInput.value.trim().toLowerCase();
+      const email = normalizeEmail(emailInput.value);
       const password = passwordInput.value.trim();
 
-      if(email === DEMO_USERS.admin.email && password === DEMO_USERS.admin.password){
+      if(email === normalizeEmail(DEMO_USERS.admin.email) && password === DEMO_USERS.admin.password){
         enterApp(DEMO_USERS.admin);
         return;
       }
 
-      if(email === DEMO_USERS.student.email && password === DEMO_USERS.student.password){
-        enterApp(DEMO_USERS.student);
+      const studentAuth = authenticateSavedStudent(email, password);
+      if(studentAuth.ok){
+        enterApp(studentAuth.user);
         return;
       }
 
-      loginError.textContent = 'Credenciales demo no válidas. Usa admin@campus.com o alumno@campus.com con la clave 123456.';
+      if(studentAuth.reason === 'blocked'){
+        loginError.textContent = 'Tu acceso está bloqueado o cancelado. Comunícate con el administrador para reactivarlo.';
+      } else if(studentAuth.reason === 'pending'){
+        loginError.textContent = 'Tu acceso todavía está pendiente. El administrador debe activarlo o confirmar tu pago.';
+      } else {
+        loginError.textContent = 'Correo o contraseña no válidos. Verifica los datos creados por el administrador.';
+      }
       loginError.classList.remove('hidden');
     });
 
@@ -6661,13 +6884,20 @@ function sendAccess(id){
     toast('Primero reactiva al usuario o registra el pago para reenviar el acceso.');
     return;
   }
-  user.status = 'Pendiente';
-  user.accessStatus = 'Pendiente';
-  user.lastAccess = 'Acceso reenviado hace un momento';
+  user.password = String(user.password || DEMO_USERS.student.password || '123456');
+  user.lastAccess = 'Acceso enviado hace un momento';
   if (typeof saveState === 'function') saveState();
   refreshUsersSection();
-  addActivity('Se reenviaron los accesos de ' + user.name);
-  toast('Acceso enviado o reenviado a ' + user.name);
+  addActivity('Se enviaron los accesos de ' + user.name);
+  openModal('Acceso del alumno', `
+    <div class="stack">
+      <div class="mini-note"><strong>${user.name}</strong> ya puede ingresar con estos datos si su estado está activo.</div>
+      <div class="mini-note">Correo: <strong>${user.email}</strong></div>
+      <div class="mini-note">Contraseña: <strong>${user.password}</strong></div>
+      <div class="mini-note">Curso asignado: <strong>${(courseById(user.courseId) || {}).title || 'Curso'}</strong></div>
+    </div>
+  `);
+  toast('Acceso listo para ' + user.name);
 }
 
 function toggleUserStatus(id){
@@ -6978,6 +7208,11 @@ function openPaymentHistoryModal(id){
     }
 
     function openCoursePlayer(courseId){
+      if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(courseId)){
+        toast('Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
+        showTab('student-courses');
+        return;
+      }
       state.currentCourseId = courseId;
       state.currentLessonIndex = 0;
       if (typeof saveState === 'function') saveState();
@@ -6995,7 +7230,7 @@ function openPaymentHistoryModal(id){
     // Button functionality bindings
     
     function updateStudentDesire(){
-      const assigned = state.courses.filter(c => c.assigned);
+      const assigned = getStudentCourses();
       const active = assigned.length;
       const completed = assigned.filter(c => c.progress >= 100).length;
       const avg = active ? Math.round(assigned.reduce((a,c)=>a+(c.progress||0),0)/active) : 0;
@@ -7038,11 +7273,22 @@ function openPaymentHistoryModal(id){
         if(goalText) goalText.textContent = next.progress >= 100 ? 'Hoy puedes empezar otro curso y mantener tu impulso.' : `Tu meta de hoy: avanzar al menos una clase en ${next.title}.`;
         if(opportunityText) opportunityText.textContent = next.progress >= 80 ? 'Ya casi lo completas. Este es el mejor momento para terminar.' : 'Siempre hay un curso con potencial de avance esperando por ti.';
         if(quickWin) quickWin.textContent = next.progress >= 100 ? 'Ya lograste un avance importante. Aprovecha y abre tu siguiente curso.' : 'Un pequeño avance hoy mantiene viva la motivación y te acerca a un resultado real.';
+      } else {
+        if(continueTitle) continueTitle.textContent = 'Sin cursos asignados';
+        if(continueDesc) continueDesc.textContent = 'Cuando el administrador active un curso para tu usuario, aparecerá aquí.';
+        if(continueBar) continueBar.style.width = '0%';
+        if(continueLessonText) continueLessonText.textContent = 'No hay clases disponibles todavía.';
+        if(continueProgressText) continueProgressText.textContent = 'Tu progreso iniciará cuando tengas un curso asignado.';
+        if(rec) rec.textContent = 'Aún no tienes cursos activos.';
+        if(reward) reward.textContent = 'Tu primera recompensa aparecerá al completar un curso.';
+        if(goalText) goalText.textContent = 'Espera la activación de tu acceso o solicita un curso disponible.';
+        if(opportunityText) opportunityText.textContent = 'Explora cursos disponibles o consulta con el administrador.';
+        if(quickWin) quickWin.textContent = 'Tu panel se actualizará automáticamente cuando tengas acceso activo.';
       }
 
       if(note) note.textContent = completed ? `Llevas ${completed} curso(s) completado(s).` : 'Tu progreso te está esperando';
       if(signals){
-        const reqs = state.accessRequests.filter(r => r.requestedBy === 'alumno@campus.com').length;
+        const reqs = state.accessRequests.filter(r => r.requestedBy === getStudentIdentifier()).length;
         signals.innerHTML = `
           <small>${completed ? 'Ya tienes resultados visibles dentro de la plataforma.' : 'Tu primer logro está más cerca de lo que parece.'}</small>
           <small>${reqs ? `Tienes ${reqs} solicitud(es) de acceso registrada(s).` : 'Explora nuevos cursos para ampliar tu ruta de aprendizaje.'}</small>
@@ -7062,7 +7308,7 @@ function openPaymentHistoryModal(id){
     function renderStudentProgress(){
       const grid = document.getElementById('studentProgressGrid');
       if(!grid) return;
-      const courses = state.courses.filter(c => c.assigned);
+      const courses = getStudentCourses();
       grid.innerHTML = courses.map(course => {
         const completed = (course.completedLessons || []).length;
         return `
@@ -7085,7 +7331,7 @@ function openPaymentHistoryModal(id){
     function renderStudentResources(){
       const box = document.getElementById('studentResourcesList');
       if(!box) return;
-      const assignedIds = state.courses.filter(c => c.assigned).map(c => c.id);
+      const assignedIds = getStudentCourses().map(c => c.id);
       const resources = state.resources.filter(r => assignedIds.includes(r.courseId));
       box.innerHTML = resources.map(r => {
         const course = courseById(r.courseId);
@@ -7106,7 +7352,7 @@ function openPaymentHistoryModal(id){
     function renderStudentCertificates(){
       const box = document.getElementById('studentCertificatesList');
       if(!box) return;
-      const completed = state.courses.filter(c => c.assigned && c.progress >= 100);
+      const completed = getStudentCourses().filter(c => c.progress >= 100);
       box.innerHTML = completed.map(c => `<div class="history-item">
         <div class="student-list-content">
           <div class="student-list-eyebrow">Curso finalizado</div>
@@ -7135,6 +7381,13 @@ function openPaymentHistoryModal(id){
     }
 
     function renderStudentProfileSummary(){
+      const student = getCurrentStudentRecord();
+      if(student){
+        const nameField = document.getElementById('studentProfileName');
+        const emailField = document.getElementById('studentProfileEmail');
+        if(nameField) nameField.value = student.name || '';
+        if(emailField) emailField.value = student.email || '';
+      }
       updateStudentDesire();
     }
 
@@ -7154,17 +7407,36 @@ function openPaymentHistoryModal(id){
     }
 
     function toggleLessonComplete(courseId, idx){
-      const course = courseById(courseId);
-      if(!course.completedLessons) course.completedLessons = [];
-      if(course.completedLessons.includes(idx)){
-        course.completedLessons = course.completedLessons.filter(i => i !== idx);
-      }else{
-        course.completedLessons.push(idx);
-        state.activityLog.unshift({ id: Date.now(), text: `Completaste una clase de ${course.title}`, time: 'Ahora' });
+      const baseCourse = courseById(courseId);
+      if(!baseCourse) return;
+      let completedLessons = [];
+      if(state.currentUser && state.currentUser.role === 'student'){
+        completedLessons = getStudentCompletedLessons(courseId);
+      } else {
+        if(!baseCourse.completedLessons) baseCourse.completedLessons = [];
+        completedLessons = [...baseCourse.completedLessons];
       }
-      course.progress = Math.max(0, Math.min(100, Math.round((course.completedLessons.length / course.lessons.length) * 100)));
-      if(course.progress >= 100 && !state.certificates.some(c => c.courseId === courseId)){
-        state.certificates.push({ courseId });
+
+      if(completedLessons.includes(idx)){
+        completedLessons = completedLessons.filter(i => i !== idx);
+      }else{
+        completedLessons.push(idx);
+        state.activityLog.unshift({ id: Date.now(), text: `Completaste una clase de ${baseCourse.title}`, time: 'Ahora' });
+      }
+
+      completedLessons = Array.from(new Set(completedLessons)).sort((a,b) => a-b);
+      let progress = 0;
+      if(state.currentUser && state.currentUser.role === 'student'){
+        const updatedUser = updateStudentCourseProgress(courseId, completedLessons);
+        progress = updatedUser?.progressByCourse?.[courseId] || 0;
+      } else {
+        baseCourse.completedLessons = completedLessons;
+        baseCourse.progress = Math.max(0, Math.min(100, Math.round((completedLessons.length / Math.max(1, baseCourse.lessons.length)) * 100)));
+        progress = baseCourse.progress;
+      }
+
+      if(progress >= 100 && !state.certificates.some(c => c.courseId === courseId && c.email === getStudentIdentifier())){
+        state.certificates.push({ courseId, email: getStudentIdentifier() });
       }
       saveState();
       renderPlayer(courseId);
@@ -7317,8 +7589,10 @@ byId('btnSaveUserInline')?.addEventListener('click', () => {
     const user = state.users.find(u => u.id === editingId);
     if(!user) return;
     user.name = name;
-    user.email = email;
+    user.email = normalizeEmail(email);
+    if(password) user.password = password;
     user.courseId = courseId;
+    user.assignedCourseIds = [courseId];
     user.status = status;
     user.accessStatus = status;
     user.accessLockedByAdmin = status === 'Bloqueado';
@@ -7337,8 +7611,10 @@ byId('btnSaveUserInline')?.addEventListener('click', () => {
     state.users.unshift(normalizeUserRecord({
       id: Date.now(),
       name,
-      email,
+      email: normalizeEmail(email),
+      password,
       courseId,
+      assignedCourseIds: [courseId],
       status,
       accessStatus: status,
       accessLockedByAdmin: status === 'Bloqueado',
@@ -7382,15 +7658,23 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       });
 
       byId('btnSaveStudentProfile')?.addEventListener('click', () => {
-        DEMO_USERS.student.name = byId('studentProfileName').value.trim() || DEMO_USERS.student.name;
-        DEMO_USERS.student.email = byId('studentProfileEmail').value.trim() || DEMO_USERS.student.email;
+        const student = getCurrentStudentRecord() || ensureDefaultStudentUser();
+        const newName = byId('studentProfileName').value.trim() || student.name;
+        const newEmail = normalizeEmail(byId('studentProfileEmail').value.trim() || student.email);
+        const newPassword = byId('studentProfilePassword').value.trim();
+        student.name = newName;
+        student.email = newEmail;
+        if(newPassword) student.password = newPassword;
         if(state.currentUser?.role === 'student'){
-          state.currentUser.name = DEMO_USERS.student.name;
-          state.currentUser.email = DEMO_USERS.student.email;
+          state.currentUser.id = student.id;
+          state.currentUser.name = newName;
+          state.currentUser.email = newEmail;
+          state.currentUser.courseId = student.courseId;
           saveState();
         }
-        document.getElementById('sideUserName').textContent = DEMO_USERS.student.name;
-        document.getElementById('sideUserEmail').textContent = DEMO_USERS.student.email;
+        document.getElementById('sideUserName').textContent = newName;
+        document.getElementById('sideUserEmail').textContent = newEmail;
+        byId('studentProfilePassword').value = '';
         toast('Perfil actualizado');
       });
 
