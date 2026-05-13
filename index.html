@@ -3720,6 +3720,44 @@
     @media (max-width:980px){.purchase-modal-shell{grid-template-columns:1fr;}}
     @media (max-width:760px){.finance-inline-grid,.user-finance-strip,.modal-payment-grid,.modal-ledger-summary{grid-template-columns:1fr;}}
 
+
+    /* === Editor de cursos en modal === */
+    .modal{width:min(980px,92vw)}
+    .course-edit-modal .course-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .course-edit-modal .course-edit-full{grid-column:1 / -1}
+    .course-edit-modal .course-edit-lessons{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+    .course-edit-modal .course-edit-lesson-card{
+      border:1px solid #dfe6f2;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 10px 20px rgba(15,23,42,.04);
+    }
+    .course-edit-modal .course-edit-lesson-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .course-edit-modal .course-edit-lesson-head strong{color:#172033}
+    .course-edit-modal .course-edit-lesson-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .course-edit-modal .course-edit-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:18px}
+    .course-edit-modal .course-edit-add-card{
+      margin-top:14px;
+      padding:14px;
+      border:1px dashed #cbd5e1;
+      border-radius:18px;
+      background:#f8fafc;
+    }
+    @media (max-width:760px){
+      .modal{width:min(94vw,94vw);padding:18px}
+      .course-edit-modal .course-edit-grid,
+      .course-edit-modal .course-edit-lesson-grid{grid-template-columns:1fr}
+      .course-edit-modal .course-edit-actions{justify-content:stretch}
+      .course-edit-modal .course-edit-actions .btn{width:100%}
+    }
+
   </style>
 </head>
 <body>
@@ -7421,18 +7459,330 @@ function renderPlayer(courseId){
       loginError.classList.remove('hidden');
     });
 
+    let courseEditDraft = { courseId: null, lessons: [] };
+
+    function getCourseEditOptions(options, selected){
+      const current = String(selected || '').trim();
+      const values = Array.from(new Set([...(options || []), current].filter(Boolean)));
+      return values.map(value => `<option value="${escapeHtml(value)}"${String(value) === current ? ' selected' : ''}>${escapeHtml(value)}</option>`).join('');
+    }
+
+    function escapeCssUrl(value){
+      return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
+    }
+
+    function getCourseEditModalHtml(course){
+      const categories = ['Ventas','Marketing','Diseño','Tecnología','IA','Negocios','Finanzas','Otro'];
+      const paymentTypes = ['Único','Mensual','Por cuotas'];
+      const statuses = ['Activo','Borrador','Oculto'];
+      const cover = (course.cover || '').trim();
+      return `
+        <div class="stack course-edit-modal">
+          <div class="mini-note">
+            Edita la información completa del curso, su portada, precio, estado y clases. Los cambios se guardan en Firebase/localStorage y se reflejan en el panel del alumno.
+          </div>
+
+          <div class="course-edit-grid">
+            <div class="field">
+              <label>Título del curso</label>
+              <input type="text" id="editCourseTitleField" value="${escapeHtml(course.title || '')}" placeholder="Título del curso">
+            </div>
+            <div class="field">
+              <label>Categoría</label>
+              <select id="editCourseCategoryField">${getCourseEditOptions(categories, course.category || 'Ventas')}</select>
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select id="editCourseStatusField">${getCourseEditOptions(statuses, course.status || 'Activo')}</select>
+            </div>
+            <div class="field">
+              <label>Precio del curso</label>
+              <div class="money-input-wrap">
+                <span>COP</span>
+                <input type="number" id="editCoursePriceField" min="0" step="1000" value="${Number(course.price || 0)}" placeholder="57000">
+              </div>
+            </div>
+            <div class="field">
+              <label>Tipo de cobro</label>
+              <select id="editCoursePaymentTypeField">${getCourseEditOptions(paymentTypes, course.paymentType || 'Único')}</select>
+            </div>
+            <div class="field">
+              <label>Permite abono</label>
+              <select id="editCourseAllowPartialField">
+                <option value="true"${course.allowPartial === false ? '' : ' selected'}>Sí</option>
+                <option value="false"${course.allowPartial === false ? ' selected' : ''}>No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Número de cuotas</label>
+              <input type="number" id="editCourseInstallmentsField" min="1" step="1" value="${Math.max(1, Number(course.installments) || 1)}">
+            </div>
+            <div class="field course-edit-full">
+              <label>Descripción</label>
+              <textarea id="editCourseDescField" placeholder="Explica qué resultado logrará el alumno con este curso">${escapeHtml(course.description || '')}</textarea>
+            </div>
+
+            <div class="field course-edit-full">
+              <label>Portada del curso</label>
+              <div class="cover-source-box">
+                <input type="text" id="editCourseCoverField" value="${escapeHtml(cover)}" placeholder="URL de portada o imagen cargada">
+                <label class="cover-upload-drop" for="editCourseCoverUploadField">
+                  <input type="file" id="editCourseCoverUploadField" accept="image/*">
+                  <span class="cover-upload-title">Subir nueva imagen de portada</span>
+                  <span class="cover-upload-meta">Opcional · PNG, JPG o WEBP</span>
+                </label>
+                <div class="cover-upload-file-name" id="editCourseCoverUploadName">${cover ? 'Portada actual cargada.' : 'No has seleccionado ningún archivo.'}</div>
+                <div class="cover-preview-card">
+                  <div class="cover-preview-media${cover ? ' has-image' : ''}" id="editCourseCoverPreviewMedia" style="${cover ? `background-image:url('${escapeCssUrl(cover)}')` : ''}"><span>${cover ? 'Portada actual' : 'Vista previa de portada'}</span></div>
+                  <div class="cover-preview-info">
+                    <strong>Vista previa</strong>
+                    <small id="editCourseCoverPreviewText">${cover ? 'Esta es la portada guardada actualmente en el curso.' : 'Puedes pegar una URL o subir una imagen desde tu equipo.'}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-card" style="padding:18px">
+            <h3 style="margin:0 0 8px;color:#172033">Clases del curso</h3>
+            <p class="muted-text" style="margin:0">Edita módulo, título y URL del video. Compatible con Cloudflare Stream, iframe, YouTube, Vimeo, MP4 o HLS .m3u8.</p>
+            <div id="courseEditLessonsBox" class="course-edit-lessons"></div>
+
+            <div class="course-edit-add-card">
+              <h4 style="margin:0 0 12px;color:#172033">Agregar nueva clase</h4>
+              <div class="course-edit-lesson-grid">
+                <div class="field">
+                  <label>Módulo</label>
+                  <input type="text" id="editNewLessonModuleField" placeholder="Módulo 1 · Introducción">
+                </div>
+                <div class="field">
+                  <label>Título de la clase</label>
+                  <input type="text" id="editNewLessonTitleField" placeholder="Clase 1 · Bienvenida">
+                </div>
+                <div class="field course-edit-full">
+                  <label>URL del video</label>
+                  <input type="text" id="editNewLessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+                </div>
+              </div>
+              <div class="admin-inline-actions">
+                <button class="btn btn-dark" type="button" onclick="addCourseEditLesson()">+ Agregar clase al curso</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-edit-actions">
+            <button class="btn btn-soft" type="button" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-primary" type="button" onclick="saveEditedCourse(${Number(course.id)})">Guardar cambios</button>
+          </div>
+        </div>
+      `;
+    }
+
     function editCourse(id){
       const course = courseById(id);
-      openModal('Editar curso', `
-        <div class="stack">
-          ${course.cover ? `<div class="cover cover-has-image" style="height:180px;background-image:url('${course.cover.replace(/'/g, "\'")}')"><span>${course.title}</span></div>` : ''}
-          <div class="mini-note">Curso: <strong>${course.title}</strong></div>
-          <div class="mini-note">Categoría: <strong>${course.category}</strong></div>
-          <div class="mini-note">Estado: <strong>${course.status}</strong></div>
-          <div class="mini-note">Precio: <strong>${formatCurrencyCOP(estimateCoursePrice(course))}</strong> · Cobro: <strong>${course.paymentType || 'Único'}</strong> · ${course.allowPartial === false ? 'Sin abonos' : 'Permite abonos'}.</div>
-          <div class="mini-note">Descripción: ${course.description}</div>
-        </div>
-      `);
+      if(!course){ toast('No se encontró el curso.'); return; }
+      openModal('Editar curso', getCourseEditModalHtml(course));
+      bindCourseEditModal(id);
+    }
+
+    function bindCourseEditModal(courseId){
+      const course = courseById(courseId);
+      if(!course) return;
+      courseEditDraft = { courseId: Number(courseId), lessons: clonePlain(course.lessons || []) };
+      renderCourseEditLessonsDraft();
+      updateCourseEditCoverPreview(course.cover || '');
+
+      const coverField = document.getElementById('editCourseCoverField');
+      const uploadField = document.getElementById('editCourseCoverUploadField');
+      coverField?.addEventListener('input', (event) => updateCourseEditCoverPreview(event.target.value));
+      uploadField?.addEventListener('change', (event) => {
+        const file = event.target.files?.[0];
+        const nameNode = document.getElementById('editCourseCoverUploadName');
+        if(!file){
+          if(nameNode) nameNode.textContent = 'No has seleccionado ningún archivo.';
+          updateCourseEditCoverPreview(coverField?.value || '');
+          return;
+        }
+        if(!file.type.startsWith('image/')){
+          toast('Sube un archivo de imagen válido.');
+          event.target.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          const data = String(reader.result || '');
+          if(coverField) coverField.value = data;
+          if(nameNode) nameNode.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+          updateCourseEditCoverPreview(data);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function updateCourseEditCoverPreview(src){
+      const media = document.getElementById('editCourseCoverPreviewMedia');
+      const text = document.getElementById('editCourseCoverPreviewText');
+      if(!media || !text) return;
+      const cover = String(src || '').trim();
+      if(cover){
+        media.classList.add('has-image');
+        media.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+        media.innerHTML = '<span>Portada seleccionada</span>';
+        text.textContent = cover.startsWith('data:image') ? 'Imagen cargada desde tu equipo y lista para guardarse.' : 'Imagen tomada desde la URL indicada.';
+      }else{
+        media.classList.remove('has-image');
+        media.style.backgroundImage = '';
+        media.innerHTML = '<span>Vista previa de portada</span>';
+        text.textContent = 'Puedes pegar una URL o subir una imagen desde tu equipo.';
+      }
+    }
+
+    function syncAllCourseEditLessonsFromDom(){
+      if(!courseEditDraft || !Array.isArray(courseEditDraft.lessons)) return;
+      courseEditDraft.lessons = courseEditDraft.lessons.map((lesson, idx) => {
+        const moduleField = document.getElementById(`editLessonModule_${idx}`);
+        const titleField = document.getElementById(`editLessonTitle_${idx}`);
+        const urlField = document.getElementById(`editLessonUrl_${idx}`);
+        return {
+          module: moduleField ? moduleField.value.trim() : (lesson.module || ''),
+          title: titleField ? titleField.value.trim() : (lesson.title || ''),
+          url: urlField ? normalizeVideoUrl(urlField.value.trim()) : normalizeVideoUrl(lesson.url || '')
+        };
+      });
+    }
+
+    function renderCourseEditLessonsDraft(){
+      const box = document.getElementById('courseEditLessonsBox');
+      if(!box) return;
+      const lessons = Array.isArray(courseEditDraft.lessons) ? courseEditDraft.lessons : [];
+      if(!lessons.length){
+        box.innerHTML = `<div class="empty-state">Este curso todavía no tiene clases. Agrega al menos una antes de guardar.</div>`;
+        return;
+      }
+      box.innerHTML = lessons.map((lesson, idx) => {
+        const provider = lesson.url ? getVideoProviderLabel(lesson.url) : 'Sin video';
+        return `
+          <div class="course-edit-lesson-card">
+            <div class="course-edit-lesson-head">
+              <strong>Clase ${idx + 1}</strong>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span class="pill-note" style="padding:6px 10px;font-size:11px">${escapeHtml(provider)}</span>
+                <button class="btn btn-danger btn-sm" type="button" onclick="deleteCourseEditLesson(${idx})">Eliminar</button>
+              </div>
+            </div>
+            <div class="course-edit-lesson-grid">
+              <div class="field">
+                <label>Módulo</label>
+                <input type="text" id="editLessonModule_${idx}" value="${escapeHtml(lesson.module || '')}" placeholder="Módulo">
+              </div>
+              <div class="field">
+                <label>Título de la clase</label>
+                <input type="text" id="editLessonTitle_${idx}" value="${escapeHtml(lesson.title || '')}" placeholder="Título de la clase">
+              </div>
+              <div class="field course-edit-full">
+                <label>URL del video</label>
+                <input type="text" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addCourseEditLesson(){
+      syncAllCourseEditLessonsFromDom();
+      const module = document.getElementById('editNewLessonModuleField')?.value.trim() || '';
+      const title = document.getElementById('editNewLessonTitleField')?.value.trim() || '';
+      const url = document.getElementById('editNewLessonUrlField')?.value.trim() || '';
+      if(!module || !title){ toast('Agrega módulo y título de la nueva clase.'); return; }
+      courseEditDraft.lessons.push({ module, title, url: normalizeVideoUrl(url) });
+      document.getElementById('editNewLessonModuleField').value = '';
+      document.getElementById('editNewLessonTitleField').value = '';
+      document.getElementById('editNewLessonUrlField').value = '';
+      renderCourseEditLessonsDraft();
+      toast('Clase agregada al editor.');
+    }
+
+    function deleteCourseEditLesson(index){
+      syncAllCourseEditLessonsFromDom();
+      courseEditDraft.lessons.splice(index, 1);
+      renderCourseEditLessonsDraft();
+      toast('Clase eliminada del editor.');
+    }
+
+    function reconcileCourseProgressAfterEdit(courseId){
+      const course = courseById(courseId);
+      const total = Math.max(1, (course?.lessons || []).length);
+      if(course){
+        course.completedLessons = Array.from(new Set((course.completedLessons || []).map(Number).filter(i => Number.isFinite(i) && i >= 0 && i < total))).sort((a,b) => a-b);
+        course.progress = Math.max(0, Math.min(100, Math.round((course.completedLessons.length / total) * 100)));
+      }
+      (state.users || []).forEach(user => {
+        if(!user || !user.completedLessonsByCourse || !user.progressByCourse) return;
+        const saved = user.completedLessonsByCourse[courseId];
+        if(Array.isArray(saved)){
+          user.completedLessonsByCourse[courseId] = Array.from(new Set(saved.map(Number).filter(i => Number.isFinite(i) && i >= 0 && i < total))).sort((a,b) => a-b);
+          user.progressByCourse[courseId] = Math.max(0, Math.min(100, Math.round((user.completedLessonsByCourse[courseId].length / total) * 100)));
+          if(Number(user.courseId) === Number(courseId)){
+            user.progress = user.progressByCourse[courseId];
+          }
+        }
+      });
+    }
+
+    function saveEditedCourse(id){
+      const course = courseById(id);
+      if(!course){ toast('No se encontró el curso.'); return; }
+      syncAllCourseEditLessonsFromDom();
+
+      const title = document.getElementById('editCourseTitleField')?.value.trim() || '';
+      const category = document.getElementById('editCourseCategoryField')?.value || 'Ventas';
+      const status = document.getElementById('editCourseStatusField')?.value || 'Activo';
+      const description = document.getElementById('editCourseDescField')?.value.trim() || '';
+      const cover = document.getElementById('editCourseCoverField')?.value.trim() || '';
+      const price = Math.max(0, Number(document.getElementById('editCoursePriceField')?.value || 0));
+      const paymentType = document.getElementById('editCoursePaymentTypeField')?.value || 'Único';
+      const allowPartial = (document.getElementById('editCourseAllowPartialField')?.value || 'true') === 'true';
+      const installments = Math.max(1, Number(document.getElementById('editCourseInstallmentsField')?.value || 1));
+      const lessons = (courseEditDraft.lessons || [])
+        .map(lesson => ({ module: (lesson.module || '').trim(), title: (lesson.title || '').trim(), url: normalizeVideoUrl(lesson.url || '') }))
+        .filter(lesson => lesson.module || lesson.title || lesson.url);
+
+      if(!title){ toast('El curso necesita un título.'); return; }
+      if(!description){ toast('Agrega una descripción del curso.'); return; }
+      if(lessons.some(lesson => !lesson.module || !lesson.title)){
+        toast('Cada clase debe tener módulo y título.');
+        return;
+      }
+      if(!lessons.length){ toast('Agrega al menos una clase antes de guardar.'); return; }
+
+      const previousTitle = course.title;
+      course.title = title;
+      course.category = category;
+      course.status = status;
+      course.description = description;
+      course.cover = cover;
+      course.price = price;
+      course.paymentType = paymentType;
+      course.allowPartial = allowPartial;
+      course.installments = installments;
+      course.lessons = lessons;
+      course.updatedAt = new Date().toISOString();
+      reconcileCourseProgressAfterEdit(id);
+
+      saveState();
+      renderAdminCourses();
+      renderStudentDiscover();
+      renderStudentAssignedCourses();
+      renderStudentProgress();
+      renderStudentResources();
+      renderStudentCertificates();
+      renderUsersTable();
+      fillCourseSelects();
+      renderAdminDashboard();
+      addActivity(`Se editó el curso ${previousTitle || title}.`);
+      closeModal();
+      toast('Curso actualizado correctamente.');
     }
 
     function viewCourseStructure(id){
@@ -8374,6 +8724,9 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
     window.showTab = showTab;
     window.editCourse = editCourse;
+    window.saveEditedCourse = saveEditedCourse;
+    window.addCourseEditLesson = addCourseEditLesson;
+    window.deleteCourseEditLesson = deleteCourseEditLesson;
     window.viewCourseStructure = viewCourseStructure;
     window.editUser = editUser;
     window.sendAccess = sendAccess;
