@@ -4145,7 +4145,197 @@
         min-height:40px !important;
       }
     }
-</style>
+
+
+    /* === Navegación superior: menú en header para liberar espacio lateral === */
+    .topbar{
+      box-shadow:0 14px 34px rgba(0,0,0,.14);
+    }
+    .topbar-inner{
+      padding:12px 0 10px;
+      flex-wrap:wrap;
+    }
+    .top-right{
+      margin-left:auto;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .header-user-meta{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      align-items:flex-end;
+      min-width:0;
+    }
+    .header-user-meta strong{
+      color:#ffffff;
+      font-size:13px;
+      line-height:1.2;
+      max-width:220px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .header-user-meta small{
+      color:#c7cbd4;
+      font-size:12px;
+      line-height:1.2;
+      max-width:220px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .topbar #sideRoleBadge{
+      margin-top:0;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      color:#ffffff;
+      border-radius:999px;
+    }
+    .top-nav-wrap{
+      width:min(1380px,95%);
+      margin:0 auto;
+      padding:0 0 12px;
+    }
+    .top-nav-scroll{
+      width:100%;
+      overflow-x:auto;
+      overflow-y:hidden;
+      scrollbar-width:thin;
+      -webkit-overflow-scrolling:touch;
+    }
+    .topbar .menu.top-nav-menu,
+    .topbar #menuAdmin,
+    .topbar #menuStudent{
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      gap:8px;
+      margin-top:0;
+      padding:0;
+      width:max-content;
+      min-width:100%;
+      border:none;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+    }
+    .topbar .menu.top-nav-menu.hidden,
+    .topbar #menuAdmin.hidden,
+    .topbar #menuStudent.hidden{
+      display:none!important;
+    }
+    .topbar .menu.top-nav-menu button,
+    .topbar #menuAdmin button,
+    .topbar #menuStudent button{
+      position:relative;
+      overflow:hidden;
+      flex:0 0 auto;
+      min-height:40px;
+      padding:10px 15px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(255,255,255,.07);
+      color:#d8deea;
+      font-size:13px;
+      font-weight:800;
+      white-space:nowrap;
+      text-align:center;
+      box-shadow:none;
+      transform:none;
+    }
+    .topbar #menuAdmin button::before,
+    .topbar #menuStudent button::before{
+      display:none;
+    }
+    .topbar .menu.top-nav-menu button:hover,
+    .topbar #menuAdmin button:hover,
+    .topbar #menuStudent button:hover{
+      background:rgba(255,255,255,.13);
+      color:#ffffff;
+      border-color:rgba(255,255,255,.22);
+      transform:translateY(-1px);
+      box-shadow:none;
+    }
+    .topbar .menu.top-nav-menu button.active,
+    .topbar #menuAdmin button.active,
+    .topbar #menuStudent button.active{
+      background:#ffffff;
+      color:#111827;
+      border-color:#ffffff;
+      box-shadow:0 10px 20px rgba(0,0,0,.18);
+    }
+    .layout.layout-full,
+    .layout{
+      width:min(1480px,96%);
+      margin:18px auto 20px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:0;
+    }
+    .sidebar{
+      display:none!important;
+    }
+    .main{
+      width:100%;
+    }
+    .section-card{
+      padding:24px;
+    }
+    .player-side-card{
+      top:138px;
+    }
+    @media (max-width:900px){
+      .topbar-inner{
+        align-items:flex-start;
+      }
+      .top-right{
+        width:100%;
+        justify-content:flex-start;
+      }
+      .header-user-meta{
+        align-items:flex-start;
+      }
+      .top-nav-wrap{
+        width:min(100%,95%);
+      }
+      .topbar .menu.top-nav-menu button,
+      .topbar #menuAdmin button,
+      .topbar #menuStudent button{
+        padding:10px 13px;
+        font-size:12px;
+      }
+    }
+    @media (max-width:760px){
+      .topbar-inner{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+      }
+      .top-left{
+        width:100%;
+      }
+      .top-title strong{
+        font-size:15px;
+      }
+      .top-title small{
+        font-size:12px;
+      }
+      .header-user-meta strong,
+      .header-user-meta small{
+        max-width:180px;
+      }
+      .layout.layout-full,
+      .layout{
+        width:min(100%,94%);
+        margin-top:14px;
+      }
+      .section-card{
+        padding:18px;
+      }
+    }
+
+  </style>
 </head>
 <body>
 
@@ -4203,43 +4393,44 @@
         </div>
 
         <div class="top-right">
+          <div class="header-user-meta">
+            <strong id="sideUserName">Admin Principal</strong>
+            <small id="sideUserEmail">admin@campus.com</small>
+          </div>
+          <span id="sideRoleBadge" class="role role-admin">Administrador</span>
           <span class="chip" id="roleChip">ADMIN</span>
           <div class="avatar" id="avatarText">A</div>
           <button class="btn btn-soft" onclick="logout()">Cerrar sesión</button>
         </div>
       </div>
+
+      <div class="top-nav-wrap">
+        <div class="top-nav-scroll">
+          <div class="menu top-nav-menu" id="menuAdmin">
+            <button class="active" data-tab="admin-dashboard" onclick="showTab('admin-dashboard', this)">Resumen</button>
+            <button data-tab="admin-courses" onclick="showTab('admin-courses', this)">Cursos</button>
+            <button data-tab="admin-users" onclick="showTab('admin-users', this)">Usuarios</button>
+            <button data-tab="admin-accounting" onclick="showTab('admin-accounting', this)">Contabilidad</button>
+            <button data-tab="admin-create" onclick="showTab('admin-create', this)">Crear curso</button>
+            <button data-tab="admin-config" onclick="showTab('admin-config', this)">Configuración</button>
+          </div>
+
+          <div class="menu top-nav-menu hidden" id="menuStudent">
+            <button class="active" data-tab="student-home" onclick="showTab('student-home', this)">Mi panel</button>
+            <button data-tab="student-courses" onclick="showTab('student-courses', this)">Mis cursos</button>
+            <button data-tab="student-discover" onclick="showTab('student-discover', this)">Explorar cursos</button>
+            <button data-tab="student-progress" onclick="showTab('student-progress', this)">Mi progreso</button>
+            <button data-tab="student-resources" onclick="showTab('student-resources', this)">Recursos</button>
+            <button data-tab="student-certificates" onclick="showTab('student-certificates', this)">Certificados</button>
+            <button data-tab="student-history" onclick="showTab('student-history', this)">Actividad</button>
+            <button data-tab="student-player" onclick="showTab('student-player', this)">Continuar clase</button>
+            <button data-tab="student-profile" onclick="showTab('student-profile', this)">Mi perfil</button>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <div class="layout">
-      <aside class="panel sidebar">
-        <div class="sidebar-user">
-          <strong id="sideUserName">Admin Principal</strong>
-          <small id="sideUserEmail">admin@campus.com</small>
-          <span id="sideRoleBadge" class="role role-admin">Administrador</span>
-        </div>
-
-        <div class="menu" id="menuAdmin">
-          <button class="active" data-tab="admin-dashboard" onclick="showTab('admin-dashboard', this)">Resumen</button>
-          <button data-tab="admin-courses" onclick="showTab('admin-courses', this)">Cursos</button>
-          <button data-tab="admin-users" onclick="showTab('admin-users', this)">Usuarios</button>
-          <button data-tab="admin-accounting" onclick="showTab('admin-accounting', this)">Contabilidad</button>
-          <button data-tab="admin-create" onclick="showTab('admin-create', this)">Crear curso</button>
-          <button data-tab="admin-config" onclick="showTab('admin-config', this)">Configuración</button>
-        </div>
-
-        <div class="menu hidden" id="menuStudent">
-          <button class="active" data-tab="student-home" onclick="showTab('student-home', this)">Mi panel</button>
-          <button data-tab="student-courses" onclick="showTab('student-courses', this)">Mis cursos</button>
-          <button data-tab="student-discover" onclick="showTab('student-discover', this)">Explorar cursos</button>
-          <button data-tab="student-progress" onclick="showTab('student-progress', this)">Mi progreso</button>
-          <button data-tab="student-resources" onclick="showTab('student-resources', this)">Recursos</button>
-          <button data-tab="student-certificates" onclick="showTab('student-certificates', this)">Certificados</button>
-          <button data-tab="student-history" onclick="showTab('student-history', this)">Actividad</button>
-          <button data-tab="student-player" onclick="showTab('student-player', this)">Continuar clase</button>
-          <button data-tab="student-profile" onclick="showTab('student-profile', this)">Mi perfil</button>
-        </div>
-      </aside>
-
+    <div class="layout layout-full">
       <main class="main">
 
         <section id="tab-admin-dashboard" class="panel section-card tab-section">
