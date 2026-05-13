@@ -3758,6 +3758,154 @@
 
 
 
+
+
+    /* === Vista admin del curso: secciones y videos === */
+    .admin-course-view{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .admin-course-view-hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(240px,.9fr);
+      gap:16px;
+      align-items:stretch;
+      padding:18px;
+      border-radius:20px;
+      border:1px solid #dfe6f2;
+      background:
+        radial-gradient(circle at top right, rgba(91,91,214,.10), transparent 32%),
+        linear-gradient(180deg,#ffffff 0%,#f8faff 100%);
+      box-shadow:0 14px 28px rgba(23,37,84,.06);
+    }
+    .admin-course-view-hero h4{
+      margin:0 0 8px;
+      color:#172033;
+      font-size:24px;
+      line-height:1.15;
+      letter-spacing:-.03em;
+    }
+    .admin-course-view-hero p{
+      margin:0;
+      color:#667892;
+      line-height:1.65;
+    }
+    .admin-course-view-meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    .admin-course-view-meta .mini-note{
+      margin:0;
+      border-radius:16px;
+      background:#ffffff;
+    }
+    .admin-course-section{
+      border:1px solid #dfe6f2;
+      border-radius:20px;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfcff 100%);
+      overflow:hidden;
+      box-shadow:0 14px 28px rgba(23,37,84,.05);
+    }
+    .admin-course-section-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:16px 18px;
+      background:#f7f9ff;
+      border-bottom:1px solid #e7ebf5;
+    }
+    .admin-course-section-head strong{
+      color:#1b2b4d;
+      font-size:16px;
+    }
+    .admin-course-section-head span{
+      flex:0 0 auto;
+    }
+    .admin-lesson-preview{
+      display:grid;
+      grid-template-columns:minmax(260px,.95fr) minmax(0,1.05fr);
+      gap:16px;
+      padding:16px 18px;
+      align-items:start;
+    }
+    .admin-lesson-preview + .admin-lesson-preview{
+      border-top:1px solid #edf1f7;
+    }
+    .admin-lesson-info{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .admin-lesson-info strong{
+      display:block;
+      color:#172033;
+      font-size:15px;
+      line-height:1.45;
+    }
+    .admin-lesson-info small{
+      display:block;
+      color:#667892;
+      line-height:1.5;
+      overflow-wrap:anywhere;
+    }
+    .admin-video-preview{
+      position:relative;
+      width:100%;
+      min-height:220px;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid #dfe6f2;
+      background:#0b0f17;
+    }
+    .admin-video-preview iframe,
+    .admin-video-preview video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+      background:#000;
+    }
+    .admin-video-empty{
+      min-height:220px;
+      display:grid;
+      place-items:center;
+      padding:20px;
+      text-align:center;
+      color:#6b7d98;
+      background:#f8fafc;
+    }
+    .admin-course-view-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    @media (max-width:900px){
+      .admin-course-view-hero,
+      .admin-lesson-preview{
+        grid-template-columns:1fr;
+      }
+    }
+    @media (max-width:640px){
+      .admin-course-view-meta{
+        grid-template-columns:1fr;
+      }
+      .admin-course-section-head{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .admin-video-preview,
+      .admin-video-empty{
+        min-height:190px;
+      }
+    }
+
+
     /* === Editor de cursos en modal === */
     .modal{width:min(980px,92vw)}
     .course-edit-modal .course-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -7485,7 +7633,7 @@ function renderAdminDashboard(){
           </div>
           <div class="course-actions-row">
             <button class="btn btn-soft" onclick="editCourse(${course.id})">Editar</button>
-            <button class="btn btn-dark" onclick="viewCourseStructure(${course.id})">Ver estructura</button>
+            <button class="btn btn-dark" onclick="viewCourseStructure(${course.id})">Ver curso</button>
             <button class="btn btn-soft" onclick="toggleCourseVisibility(${course.id})">${isCourseVisible(course) ? 'Ocultar' : 'Hacer visible'}</button>
             <button class="btn btn-danger" onclick="openDeleteCourseConfirm(${course.id})">Eliminar curso</button>
           </div>
@@ -8855,6 +9003,7 @@ function renderPlayer(courseId){
           </div>
 
           <div class="course-edit-actions">
+            <button class="btn btn-dark" type="button" onclick="viewCourseStructure(${Number(course.id)})">Ver curso completo</button>
             <button class="btn btn-danger" type="button" onclick="openDeleteCourseConfirm(${Number(course.id)})">Eliminar curso completo</button>
             <button class="btn btn-soft" type="button" onclick="closeModal()">Cancelar</button>
             <button class="btn btn-primary" type="button" onclick="saveEditedCourse(${Number(course.id)})">Guardar cambios</button>
@@ -9102,12 +9251,104 @@ function renderPlayer(courseId){
       toast(nextVisible ? 'Curso visible para alumnos.' : 'Curso oculto para alumnos.');
     }
 
+    function groupCourseLessonsByModule(course){
+      const groups = [];
+      const indexByName = new Map();
+      (course.lessons || []).forEach((lesson, index) => {
+        const moduleName = String(lesson.module || 'Sección sin nombre').trim() || 'Sección sin nombre';
+        if(!indexByName.has(moduleName)){
+          indexByName.set(moduleName, groups.length);
+          groups.push({ title: moduleName, lessons: [] });
+        }
+        groups[indexByName.get(moduleName)].lessons.push({ ...lesson, originalIndex: index });
+      });
+      return groups;
+    }
+
+    function renderAdminLessonVideoPreview(lesson){
+      const finalUrl = normalizeVideoUrl(lesson.url || '');
+      if(!finalUrl){
+        return `<div class="admin-video-preview admin-video-empty">Esta clase todavía no tiene URL de video guardada.</div>`;
+      }
+      const safeUrl = escapeHtml(finalUrl);
+      if(isDirectVideoUrl(finalUrl)){
+        const typeAttr = finalUrl.toLowerCase().includes('.m3u8') || finalUrl.toLowerCase().includes('/manifest/video.m3u8')
+          ? ' type="application/vnd.apple.mpegurl"'
+          : '';
+        return `
+          <div class="admin-video-preview">
+            <video controls preload="metadata" playsinline src="${safeUrl}"${typeAttr}></video>
+          </div>
+        `;
+      }
+      return `
+        <div class="admin-video-preview">
+          <iframe src="${safeUrl}" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+        </div>
+      `;
+    }
+
     function viewCourseStructure(id){
       const course = courseById(id);
       if(!course){ toast('No se encontró el curso.'); return; }
-      openModal('Estructura del curso', `
-        <div class="stack">
-          ${course.lessons.map((ls, i) => `<div class="list-item"><div><strong>${i+1}. ${ls.title}</strong><small>${ls.module}</small></div><span class="pill-note">Clase</span></div>`).join('')}
+      const groups = groupCourseLessonsByModule(course);
+      const lessonCount = (course.lessons || []).length;
+      const sectionCount = groups.length;
+      const localNotice = isLocalFileMode()
+        ? `<div class="mini-note">Nota: si algún video no carga desde el archivo local, abre esta página desde un servidor o dominio. Esto evita bloqueos del navegador en algunos proveedores.</div>`
+        : '';
+      const sectionsHtml = groups.length ? groups.map((group, groupIndex) => `
+        <div class="admin-course-section">
+          <div class="admin-course-section-head">
+            <strong>Sección ${groupIndex + 1}: ${escapeHtml(group.title)}</strong>
+            <span class="pill-note">${group.lessons.length} clase${group.lessons.length === 1 ? '' : 's'}</span>
+          </div>
+          ${group.lessons.map(lesson => {
+            const provider = lesson.url ? getVideoProviderLabel(lesson.url) : 'Sin video';
+            const finalUrl = normalizeVideoUrl(lesson.url || '');
+            return `
+              <div class="admin-lesson-preview">
+                <div class="admin-lesson-info">
+                  <span class="pill-note">Clase ${Number(lesson.originalIndex) + 1} · ${escapeHtml(provider)}</span>
+                  <strong>${escapeHtml(lesson.title || 'Clase sin título')}</strong>
+                  <small>${finalUrl ? escapeHtml(finalUrl) : 'Sin URL de video'}</small>
+                  <div class="admin-inline-actions" style="margin-top:0">
+                    <button class="btn btn-soft btn-sm" type="button" onclick="editCourse(${Number(course.id)})">Editar curso</button>
+                    ${finalUrl ? `<a class="btn btn-dark btn-sm" href="${escapeHtml(finalUrl)}" target="_blank" rel="noopener">Abrir video</a>` : ''}
+                  </div>
+                </div>
+                ${renderAdminLessonVideoPreview(lesson)}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `).join('') : `<div class="empty-state">Este curso todavía no tiene clases creadas.</div>`;
+
+      openModal('Vista admin del curso', `
+        <div class="admin-course-view">
+          <div class="admin-course-view-hero">
+            <div>
+              <span class="status ${courseVisibilityTagClass(course)}">${courseVisibilityLabel(course)}</span>
+              <h4>${escapeHtml(course.title || 'Curso sin título')}</h4>
+              <p>${escapeHtml(course.description || 'Sin descripción registrada.')}</p>
+              <div class="admin-inline-actions">
+                <button class="btn btn-primary" type="button" onclick="editCourse(${Number(course.id)})">Editar curso</button>
+                <button class="btn btn-soft" type="button" onclick="toggleCourseVisibility(${Number(course.id)})">${isCourseVisible(course) ? 'Ocultar a alumnos' : 'Hacer visible'}</button>
+              </div>
+            </div>
+            <div class="admin-course-view-meta">
+              <div class="mini-note"><strong>${sectionCount}</strong><br>Sección${sectionCount === 1 ? '' : 'es'}</div>
+              <div class="mini-note"><strong>${lessonCount}</strong><br>Video${lessonCount === 1 ? '' : 's'} / clase${lessonCount === 1 ? '' : 's'}</div>
+              <div class="mini-note"><strong>${escapeHtml(course.category || 'Sin categoría')}</strong><br>Categoría</div>
+              <div class="mini-note"><strong>${formatCurrencyCOP(estimateCoursePrice(course))}</strong><br>Valor base</div>
+            </div>
+          </div>
+          ${localNotice}
+          ${sectionsHtml}
+          <div class="admin-course-view-actions">
+            <button class="btn btn-soft" type="button" onclick="closeModal()">Cerrar</button>
+            <button class="btn btn-danger" type="button" onclick="openDeleteCourseConfirm(${Number(course.id)})">Eliminar curso</button>
+          </div>
         </div>
       `);
     }
