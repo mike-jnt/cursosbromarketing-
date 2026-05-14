@@ -3760,6 +3760,25 @@
 
 
 
+    .cover-upload-file-name[data-upload-kind="uploading"]{
+      background:#eef4ff;
+      border-color:#cbd9ff;
+      color:#304aa0;
+      font-weight:800;
+    }
+    .cover-upload-file-name[data-upload-kind="done"]{
+      background:#ecfdf5;
+      border-color:#b7e4cf;
+      color:#047857;
+      font-weight:800;
+    }
+    .cover-upload-file-name[data-upload-kind="error"]{
+      background:#fff1f2;
+      border-color:#fecdd3;
+      color:#be123c;
+      font-weight:800;
+    }
+
     /* === Vista admin del curso: secciones y videos === */
     .admin-course-view{
       display:flex;
@@ -5518,6 +5537,15 @@
                   <input type="text" id="lessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
                   <small class="cover-upload-meta">Acepta enlace de Cloudflare Stream, URL embed, iframe completo, YouTube, Vimeo, MP4 directo o manifest HLS.</small>
                 </div>
+                <div class="field">
+                  <label>Subir video desde admin</label>
+                  <label class="cover-upload-drop" for="lessonVideoUploadField">
+                    <input type="file" id="lessonVideoUploadField" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv">
+                    <span class="cover-upload-title">Seleccionar video de la clase</span>
+                    <span class="cover-upload-meta">El video se sube a Cloudflare Stream y la URL se pega automáticamente arriba.</span>
+                  </label>
+                  <div class="cover-upload-file-name" id="lessonVideoUploadStatus">No has seleccionado ningún video.</div>
+                </div>
               </div>
               <div class="mini-note" id="lessonsPreviewBox">Aún no has agregado clases para este curso.</div>
               <div class="admin-inline-actions">
@@ -5886,6 +5914,7 @@
 
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@latest/dist/tus.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -5924,6 +5953,12 @@
     let firebaseAuthSyncStarted = false;
     const FIREBASE_COLLECTION = 'campus';
     const FIREBASE_STATE_DOC = 'mainState';
+    const CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/direct-upload';
+    const CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/tus-upload';
+    const CLOUDFLARE_STREAM_BASIC_LIMIT_BYTES = 200 * 1024 * 1024;
+    const CLOUDFLARE_STREAM_TUS_CHUNK_BYTES = 50 * 1024 * 1024;
+    const CLOUDFLARE_STREAM_DEFAULT_MAX_DURATION_SECONDS = Number(window.CLOUDFLARE_STREAM_MAX_DURATION_SECONDS || 3600);
+    const CLOUDFLARE_STREAM_PLAYBACK_BASE = 'https://iframe.videodelivery.net/';
 
     const DEMO_USERS = {
       admin: {
@@ -8216,6 +8251,254 @@ function toggleUserCard(userId, event){
       return 'URL externa';
     }
 
+    function isAcceptedVideoFile(file){
+      if(!file) return false;
+      const name = String(file.name || '').toLowerCase();
+      return String(file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mov|m4v|m3u8)$/i.test(name);
+    }
+
+    function formatFileSize(bytes){
+      const size = Number(bytes || 0);
+      if(size >= 1024 * 1024 * 1024) return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+      if(size >= 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + ' MB';
+      if(size >= 1024) return (size / 1024).toFixed(1) + ' KB';
+      return size + ' B';
+    }
+
+    function buildCloudflareStreamPlaybackUrl(uid){
+      const id = String(uid || '').trim();
+      return id ? `${CLOUDFLARE_STREAM_PLAYBACK_BASE}${encodeURIComponent(id)}` : '';
+    }
+
+    function parseCloudflareStreamUid(value){
+      const raw = String(value || '').trim();
+      if(!raw) return '';
+      try{
+        const url = new URL(raw);
+        const parts = url.pathname.split('/').filter(Boolean);
+        const direct = parts.find(part => /^[a-z0-9]{20,64}$/i.test(part));
+        if(direct) return direct;
+      }catch(error){
+        const match = raw.match(/[a-z0-9]{20,64}/i);
+        if(match) return match[0];
+      }
+      return '';
+    }
+
+    function getCloudflareUploadMeta(file, options = {}){
+      return {
+        name: file && file.name ? file.name : 'video',
+        filename: file && file.name ? file.name : 'video',
+        filetype: file && file.type ? file.type : 'video/mp4',
+        courseId: String(options.courseId || ''),
+        lessonIndex: String(options.lessonIndex ?? ''),
+        uploadedFrom: 'campus-admin'
+      };
+    }
+
+    async function readResponseTextOrJson(response){
+      const text = await response.text();
+      if(!text) return null;
+      try{ return JSON.parse(text); }
+      catch(error){ return text; }
+    }
+
+    function getCloudflareApiErrorMessage(payload){
+      if(!payload) return '';
+      if(typeof payload === 'string') return payload.slice(0, 220);
+      if(Array.isArray(payload.errors) && payload.errors.length){
+        return payload.errors.map(err => err.message || err.code || JSON.stringify(err)).join(' · ');
+      }
+      if(payload.message) return payload.message;
+      if(payload.error) return typeof payload.error === 'string' ? payload.error : JSON.stringify(payload.error);
+      return '';
+    }
+
+    async function requestCloudflareDirectUpload(file, options = {}){
+      const body = {
+        fileName: file.name || 'video',
+        size: Number(file.size || 0),
+        contentType: file.type || 'video/mp4',
+        maxDurationSeconds: Number(options.maxDurationSeconds || CLOUDFLARE_STREAM_DEFAULT_MAX_DURATION_SECONDS),
+        requireSignedURLs: Boolean(options.requireSignedURLs || false),
+        meta: getCloudflareUploadMeta(file, options)
+      };
+      const response = await fetch(CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+      });
+      const payload = await readResponseTextOrJson(response);
+      if(!response.ok){
+        const detail = getCloudflareApiErrorMessage(payload);
+        throw new Error(detail || 'El endpoint de Cloudflare Stream no pudo generar la URL temporal.');
+      }
+      const result = payload && (payload.result || payload.data || payload);
+      const uploadURL = result && (result.uploadURL || result.uploadUrl || result.url);
+      const uid = result && (result.uid || result.id || result.videoId || result.streamMediaId);
+      if(!uploadURL || !uid){
+        throw new Error('El endpoint no devolvió uploadURL y uid. Revisa el Worker de Cloudflare.');
+      }
+      return { uploadURL, uid };
+    }
+
+    function uploadFileToCloudflarePost(file, uploadURL, statusId){
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append('file', file, file.name || 'video.mp4');
+        xhr.open('POST', uploadURL, true);
+        xhr.upload.onprogress = event => {
+          if(event.lengthComputable){
+            const progress = Math.round((event.loaded / event.total) * 100);
+            setUploadStatus(statusId, `Subiendo a Cloudflare Stream · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading');
+          }
+        };
+        xhr.onload = () => {
+          if(xhr.status >= 200 && xhr.status < 300){
+            resolve(true);
+          }else{
+            reject(new Error(`Cloudflare respondió ${xhr.status}. ${xhr.responseText || ''}`.trim()));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Error de red subiendo el video a Cloudflare Stream.'));
+        xhr.send(formData);
+      });
+    }
+
+    async function uploadCloudflareStreamBasic(file, statusId, options = {}){
+      setUploadStatus(statusId, `Preparando URL temporal en Cloudflare Stream · ${file.name}`, 'uploading');
+      const direct = await requestCloudflareDirectUpload(file, options);
+      setUploadStatus(statusId, `URL temporal creada · iniciando subida de ${file.name}`, 'uploading');
+      await uploadFileToCloudflarePost(file, direct.uploadURL, statusId);
+      return {
+        uid: direct.uid,
+        uploadURL: direct.uploadURL,
+        playbackUrl: buildCloudflareStreamPlaybackUrl(direct.uid),
+        method: 'direct-post'
+      };
+    }
+
+    function uploadCloudflareStreamTus(file, statusId, options = {}){
+      if(!window.tus || !window.tus.Upload){
+        return Promise.reject(new Error('No se pudo cargar tus-js-client. Revisa conexión a internet o usa un video menor a 200 MB.'));
+      }
+      return new Promise((resolve, reject) => {
+        let mediaId = '';
+        const metadata = getCloudflareUploadMeta(file, options);
+        const upload = new window.tus.Upload(file, {
+          endpoint: CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT,
+          chunkSize: CLOUDFLARE_STREAM_TUS_CHUNK_BYTES,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          uploadSize: Number(file.size || 0),
+          metadata,
+          onError(error){
+            reject(error);
+          },
+          onProgress(bytesUploaded, bytesTotal){
+            const total = bytesTotal || file.size || 1;
+            const progress = Math.round((bytesUploaded / total) * 100);
+            setUploadStatus(statusId, `Subiendo a Cloudflare Stream con TUS · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading');
+          },
+          onAfterResponse(req, res){
+            return new Promise(resolveAfter => {
+              try{
+                const headerId = res && typeof res.getHeader === 'function' ? res.getHeader('stream-media-id') : '';
+                if(headerId) mediaId = headerId;
+              }catch(error){}
+              resolveAfter();
+            });
+          },
+          onSuccess(){
+            const fallbackUid = parseCloudflareStreamUid(upload.url || '');
+            const uid = mediaId || fallbackUid;
+            if(!uid){
+              reject(new Error('La subida terminó, pero no se recibió el ID del video. Revisa que el Worker exponga el header stream-media-id.'));
+              return;
+            }
+            resolve({
+              uid,
+              uploadURL: upload.url || '',
+              playbackUrl: buildCloudflareStreamPlaybackUrl(uid),
+              method: 'tus'
+            });
+          }
+        });
+        setUploadStatus(statusId, `Preparando subida resumible TUS · ${file.name} · ${formatFileSize(file.size)}`, 'uploading');
+        upload.start();
+      });
+    }
+
+    async function uploadVideoFileAndSetUrl(file, urlInputId, statusId, options = {}){
+      const input = document.getElementById(urlInputId);
+      if(!input){ toast('No se encontró el campo de URL del video.'); return; }
+      if(!file){ setUploadStatus(statusId, 'No has seleccionado ningún video.'); return; }
+      if(!isAcceptedVideoFile(file)){
+        setUploadStatus(statusId, 'Archivo no válido. Sube un video MP4, WEBM, OGG, MOV, M4V, AVI o MKV.', 'error');
+        toast('Sube un archivo de video válido.');
+        return;
+      }
+
+      const useTus = Number(file.size || 0) > CLOUDFLARE_STREAM_BASIC_LIMIT_BYTES;
+      try{
+        const result = useTus
+          ? await uploadCloudflareStreamTus(file, statusId, options)
+          : await uploadCloudflareStreamBasic(file, statusId, options);
+        const finalUrl = result.playbackUrl || buildCloudflareStreamPlaybackUrl(result.uid);
+        if(!finalUrl){ throw new Error('Cloudflare no devolvió una URL de reproducción válida.'); }
+        input.value = finalUrl;
+        input.dataset.cloudflareUid = result.uid || '';
+        input.dataset.cloudflareUploadMethod = result.method || '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        setUploadStatus(statusId, `Video subido a Cloudflare Stream · ${file.name} · ID: ${result.uid}`, 'done');
+        toast('Video subido a Cloudflare Stream y URL agregada a la clase.');
+        return result;
+      }catch(error){
+        console.warn('Error subiendo video a Cloudflare Stream.', error);
+        const message = String(error && error.message ? error.message : error || '').includes('Failed to fetch')
+          ? 'No se pudo conectar con el endpoint seguro de Cloudflare. Revisa el Worker o la ruta /api/cloudflare-stream.'
+          : (error && error.message ? error.message : 'No se pudo subir el video a Cloudflare Stream.');
+        setUploadStatus(statusId, message, 'error');
+        toast(message);
+      }
+    }
+
+    function bindVideoUploadInput(inputId, urlInputId, statusId, optionsProvider){
+      const fileInput = document.getElementById(inputId);
+      if(!fileInput || fileInput.dataset.videoUploadBound === 'true') return;
+      fileInput.dataset.videoUploadBound = 'true';
+      fileInput.addEventListener('change', async event => {
+        const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+        const options = typeof optionsProvider === 'function' ? optionsProvider() : (optionsProvider || {});
+        await uploadVideoFileAndSetUrl(file, urlInputId, statusId, options);
+      });
+    }
+
+    function bindCreateLessonVideoUpload(){
+      bindVideoUploadInput('lessonVideoUploadField', 'lessonUrlField', 'lessonVideoUploadStatus', () => ({
+        courseId: 0,
+        lessonIndex: (state.pendingLessons || []).length + 1
+      }));
+    }
+
+    function bindCourseEditLessonVideoUploadInputs(){
+      document.querySelectorAll('[data-video-upload-target]').forEach(input => {
+        if(input.dataset.videoUploadBound === 'true') return;
+        input.dataset.videoUploadBound = 'true';
+        input.addEventListener('change', async event => {
+          const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+          const targetId = input.dataset.videoUploadTarget;
+          const statusId = input.dataset.videoUploadStatus;
+          const lessonIndex = input.dataset.lessonIndex || 'nueva';
+          await uploadVideoFileAndSetUrl(file, targetId, statusId, {
+            courseId: courseEditDraft && courseEditDraft.courseId ? courseEditDraft.courseId : 0,
+            lessonIndex
+          });
+        });
+      });
+    }
+
     function resetPlayerMedia(iframe, video){
       if(activeHlsPlayer){
         try{ activeHlsPlayer.destroy(); } catch(err){}
@@ -8247,10 +8530,10 @@ function toggleUserCard(userId, event){
 
       resetPlayerMedia(iframe, video);
 
-      if(isLocalFileMode()){
+      if(isLocalFileMode() && finalUrl && !isDirectVideoUrl(finalUrl)){
         if(titleNode) titleNode.textContent = 'Vista previa bloqueada en archivo local';
         if(localNote) localNote.style.display = 'block';
-        showPlayerPlaceholder(placeholder, 'Para probar videos embebidos o HLS, publica la página en tu dominio o ábrela desde un servidor local.');
+        showPlayerPlaceholder(placeholder, 'Para probar videos embebidos o HLS, publica la página en tu dominio o ábrela desde un servidor local. Los MP4 directos subidos a Firebase sí pueden reproducirse.');
         return;
       }
 
@@ -8977,7 +9260,7 @@ function renderPlayer(courseId){
 
           <div class="mini-card" style="padding:18px">
             <h3 style="margin:0 0 8px;color:#172033">Clases del curso</h3>
-            <p class="muted-text" style="margin:0">Edita módulo, título y URL del video. Compatible con Cloudflare Stream, iframe, YouTube, Vimeo, MP4 o HLS .m3u8.</p>
+            <p class="muted-text" style="margin:0">Edita módulo, título y URL del video. También puedes subir un video desde admin; la plataforma lo subirá a Cloudflare Stream y pegará la URL automáticamente.</p>
             <div id="courseEditLessonsBox" class="course-edit-lessons"></div>
 
             <div class="course-edit-add-card">
@@ -8994,6 +9277,15 @@ function renderPlayer(courseId){
                 <div class="field course-edit-full">
                   <label>URL del video</label>
                   <input type="text" id="editNewLessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+                </div>
+                <div class="field course-edit-full">
+                  <label>Subir video desde admin</label>
+                  <label class="cover-upload-drop" for="editNewLessonVideoUploadField">
+                    <input type="file" id="editNewLessonVideoUploadField" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" data-video-upload-target="editNewLessonUrlField" data-video-upload-status="editNewLessonVideoUploadStatus" data-lesson-index="nueva">
+                    <span class="cover-upload-title">Seleccionar video de la nueva clase</span>
+                    <span class="cover-upload-meta">Se sube a Cloudflare Stream y queda asociado a esta clase.</span>
+                  </label>
+                  <div class="cover-upload-file-name" id="editNewLessonVideoUploadStatus">No has seleccionado ningún video.</div>
                 </div>
               </div>
               <div class="admin-inline-actions">
@@ -9051,6 +9343,8 @@ function renderPlayer(courseId){
         };
         reader.readAsDataURL(file);
       });
+      bindVideoUploadInput('editNewLessonVideoUploadField', 'editNewLessonUrlField', 'editNewLessonVideoUploadStatus', () => ({ courseId, lessonIndex: 'nueva' }));
+      bindCourseEditLessonVideoUploadInputs();
     }
 
     function updateCourseEditCoverPreview(src){
@@ -9117,10 +9411,20 @@ function renderPlayer(courseId){
                 <label>URL del video</label>
                 <input type="text" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
               </div>
+              <div class="field course-edit-full">
+                <label>Reemplazar/subir video</label>
+                <label class="cover-upload-drop" for="editLessonVideoUpload_${idx}">
+                  <input type="file" id="editLessonVideoUpload_${idx}" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" data-video-upload-target="editLessonUrl_${idx}" data-video-upload-status="editLessonUploadStatus_${idx}" data-lesson-index="${idx + 1}">
+                  <span class="cover-upload-title">Seleccionar nuevo video para esta clase</span>
+                  <span class="cover-upload-meta">Opcional. Si lo subes, reemplaza la URL actual por la nueva URL de Cloudflare Stream.</span>
+                </label>
+                <div class="cover-upload-file-name" id="editLessonUploadStatus_${idx}">No has seleccionado ningún video.</div>
+              </div>
             </div>
           </div>
         `;
       }).join('');
+      bindCourseEditLessonVideoUploadInputs();
     }
 
     function addCourseEditLesson(){
@@ -9133,6 +9437,9 @@ function renderPlayer(courseId){
       document.getElementById('editNewLessonModuleField').value = '';
       document.getElementById('editNewLessonTitleField').value = '';
       document.getElementById('editNewLessonUrlField').value = '';
+      const newUploadField = document.getElementById('editNewLessonVideoUploadField');
+      if(newUploadField) newUploadField.value = '';
+      setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.');
       renderCourseEditLessonsDraft();
       toast('Clase agregada al editor.');
     }
@@ -10187,6 +10494,8 @@ function bindButtons(){
         reader.readAsDataURL(file);
       });
 
+      bindCreateLessonVideoUpload();
+
       byId('btnCreateCourseNext')?.addEventListener('click', () => {
         const title = byId('courseTitleField')?.value.trim() || '';
         if(!title){ toast('Agrega el título del curso antes de continuar.'); return; }
@@ -10206,6 +10515,9 @@ function bindButtons(){
         state.pendingLessons.push({ module, title, url: normalizedUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ' });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
+        const lessonUploadField = byId('lessonVideoUploadField');
+        if(lessonUploadField) lessonUploadField.value = '';
+        setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.');
         renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}`);
       });
 
