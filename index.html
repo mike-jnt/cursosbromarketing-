@@ -4982,6 +4982,44 @@
       0%{transform:translateX(-100%)}
       70%,100%{transform:translateX(100%)}
     }
+
+
+    /* === Resumen conectado con toda la información del campus === */
+    .dashboard-connected-grid{
+      margin-top:18px;
+    }
+    .dashboard-connected-grid .finance-health-grid{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .dashboard-connected-grid .finance-health-item strong{
+      font-size:24px;
+    }
+    .dashboard-connected-grid .finance-list-item.is-warning{
+      border-color:#fed7aa;
+      background:#fff7ed;
+    }
+    .dashboard-connected-grid .finance-list-item.is-danger{
+      border-color:#fecaca;
+      background:#fff1f2;
+    }
+    .dashboard-connected-grid .finance-list-item.is-success{
+      border-color:#bbf7d0;
+      background:#f0fdf4;
+    }
+    .dashboard-connected-grid .finance-list-item.is-info{
+      border-color:#bfdbfe;
+      background:#eff6ff;
+    }
+    @media (max-width:1180px){
+      .dashboard-connected-grid .finance-health-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+    @media (max-width:760px){
+      .dashboard-connected-grid .finance-health-grid{
+        grid-template-columns:1fr;
+      }
+    }
 </style>
 </head>
 <body>
@@ -5233,6 +5271,99 @@
             </div>
           </div>
 
+          <div class="finance-list-grid dashboard-connected-grid">
+            <div class="finance-health-card">
+              <span class="admin-head-kicker">Contenido conectado</span>
+              <h3>Estado completo de cursos y videos</h3>
+              <p>Resumen automático de cursos, visibilidad, clases, módulos y videos cargados en la plataforma.</p>
+              <div class="finance-health-grid">
+                <div class="finance-health-item">
+                  <small>Total de cursos</small>
+                  <strong id="adminSummaryTotalCourses">0</strong>
+                  <span id="adminSummaryTotalCoursesText">Cursos creados en el campus.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Visibles / ocultos</small>
+                  <strong id="adminSummaryCourseVisibility">0 / 0</strong>
+                  <span id="adminSummaryCourseVisibilityText">Control de catálogo para alumnos.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Secciones / módulos</small>
+                  <strong id="adminSummaryModules">0</strong>
+                  <span id="adminSummaryModulesText">Módulos detectados en todos los cursos.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Clases cargadas</small>
+                  <strong id="adminSummaryLessons">0</strong>
+                  <span id="adminSummaryLessonsText">Total de clases creadas.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Videos listos</small>
+                  <strong id="adminSummaryVideosReady">0</strong>
+                  <span id="adminSummaryVideosReadyText">Clases con URL reproducible.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Videos pendientes</small>
+                  <strong id="adminSummaryVideosMissing">0</strong>
+                  <span id="adminSummaryVideosMissingText">Clases sin video asociado.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="finance-health-card">
+              <span class="admin-head-kicker">Operación conectada</span>
+              <h3>Usuarios, pagos y materiales</h3>
+              <p>Lectura automática de alumnos, pagos, recursos, certificados, solicitudes y administradores.</p>
+              <div class="finance-health-grid">
+                <div class="finance-health-item">
+                  <small>Usuarios totales</small>
+                  <strong id="adminSummaryTotalUsers">0</strong>
+                  <span id="adminSummaryTotalUsersText">Alumnos registrados en la plataforma.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Pagos registrados</small>
+                  <strong id="adminSummaryPayments">0</strong>
+                  <span id="adminSummaryPaymentsText">Movimientos financieros guardados.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Recursos</small>
+                  <strong id="adminSummaryResources">0</strong>
+                  <span id="adminSummaryResourcesText">Materiales vinculados a cursos.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Certificados</small>
+                  <strong id="adminSummaryCertificates">0</strong>
+                  <span id="adminSummaryCertificatesText">Certificados generados por avance.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Solicitudes pendientes</small>
+                  <strong id="adminSummaryRequests">0</strong>
+                  <span id="adminSummaryRequestsText">Solicitudes de acceso por revisar.</span>
+                </div>
+                <div class="finance-health-item">
+                  <small>Administradores</small>
+                  <strong id="adminSummaryAdmins">0</strong>
+                  <span id="adminSummaryAdminsText">Perfiles admin configurados.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="finance-list-grid dashboard-connected-grid">
+            <div class="finance-list-card">
+              <span class="admin-head-kicker">Alertas automáticas</span>
+              <h3>Lo que debes revisar primero</h3>
+              <p>La sección de resumen ahora cruza cursos, alumnos, pagos y videos para mostrar prioridades reales.</p>
+              <div class="finance-list" id="adminDashboardAlerts"></div>
+            </div>
+
+            <div class="finance-list-card">
+              <span class="admin-head-kicker">Actividad del campus</span>
+              <h3>Últimos movimientos</h3>
+              <p>Resumen de actividad reciente, favoritos y último curso trabajado en la plataforma.</p>
+              <div class="finance-list" id="adminDashboardActivityList"></div>
+            </div>
+          </div>
 
           <div class="finance-table-grid">
             <div class="finance-table-card">
@@ -6442,6 +6573,14 @@
       }
       if(!options.localOnly){
         scheduleFirebaseSave();
+      }
+      try{
+        const dashboard = document.getElementById('tab-admin-dashboard');
+        if(dashboard && !dashboard.classList.contains('hidden') && state.currentUser?.role === 'admin'){
+          renderAdminDashboard();
+        }
+      }catch(error){
+        console.warn('No se pudo refrescar el resumen administrativo.', error);
       }
     }
 
@@ -7699,11 +7838,64 @@ Este es un archivo de demostración generado desde el campus.`;
       });
     }
 
+
+    function setTextById(id, value){
+      const el = document.getElementById(id);
+      if(el) el.textContent = value;
+    }
+
+    function buildDashboardListItem(title, description, value = '', label = '', type = ''){
+      const typeClass = type ? ` is-${type}` : '';
+      return `
+        <div class="finance-list-item${typeClass}">
+          <div>
+            <strong>${escapeHtml(title)}</strong>
+            <small>${escapeHtml(description)}</small>
+          </div>
+          <div class="finance-list-value">
+            <strong>${escapeHtml(value)}</strong>
+            <small>${escapeHtml(label)}</small>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboardList(id, items, emptyText){
+      const el = document.getElementById(id);
+      if(!el) return;
+      const cleanItems = Array.isArray(items) ? items.filter(Boolean) : [];
+      el.innerHTML = cleanItems.length
+        ? cleanItems.join('')
+        : buildDashboardListItem('Todo se ve estable', emptyText || 'No hay alertas pendientes para revisar.', 'OK', 'sin pendientes', 'success');
+    }
+
     
 function renderAdminDashboard(){
       const users = Array.isArray(state.users) ? state.users : [];
       const courses = Array.isArray(state.courses) ? state.courses : [];
+      const payments = Array.isArray(state.payments) ? state.payments : [];
+      const resources = Array.isArray(state.resources) ? state.resources : [];
+      const certificates = Array.isArray(state.certificates) ? state.certificates : [];
+      const accessRequests = Array.isArray(state.accessRequests) ? state.accessRequests : [];
+      const admins = Array.isArray(state.admins) ? state.admins : [];
+      const activity = Array.isArray(state.activityLog) ? state.activityLog : [];
+      const favorites = Array.isArray(state.favorites) ? state.favorites : [];
+
       const publishedCourses = courses.filter(isCourseVisible).length;
+      const hiddenCourses = Math.max(0, courses.length - publishedCourses);
+      const activeCourses = courses.filter(course => String(course.status || '').trim() === 'Activo').length;
+      const draftCourses = courses.filter(course => String(course.status || '').trim() === 'Borrador').length;
+      const allLessons = courses.flatMap(course => Array.isArray(course.lessons) ? course.lessons.map(lesson => ({ ...lesson, course })) : []);
+      const totalLessons = allLessons.length;
+      const modulesCount = new Set(allLessons.map(item => String(item.module || 'Sin módulo').trim() || 'Sin módulo')).size;
+      const videosReady = allLessons.filter(item => !!getLessonPlayableUrl(item)).length;
+      const videosMissing = Math.max(0, totalLessons - videosReady);
+      const cloudflareVideos = allLessons.filter(item => getVideoProviderLabel(item.url || '') === 'Cloudflare Stream').length;
+      const confirmedPaymentsCount = payments.filter(payment => payment.status === 'Confirmado').length;
+      const pendingPaymentCount = payments.filter(payment => payment.status !== 'Confirmado').length;
+      const pendingRequestsCount = accessRequests.filter(request => String(request.status || '').toLowerCase().includes('pendiente')).length;
+      const visibleResources = resources.filter(resource => courseById(resource.courseId)).length;
+      const currentCourse = courseById(state.currentCourseId);
 
       const summary = getAccountingSummary(users);
       const { projectedByCourse, totals } = summary;
@@ -7737,13 +7929,38 @@ function renderAdminDashboard(){
         adminFinanceAvgProgress: `${avgProgress}%`,
         adminFinanceMonthRevenue: formatCurrencyCOP(monthRevenue),
         adminFinancePendingUsersCount: pendingUsers,
-        adminFinanceRiskAmount: formatCurrencyCOP(riskAmount)
+        adminFinanceRiskAmount: formatCurrencyCOP(riskAmount),
+        adminSummaryTotalCourses: courses.length,
+        adminSummaryCourseVisibility: `${publishedCourses} / ${hiddenCourses}`,
+        adminSummaryModules: modulesCount,
+        adminSummaryLessons: totalLessons,
+        adminSummaryVideosReady: videosReady,
+        adminSummaryVideosMissing: videosMissing,
+        adminSummaryTotalUsers: users.length,
+        adminSummaryPayments: payments.length,
+        adminSummaryResources: resources.length,
+        adminSummaryCertificates: certificates.length,
+        adminSummaryRequests: pendingRequestsCount,
+        adminSummaryAdmins: admins.length
       };
 
       Object.entries(stats).forEach(([id, value]) => {
         const el = document.getElementById(id);
         if(el) el.textContent = value;
       });
+
+      setTextById('adminSummaryTotalCoursesText', `${activeCourses} activo${activeCourses === 1 ? '' : 's'} · ${draftCourses} borrador${draftCourses === 1 ? '' : 'es'}.`);
+      setTextById('adminSummaryCourseVisibilityText', `${publishedCourses} visible${publishedCourses === 1 ? '' : 's'} para alumnos y ${hiddenCourses} oculto${hiddenCourses === 1 ? '' : 's'}.`);
+      setTextById('adminSummaryModulesText', `${modulesCount} sección${modulesCount === 1 ? '' : 'es'} detectada${modulesCount === 1 ? '' : 's'} en todos los cursos.`);
+      setTextById('adminSummaryLessonsText', `${totalLessons} clase${totalLessons === 1 ? '' : 's'} creada${totalLessons === 1 ? '' : 's'} en el campus.`);
+      setTextById('adminSummaryVideosReadyText', `${videosReady} clase${videosReady === 1 ? '' : 's'} con video reproducible · ${cloudflareVideos} en Cloudflare Stream.`);
+      setTextById('adminSummaryVideosMissingText', videosMissing ? `${videosMissing} clase${videosMissing === 1 ? '' : 's'} necesita${videosMissing === 1 ? '' : 'n'} video.` : 'Todas las clases tienen video asociado.');
+      setTextById('adminSummaryTotalUsersText', `${activeUsers} activo${activeUsers === 1 ? '' : 's'} · ${pendingUsers} pendiente${pendingUsers === 1 ? '' : 's'} · ${blockedUsers} bloqueado${blockedUsers === 1 ? '' : 's'}.`);
+      setTextById('adminSummaryPaymentsText', `${confirmedPaymentsCount} confirmado${confirmedPaymentsCount === 1 ? '' : 's'} · ${pendingPaymentCount} por verificar.`);
+      setTextById('adminSummaryResourcesText', `${visibleResources} recurso${visibleResources === 1 ? '' : 's'} vinculado${visibleResources === 1 ? '' : 's'} a cursos existentes.`);
+      setTextById('adminSummaryCertificatesText', certificates.length ? 'Certificados generados automáticamente por avance.' : 'Aún no hay certificados generados.');
+      setTextById('adminSummaryRequestsText', pendingRequestsCount ? `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} pendiente${pendingRequestsCount === 1 ? '' : 's'} de revisión.` : 'Sin solicitudes pendientes.');
+      setTextById('adminSummaryAdminsText', `${admins.length} perfil${admins.length === 1 ? '' : 'es'} con acceso administrativo.`);
 
       const collectedHint = document.getElementById('adminFinanceCollectedHint');
       if(collectedHint) collectedHint.textContent = activeUsers
@@ -7817,6 +8034,41 @@ function renderAdminDashboard(){
           `).join('')
           : '<div class="finance-list-item"><div><strong>Sin datos disponibles</strong><small>Crea usuarios y asigna cursos para ver el ranking financiero.</small></div><div class="finance-list-value"><strong>$0</strong><small>sin movimiento</small></div></div>';
       }
+
+      const alerts = [];
+      if(pendingUsers > 0){
+        alerts.push(buildDashboardListItem('Alumnos pendientes por activar', `${pendingUsers} usuario${pendingUsers === 1 ? '' : 's'} todavía requiere${pendingUsers === 1 ? '' : 'n'} seguimiento o cobro.`, String(pendingUsers), 'usuarios', 'warning'));
+      }
+      if(riskAmount > 0){
+        alerts.push(buildDashboardListItem('Cartera en riesgo', `Hay saldo vencido o bloqueado por ${formatCurrencyCOP(riskAmount)}.`, formatCurrencyCOP(riskAmount), 'revisar', 'danger'));
+      }
+      if(videosMissing > 0){
+        alerts.push(buildDashboardListItem('Clases sin video', `${videosMissing} clase${videosMissing === 1 ? '' : 's'} todavía no tiene${videosMissing === 1 ? '' : 'n'} URL de reproducción.`, String(videosMissing), 'pendientes', 'warning'));
+      }
+      if(hiddenCourses > 0){
+        alerts.push(buildDashboardListItem('Cursos ocultos', `${hiddenCourses} curso${hiddenCourses === 1 ? '' : 's'} no se muestra${hiddenCourses === 1 ? '' : 'n'} en el área del alumno.`, String(hiddenCourses), 'ocultos', 'info'));
+      }
+      if(pendingPaymentCount > 0){
+        alerts.push(buildDashboardListItem('Pagos por verificar', `${pendingPaymentCount} movimiento${pendingPaymentCount === 1 ? '' : 's'} financiero${pendingPaymentCount === 1 ? '' : 's'} no está${pendingPaymentCount === 1 ? '' : 'n'} confirmado${pendingPaymentCount === 1 ? '' : 's'}.`, String(pendingPaymentCount), 'pagos', 'warning'));
+      }
+      if(pendingRequestsCount > 0){
+        alerts.push(buildDashboardListItem('Solicitudes de acceso', `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} espera${pendingRequestsCount === 1 ? '' : 'n'} aprobación o respuesta.`, String(pendingRequestsCount), 'solicitudes', 'info'));
+      }
+      if(avgProgress < 40 && users.length){
+        alerts.push(buildDashboardListItem('Avance académico bajo', `El promedio general es ${avgProgress}%. Conviene activar seguimiento a alumnos.`, `${avgProgress}%`, 'avance', 'warning'));
+      }
+      renderDashboardList('adminDashboardAlerts', alerts, 'Cursos, usuarios, pagos y videos están conectados sin alertas críticas.');
+
+      const activityItems = [];
+      activity.slice(0, 4).forEach(item => {
+        activityItems.push(buildDashboardListItem(item.text || 'Actividad registrada', item.time || 'Sin fecha', 'Actividad', 'historial', 'info'));
+      });
+      if(currentCourse){
+        activityItems.push(buildDashboardListItem('Curso actual en reproductor', `${currentCourse.title} · ${getCourseVideoReadyStats(currentCourse).ready}/${getCourseVideoReadyStats(currentCourse).total} videos con URL.`, 'Actual', 'curso', 'success'));
+      }
+      activityItems.push(buildDashboardListItem('Favoritos guardados', `${favorites.length} curso${favorites.length === 1 ? '' : 's'} marcado${favorites.length === 1 ? '' : 's'} como favorito${favorites.length === 1 ? '' : 's'}.`, String(favorites.length), 'favoritos', favorites.length ? 'success' : 'info'));
+      activityItems.push(buildDashboardListItem('Recursos disponibles', `${resources.length} material${resources.length === 1 ? '' : 'es'} complementario${resources.length === 1 ? '' : 's'} dentro del campus.`, String(resources.length), 'recursos', resources.length ? 'success' : 'info'));
+      renderDashboardList('adminDashboardActivityList', activityItems, 'Todavía no hay movimientos recientes registrados.');
 
       renderAdminAccountingTables(summary);
     }
@@ -9166,6 +9418,7 @@ function renderPlayer(courseId){
         if(autoBtn) autoBtn.classList.add('active');
       }
 
+      if(tabId === 'admin-dashboard') renderAdminDashboard();
       if(tabId === 'admin-create') setCreateCourseStep('info');
       if(tabId === 'admin-courses') renderAdminCourses();
       if(tabId === 'admin-accounting') renderAccountingSection();
@@ -9232,6 +9485,7 @@ function renderPlayer(courseId){
         const firstBtn = menuAdmin.querySelector('button[data-tab="admin-dashboard"]');
         if(firstBtn) firstBtn.classList.add('active');
         document.getElementById('tab-admin-dashboard').classList.remove('hidden');
+        renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
         setTimeout(() => syncExistingStudentsToFirebaseAuth({ silent: false }), 800);
