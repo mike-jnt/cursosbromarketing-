@@ -1706,6 +1706,7 @@
       border:1px solid #d9dafe;
       color:#4c5f7f;
       line-height:1.65;
+    }
 #tab-admin-users .admin-user-stats{
   display:grid;
   grid-template-columns:repeat(4,minmax(220px,1fr));
@@ -1916,7 +1917,6 @@
   color:#6f809a;
   background:#fcfdff;
 }
-    }
     .admin-inline-actions{
       display:flex;
       gap:10px;
@@ -5170,6 +5170,795 @@
         grid-template-columns:1fr;
       }
     }
+
+
+    /* =========================================================
+       BRO MARKETING COLOR SYSTEM
+       Paleta tomada de la página de referencia:
+       negro/vino, tarjetas oscuras, texto blanco y acento naranja.
+       Esta capa solo cambia apariencia visual, no altera funciones.
+    ========================================================= */
+    :root{
+      --bro-page:#0d0a13;
+      --bro-black:#050507;
+      --bro-black-2:#090711;
+      --bro-wine:#261017;
+      --bro-panel:#191820;
+      --bro-panel-2:#201f27;
+      --bro-panel-active:#2f2d34;
+      --bro-panel-soft:#14121a;
+      --bro-accent:#ff5a1f;
+      --bro-accent-2:#ff762e;
+      --bro-accent-soft:#ff8a46;
+      --bro-text:#ffffff;
+      --bro-muted:#d8d4dc;
+      --bro-muted-2:#9f98a8;
+      --bro-line:rgba(255,255,255,.12);
+      --bro-line-soft:rgba(255,255,255,.07);
+      --bro-shadow:0 22px 54px rgba(0,0,0,.36);
+
+      --bg:var(--bro-page);
+      --bg-2:var(--bro-black);
+      --panel:var(--bro-panel);
+      --panel-2:var(--bro-panel-active);
+      --line:var(--bro-line);
+      --line-soft:var(--bro-line-soft);
+      --text:var(--bro-text);
+      --muted:var(--bro-muted);
+      --primary:var(--bro-accent);
+      --primary-2:var(--bro-accent-2);
+      --primary-soft:rgba(255,90,31,.16);
+    }
+
+    html,
+    body{
+      background:
+        radial-gradient(circle at 0% 0%, rgba(255,90,31,.16), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(91,62,255,.10), transparent 28%),
+        linear-gradient(135deg,#261017 0%,#0a080f 46%,#0d0a13 100%) !important;
+      color:var(--bro-text) !important;
+    }
+
+    .auth-shell,
+    .auth-left,
+    .auth-right,
+    .app-shell,
+    .layout,
+    .main{
+      background:transparent !important;
+      color:var(--bro-text) !important;
+    }
+
+    .auth-right{
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.13), transparent 34%),
+        linear-gradient(180deg,#121018 0%,#090711 100%) !important;
+    }
+
+    .panel,
+    .login-card,
+    .demo-access,
+    .point,
+    .section-card,
+    .mini-card,
+    .stat,
+    .course-card,
+    .lesson,
+    .resource-item,
+    .list-item,
+    .info-card,
+    .hero-banner,
+    .quick-panel,
+    .continue-card,
+    .goal-card,
+    .desire-card,
+    .metric-box,
+    .history-item,
+    .table-wrap,
+    .modal,
+    .empty-state,
+    .mini-note,
+    .sidebar-user,
+    .cover-source-box,
+    .cover-preview-card,
+    .cover-upload-drop,
+    .cover-upload-file-name,
+    .purchase-summary-card,
+    .purchase-checkout-card,
+    .wompi-checkout-box,
+    .wompi-carousel-shell,
+    .purchase-note,
+    .finance-callout,
+    .user-finance-card,
+    .ledger-item,
+    .upload-progress-wrap,
+    .video-ready-notice,
+    .course-video-ready-strip{
+      background:linear-gradient(180deg,var(--bro-panel) 0%, var(--bro-panel-soft) 100%) !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:var(--bro-shadow) !important;
+    }
+
+    .panel:hover,
+    .mini-card:hover,
+    .stat:hover,
+    .course-card:hover,
+    .lesson:hover,
+    .resource-item:hover,
+    .list-item:hover,
+    .info-card:hover,
+    .hero-banner:hover,
+    .quick-panel:hover{
+      border-color:rgba(255,90,31,.36) !important;
+      box-shadow:0 28px 58px rgba(0,0,0,.46) !important;
+    }
+
+    h1,h2,h3,h4,
+    .section-card h2,
+    .mini-card h3,
+    .hero-banner h3,
+    .login-header h2,
+    .continue-title,
+    .section-mini-title,
+    .course-top-line strong,
+    .course-card strong,
+    .list-item strong,
+    .history-item strong,
+    .student-list-content strong,
+    .player-class-title,
+    .player-progress-detail strong,
+    .player-class-resources-head strong,
+    .modal-header h3,
+    .cover-preview-info strong,
+    .upload-progress-number,
+    .video-ready-notice strong,
+    .course-video-ready-strip strong{
+      color:var(--bro-text) !important;
+    }
+
+    p,small,li,
+    .auth-copy p,
+    .login-header p,
+    .point span,
+    .demo-access div,
+    .section-card p,
+    .mini-card p,
+    .hero-banner p,
+    .stat span,
+    .muted-text,
+    .continue-sub,
+    .section-mini-sub,
+    .course-benefit,
+    .course-meta-list small,
+    .micro-copy,
+    .lesson small,
+    .list-item small,
+    .history-item small,
+    .student-list-eyebrow,
+    .player-class-subtitle,
+    .player-progress-card-header p,
+    .player-progress-detail span,
+    .player-class-resources-head small,
+    .cover-preview-info small,
+    .upload-progress-note,
+    .video-ready-notice span,
+    .course-video-ready-strip span,
+    .footer-note{
+      color:var(--bro-muted) !important;
+    }
+
+    .field label,
+    .compact-filter-field label,
+    [id^="tab-admin-"] .field label,
+    #tab-student-profile .field label{
+      color:var(--bro-accent-soft) !important;
+    }
+
+    .field input,
+    .field select,
+    .field textarea,
+    [id^="tab-admin-"] .field input,
+    [id^="tab-admin-"] .field select,
+    [id^="tab-admin-"] .field textarea,
+    #tab-student-profile .field input,
+    .compact-filter-field input,
+    .compact-filter-field select,
+    .user-course-assign-select,
+    .money-input-wrap input{
+      background:#0f0d14 !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:none !important;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder,
+    .compact-filter-field input::placeholder{
+      color:rgba(216,212,220,.58) !important;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus,
+    [id^="tab-admin-"] .field input:focus,
+    [id^="tab-admin-"] .field select:focus,
+    [id^="tab-admin-"] .field textarea:focus,
+    #tab-student-profile .field input:focus,
+    .compact-filter-field input:focus,
+    .compact-filter-field select:focus,
+    .user-course-assign-select:focus{
+      border-color:var(--bro-accent) !important;
+      box-shadow:0 0 0 4px rgba(255,90,31,.16) !important;
+      background:#14121a !important;
+    }
+
+    .btn,
+    [id^="tab-admin-"] .btn,
+    #tab-student-home .btn,
+    #tab-student-courses .btn,
+    #tab-student-discover .btn,
+    #tab-student-progress .btn,
+    #tab-student-resources .btn,
+    #tab-student-certificates .btn,
+    #tab-student-history .btn,
+    #tab-student-profile .btn{
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      background:#0f0d14 !important;
+    }
+
+    .btn-primary,
+    .btn-success,
+    #btnMarkCurrentLesson,
+    [id^="tab-admin-"] .btn-primary,
+    #tab-student-home .btn-primary,
+    #tab-student-courses .btn-primary,
+    #tab-student-discover .btn-primary,
+    #tab-student-progress .btn-primary,
+    #tab-student-profile .btn-primary,
+    .student-inline-btn.btn-primary{
+      background:linear-gradient(90deg,var(--bro-accent) 0%,var(--bro-accent-2) 64%,#d94411 100%) !important;
+      border-color:rgba(255,90,31,.65) !important;
+      color:#ffffff !important;
+      box-shadow:0 14px 28px rgba(255,90,31,.18) !important;
+    }
+
+    .btn-primary:hover,
+    .btn-success:hover,
+    #btnMarkCurrentLesson:hover,
+    [id^="tab-admin-"] .btn-primary:hover,
+    #tab-student-home .btn-primary:hover,
+    #tab-student-courses .btn-primary:hover,
+    #tab-student-discover .btn-primary:hover,
+    #tab-student-progress .btn-primary:hover,
+    #tab-student-profile .btn-primary:hover,
+    .student-inline-btn.btn-primary:hover{
+      background:linear-gradient(90deg,#ff762e 0%,#ff5a1f 70%,#c93c0e 100%) !important;
+      border-color:var(--bro-accent) !important;
+      box-shadow:0 18px 34px rgba(255,90,31,.24) !important;
+    }
+
+    .btn-soft,
+    .btn-dark,
+    .btn-ghost,
+    .student-inline-btn,
+    [id^="tab-admin-"] .btn-success,
+    [id^="tab-admin-"] .btn-dark,
+    [id^="tab-admin-"] .btn-soft,
+    .player-nav-actions .btn,
+    #btnFavoriteCurrentCourse,
+    .player-resource-action{
+      background:#191820 !important;
+      color:var(--bro-text) !important;
+      border-color:var(--bro-line) !important;
+      box-shadow:none !important;
+    }
+
+    .btn-soft:hover,
+    .btn-dark:hover,
+    .btn-ghost:hover,
+    .student-inline-btn:hover,
+    [id^="tab-admin-"] .btn-success:hover,
+    [id^="tab-admin-"] .btn-dark:hover,
+    [id^="tab-admin-"] .btn-soft:hover,
+    .player-nav-actions .btn:hover,
+    #btnFavoriteCurrentCourse:hover,
+    .player-resource-action:hover{
+      background:var(--bro-panel-active) !important;
+      border-color:rgba(255,90,31,.34) !important;
+      color:#ffffff !important;
+    }
+
+    .btn-danger,
+    [id^="tab-admin-"] .btn-danger{
+      background:rgba(255,99,120,.12) !important;
+      color:#ffb4bf !important;
+      border-color:rgba(255,99,120,.32) !important;
+    }
+
+    .btn-danger:hover,
+    [id^="tab-admin-"] .btn-danger:hover{
+      background:rgba(255,99,120,.20) !important;
+      border-color:rgba(255,99,120,.42) !important;
+    }
+
+    .chip,
+    .tag,
+    .pill-note,
+    .badge-soft,
+    .resource-chip,
+    .history-chip,
+    .course-badge,
+    .admin-head-kicker,
+    .student-panel-kicker,
+    .player-course-line,
+    .player-progress-badge,
+    .player-class-resources-count,
+    .wompi-badge,
+    .compact-filter-title span,
+    .users-finance-sync,
+    .finance-sync-badge,
+    .users-toggle-pill,
+    .assigned-course-chip,
+    .user-mini-tag{
+      background:rgba(255,90,31,.14) !important;
+      border-color:rgba(255,90,31,.32) !important;
+      color:var(--bro-accent-soft) !important;
+      box-shadow:none !important;
+    }
+
+    .tag{
+      color:#ffffff !important;
+      background:linear-gradient(90deg,var(--bro-accent),var(--bro-accent-2)) !important;
+    }
+
+    .brand-badge,
+    #appShell .top-left .brand-badge,
+    .avatar,
+    .user-avatar-chip,
+    .user-kpi-icon{
+      background:linear-gradient(135deg,var(--bro-accent) 0%, var(--bro-accent-2) 100%) !important;
+      color:#ffffff !important;
+      border-color:rgba(255,255,255,.14) !important;
+      box-shadow:0 10px 22px rgba(255,90,31,.18) !important;
+    }
+
+    .topbar,
+    #appShell .topbar{
+      background:
+        radial-gradient(circle at top left, rgba(255,90,31,.18), transparent 34%),
+        linear-gradient(180deg,#090711 0%,#050507 100%) !important;
+      border-bottom-color:var(--bro-line) !important;
+      box-shadow:0 16px 36px rgba(0,0,0,.32) !important;
+    }
+
+    #appShell .top-left,
+    #appShell .top-right,
+    #appShell .top-nav-scroll,
+    .topbar .menu.top-nav-menu button,
+    .topbar #menuAdmin button,
+    .topbar #menuStudent button,
+    #appShell .topbar .menu.top-nav-menu button,
+    #appShell .topbar #menuAdmin button,
+    #appShell .topbar #menuStudent button{
+      background:rgba(255,255,255,.055) !important;
+      border-color:rgba(255,255,255,.10) !important;
+      color:var(--bro-muted) !important;
+    }
+
+    .topbar .menu.top-nav-menu button:hover,
+    .topbar #menuAdmin button:hover,
+    .topbar #menuStudent button:hover,
+    #appShell .topbar .menu.top-nav-menu button:hover,
+    #appShell .topbar #menuAdmin button:hover,
+    #appShell .topbar #menuStudent button:hover{
+      background:rgba(255,90,31,.15) !important;
+      color:#ffffff !important;
+      border-color:rgba(255,90,31,.32) !important;
+    }
+
+    .topbar .menu.top-nav-menu button.active,
+    .topbar #menuAdmin button.active,
+    .topbar #menuStudent button.active,
+    #appShell .topbar .menu.top-nav-menu button.active,
+    #appShell .topbar #menuAdmin button.active,
+    #appShell .topbar #menuStudent button.active{
+      background:linear-gradient(90deg,var(--bro-accent),var(--bro-accent-2)) !important;
+      color:#ffffff !important;
+      border-color:rgba(255,90,31,.65) !important;
+      box-shadow:0 10px 22px rgba(255,90,31,.20) !important;
+    }
+
+    #appShell .top-title strong,
+    #appShell .header-user-meta strong,
+    .top-title strong{
+      color:#ffffff !important;
+    }
+
+    #appShell .top-title small,
+    #appShell .header-user-meta small,
+    .top-title small{
+      color:var(--bro-muted) !important;
+    }
+
+    #appShell .topbar #sideRoleBadge,
+    .role-admin,
+    .role-student{
+      background:rgba(255,90,31,.14) !important;
+      border-color:rgba(255,90,31,.32) !important;
+      color:#ffffff !important;
+    }
+
+    .auth-copy h1{
+      color:#ffffff !important;
+      text-shadow:0 10px 34px rgba(0,0,0,.34);
+    }
+
+    .login-card{
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.13), transparent 34%),
+        linear-gradient(180deg,#191820 0%,#0f0d14 100%) !important;
+    }
+
+    .error{
+      background:rgba(255,99,120,.12) !important;
+      border-color:rgba(255,99,120,.32) !important;
+      color:#ffb4bf !important;
+    }
+
+    .link-row,
+    .link-row a{
+      color:var(--bro-muted) !important;
+    }
+
+    table,
+    tbody tr,
+    tbody td,
+    th,td{
+      background:#191820 !important;
+      color:var(--bro-text) !important;
+      border-color:var(--bro-line-soft) !important;
+    }
+
+    thead,
+    #tab-admin-users thead,
+    #tab-admin-accounting .accounting-table thead{
+      background:linear-gradient(90deg,var(--bro-accent) 0%,var(--bro-accent-2) 70%,#d94411 100%) !important;
+    }
+
+    th,
+    #tab-admin-accounting .accounting-table th{
+      background:transparent !important;
+      color:#ffffff !important;
+    }
+
+    tbody tr:hover,
+    #tab-admin-users tbody tr:hover,
+    #tab-admin-accounting .accounting-table tbody tr:hover td{
+      background:#2f2d34 !important;
+    }
+
+    .cover,
+    #tab-admin-courses .cover,
+    #tab-student-courses .cover,
+    #tab-student-discover .cover,
+    #tab-student-progress .cover,
+    #tab-student-home .continue-course-thumb,
+    .cover-preview-media{
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.22), transparent 38%),
+        linear-gradient(135deg,#050507 0%,#0a080f 52%,#2b130f 100%) !important;
+      color:#ffffff !important;
+      border-color:var(--bro-line) !important;
+    }
+
+    .course-progress,
+    .student-bar,
+    #tab-student-home .student-bar,
+    #tab-student-courses .student-bar,
+    #tab-student-progress .student-bar,
+    .player-progress-track,
+    .user-progress-track,
+    .users-finance-progress-track,
+    .finance-progress-track,
+    .upload-progress-track{
+      background:#2f2d34 !important;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.28) !important;
+    }
+
+    .course-progress > span,
+    .student-bar span,
+    #tab-student-home .student-bar span,
+    #tab-student-courses .student-bar span,
+    #tab-student-progress .student-bar span,
+    .player-progress-fill,
+    .user-progress-track span,
+    .users-finance-progress-track span,
+    .finance-progress-track span,
+    .upload-progress-bar{
+      background:linear-gradient(90deg,var(--bro-accent) 0%,var(--bro-accent-2) 100%) !important;
+    }
+
+    [id^="tab-admin-"]{
+      --admin-accent:var(--bro-accent) !important;
+      --admin-accent-strong:var(--bro-accent-2) !important;
+      --admin-accent-soft:rgba(255,90,31,.14) !important;
+      --admin-accent-border:rgba(255,90,31,.32) !important;
+      --admin-text:var(--bro-text) !important;
+      --admin-muted:var(--bro-muted) !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.10), transparent 28%),
+        linear-gradient(180deg,#14121a 0%,#0f0d14 100%) !important;
+      color:var(--bro-text) !important;
+      border-color:var(--bro-line) !important;
+    }
+
+    #tab-admin-dashboard .hero-banner,
+    #tab-admin-dashboard .quick-panel,
+    #tab-admin-dashboard .finance-panel,
+    #tab-admin-dashboard .finance-side,
+    #tab-admin-dashboard .finance-list-card,
+    #tab-admin-dashboard .finance-health-card,
+    #tab-admin-users,
+    #tab-admin-users .user-kpi,
+    #tab-admin-users .user-form-card,
+    #tab-admin-users .user-toolbar-card,
+    #tab-admin-users .user-list-shell,
+    #tab-admin-users .user-card,
+    #tab-admin-users .users-finance-panel,
+    #tab-admin-users .users-insights-card,
+    #tab-admin-users .users-ranking-card,
+    #tab-admin-accounting,
+    #tab-admin-accounting .users-finance-panel,
+    #tab-admin-accounting .users-insights-card,
+    #tab-admin-accounting .users-ranking-card,
+    #tab-admin-accounting .user-toolbar-card,
+    #tab-admin-accounting .user-list-shell,
+    .admin-course-view-hero,
+    .admin-course-section,
+    .course-edit-modal .course-edit-lesson-card,
+    .course-edit-modal .course-edit-add-card,
+    .user-modal-form .user-form-head,
+    .compact-filter-bar{
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.10), transparent 34%),
+        linear-gradient(180deg,#191820 0%,#0f0d14 100%) !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:var(--bro-shadow) !important;
+    }
+
+    [id^="tab-admin-"] .stat::before,
+    #tab-admin-users .user-kpi::before,
+    #tab-admin-users .user-form-card::before,
+    #tab-admin-users .user-toolbar-card::before,
+    #tab-admin-users .user-list-shell::before,
+    #tab-admin-users .users-finance-panel::before,
+    #tab-admin-users .users-insights-card::before,
+    #tab-admin-users .users-ranking-card::before,
+    #tab-admin-accounting .users-finance-panel::before,
+    #tab-admin-accounting .users-insights-card::before,
+    #tab-admin-accounting .users-ranking-card::before,
+    #tab-admin-accounting .user-toolbar-card::before,
+    #tab-admin-accounting .user-list-shell::before,
+    .compact-filter-bar::before{
+      background:linear-gradient(90deg,var(--bro-accent) 0%, var(--bro-accent-2) 100%) !important;
+    }
+
+    #tab-admin-dashboard .finance-kpi,
+    #tab-admin-dashboard .finance-mini-item,
+    #tab-admin-dashboard .finance-progress-card,
+    #tab-admin-dashboard .finance-list-item,
+    #tab-admin-dashboard .finance-health-item,
+    #tab-admin-users .users-finance-kpi,
+    #tab-admin-users .users-finance-progress-card,
+    #tab-admin-users .users-insight-mini-item,
+    #tab-admin-users .users-ranking-item,
+    #tab-admin-users .user-card-course,
+    #tab-admin-users .user-meta-card,
+    #tab-admin-users .user-payment-box,
+    #tab-admin-users .user-progress-card,
+    #tab-admin-users .user-course-assignment,
+    #tab-admin-accounting .users-finance-kpi,
+    #tab-admin-accounting .users-finance-progress-card,
+    #tab-admin-accounting .users-insight-mini-item,
+    #tab-admin-accounting .users-ranking-item,
+    #tab-admin-accounting .accounting-table-wrap,
+    #tab-admin-accounting .accounting-empty,
+    .wompi-checkout-mini,
+    .purchase-feature-list li{
+      background:#201f27 !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:none !important;
+    }
+
+    #tab-admin-dashboard .finance-kpi.is-primary,
+    #tab-admin-dashboard .finance-kpi.is-soft,
+    #tab-admin-users .users-finance-kpi.is-primary,
+    #tab-admin-users .users-finance-kpi.is-soft,
+    #tab-admin-accounting .users-finance-kpi.is-primary,
+    #tab-admin-accounting .users-finance-kpi.is-soft{
+      background:linear-gradient(135deg,rgba(255,90,31,.20) 0%,rgba(255,118,46,.10) 100%) !important;
+      border-color:rgba(255,90,31,.30) !important;
+    }
+
+    #tab-student-home,
+    #tab-student-courses,
+    #tab-student-discover,
+    #tab-student-progress,
+    #tab-student-resources,
+    #tab-student-certificates,
+    #tab-student-history,
+    #tab-student-profile{
+      --student-accent:var(--bro-accent) !important;
+      --student-accent-strong:var(--bro-accent) !important;
+      --student-accent-soft:rgba(255,90,31,.14) !important;
+      --student-accent-border:rgba(255,90,31,.32) !important;
+      --student-text:var(--bro-text) !important;
+      --student-muted:var(--bro-muted) !important;
+      --student-shadow:var(--bro-shadow) !important;
+      --student-shadow-hover:0 28px 58px rgba(0,0,0,.46) !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.10), transparent 30%),
+        linear-gradient(180deg,#14121a 0%,#0f0d14 100%) !important;
+      color:var(--bro-text) !important;
+      border-color:var(--bro-line) !important;
+    }
+
+    #tab-student-home .continue-card,
+    #tab-student-home .goal-card,
+    #tab-student-home .desire-card,
+    #tab-student-courses .goal-card,
+    #tab-student-courses .desire-card,
+    #tab-student-profile .mini-card,
+    #tab-student-courses .course-card,
+    #tab-student-discover .course-card,
+    #tab-student-progress .course-card,
+    #tab-student-resources .history-item,
+    #tab-student-certificates .history-item,
+    #tab-student-history .history-item{
+      background:linear-gradient(180deg,#191820 0%,#0f0d14 100%) !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+    }
+
+    #tab-student-home .continue-card::before,
+    #tab-student-courses .course-card::before,
+    #tab-student-discover .course-card::before,
+    #tab-student-progress .course-card::before,
+    #tab-student-profile .mini-card::before,
+    #tab-student-resources .history-item::before,
+    #tab-student-certificates .history-item::before,
+    #tab-student-history .history-item::before{
+      background:linear-gradient(90deg,var(--bro-accent) 0%,var(--bro-accent-2) 100%) !important;
+    }
+
+    .player-shell{
+      --player-accent:var(--bro-accent) !important;
+      --player-accent-strong:var(--bro-accent) !important;
+      --player-accent-soft:rgba(255,90,31,.14) !important;
+      --player-accent-border:rgba(255,90,31,.32) !important;
+      --player-text:var(--bro-text) !important;
+      --player-muted:var(--bro-muted) !important;
+    }
+
+    .player-video-wrap,
+    .player-video-info,
+    .player-progress-card,
+    .player-progress-highlight,
+    .player-progress-detail,
+    .player-class-resources-card,
+    .player-class-resource-item,
+    .player-side-card,
+    .player-side-header,
+    .player-lesson-row,
+    .player-buttons-under-video{
+      background:linear-gradient(180deg,#191820 0%,#0f0d14 100%) !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:var(--bro-shadow) !important;
+    }
+
+    .player-lesson-row:hover,
+    .player-lesson-row.active{
+      background:#2f2d34 !important;
+      border-color:rgba(255,90,31,.32) !important;
+    }
+
+    .player-lesson-row::before{
+      background:linear-gradient(180deg,var(--bro-accent) 0%, var(--bro-accent-2) 100%) !important;
+    }
+
+    .player-lesson-index,
+    .player-lesson-check,
+    .player-lesson-thumb{
+      background:#0f0d14 !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-muted) !important;
+    }
+
+    .player-lesson-row.done .player-lesson-check,
+    .status-ok,
+    .status-finance-paid,
+    #tab-student-certificates .resource-chip{
+      background:rgba(34,197,94,.13) !important;
+      border-color:rgba(34,197,94,.28) !important;
+      color:#86efac !important;
+    }
+
+    .status-pending,
+    .status-finance-partial,
+    .status-finance-pending,
+    #tab-student-history .history-chip{
+      background:rgba(255,179,77,.14) !important;
+      border-color:rgba(255,179,77,.30) !important;
+      color:#ffd18a !important;
+    }
+
+    .status-lock,
+    .status-finance-risk{
+      background:rgba(255,99,120,.13) !important;
+      border-color:rgba(255,99,120,.30) !important;
+      color:#ffb4bf !important;
+    }
+
+    .status-finance-cancel,
+    .status-soft{
+      background:rgba(216,212,220,.10) !important;
+      border-color:rgba(216,212,220,.18) !important;
+      color:var(--bro-muted) !important;
+    }
+
+    .modal-backdrop{
+      background:rgba(0,0,0,.72) !important;
+      backdrop-filter:blur(8px);
+    }
+
+    .modal-close{
+      background:#191820 !important;
+      border-color:var(--bro-line) !important;
+      color:#ffffff !important;
+    }
+
+    .toast{
+      background:linear-gradient(180deg,#201f27 0%,#0f0d14 100%) !important;
+      border-color:rgba(255,90,31,.34) !important;
+      color:#ffffff !important;
+      box-shadow:0 20px 50px rgba(0,0,0,.45) !important;
+    }
+
+    .cover-source-switch{
+      background:#0f0d14 !important;
+      border-color:var(--bro-line) !important;
+    }
+
+    .cover-source-btn{
+      color:var(--bro-muted) !important;
+    }
+
+    .cover-source-btn.active{
+      background:linear-gradient(90deg,var(--bro-accent),var(--bro-accent-2)) !important;
+      color:#ffffff !important;
+    }
+
+    .money-input-wrap span{
+      color:var(--bro-accent-soft) !important;
+    }
+
+    ::selection{
+      background:rgba(255,90,31,.38);
+      color:#ffffff;
+    }
+
+    ::-webkit-scrollbar-thumb{
+      background:var(--bro-accent) !important;
+    }
+    ::-webkit-scrollbar-track{
+      background:#16141c !important;
+    }
+
 </style>
 </head>
 <body>
