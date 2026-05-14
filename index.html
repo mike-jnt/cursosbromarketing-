@@ -2383,7 +2383,88 @@
     .player-resources-box{
       min-width:0;
       display:flex;
+      align-items:stretch;
+      width:100%;
+      margin-top:14px;
+    }
+    .player-class-resources-card{
+      width:100%;
+      border:1px solid #dce6f0;
+      background:linear-gradient(180deg,#ffffff 0%, #f7fbff 100%);
+      border-radius:18px;
+      padding:16px 18px;
+      box-shadow:0 16px 30px rgba(15,23,42,.055);
+    }
+    .player-class-resources-head{
+      display:flex;
+      justify-content:space-between;
       align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .player-class-resources-head strong{
+      display:block;
+      color:var(--player-text);
+      font-size:17px;
+      letter-spacing:-.01em;
+    }
+    .player-class-resources-head small{
+      display:block;
+      color:var(--player-muted);
+      margin-top:4px;
+      line-height:1.5;
+    }
+    .player-class-resources-count{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--player-accent-soft);
+      border:1px solid var(--player-accent-border);
+      color:var(--player-accent-strong);
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .player-class-resources-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    .player-class-resource-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 13px;
+      border:1px solid #e1e9f2;
+      background:#ffffff;
+      border-radius:14px;
+    }
+    .player-class-resource-item strong{
+      display:block;
+      color:var(--player-text);
+      font-size:14px;
+      line-height:1.35;
+      overflow-wrap:anywhere;
+    }
+    .player-class-resource-item small{
+      display:block;
+      color:var(--player-muted);
+      font-size:12px;
+      line-height:1.45;
+      margin-top:4px;
+    }
+    .player-class-resources-empty{
+      padding:13px 14px;
+      border:1px dashed #cfdbe8;
+      background:#f8fafc;
+      border-radius:14px;
+      color:var(--player-muted);
+      line-height:1.6;
+      font-size:13px;
     }
     .player-resource-action{
       display:inline-flex;
@@ -2622,6 +2703,7 @@
       .player-progress-card-header .player-progress-badge{align-self:flex-start;white-space:normal}
       .player-progress-details{grid-template-columns:1fr}
       .player-progress-main{grid-template-columns:1fr}
+      .player-class-resources-list{grid-template-columns:1fr}
       .player-class-title{font-size:24px}
       .topbar-inner{flex-direction:column;align-items:flex-start}
       #tab-admin-users .admin-user-stats{grid-template-columns:1fr}
@@ -5105,9 +5187,7 @@
             <button data-tab="student-courses" onclick="showTab('student-courses', this)">Mis cursos</button>
             <button data-tab="student-discover" onclick="showTab('student-discover', this)">Explorar cursos</button>
             <button data-tab="student-progress" onclick="showTab('student-progress', this)">Mi progreso</button>
-            <button data-tab="student-resources" onclick="showTab('student-resources', this)">Recursos</button>
             <button data-tab="student-certificates" onclick="showTab('student-certificates', this)">Certificados</button>
-            <button data-tab="student-history" onclick="showTab('student-history', this)">Actividad</button>
             <button data-tab="student-player" onclick="showTab('student-player', this)">Continuar clase</button>
             <button data-tab="student-profile" onclick="showTab('student-profile', this)">Mi perfil</button>
           </div>
@@ -6024,18 +6104,6 @@
           <div id="studentProgressGrid" class="course-grid" style="margin-top:18px"></div>
         </section>
 
-        <section id="tab-student-resources" class="panel section-card tab-section hidden">
-          <div class="student-panel-header">
-            <div>
-              <span class="student-panel-kicker">Apoyo extra</span>
-              <h2>Recursos</h2>
-              <p>Material complementario para apoyarte mientras avanzas en tus cursos.</p>
-            </div>
-            <span class="pill-note">Descargas rápidas y ordenadas</span>
-          </div>
-          <div id="studentResourcesList" class="list-box" style="margin-top:18px"></div>
-        </section>
-
         <section id="tab-student-certificates" class="panel section-card tab-section hidden">
           <div class="student-panel-header">
             <div>
@@ -6046,18 +6114,6 @@
             <span class="pill-note">Tus metas cumplidas quedan visibles</span>
           </div>
           <div id="studentCertificatesList" class="list-box" style="margin-top:18px"></div>
-        </section>
-
-        <section id="tab-student-history" class="panel section-card tab-section hidden">
-          <div class="student-panel-header">
-            <div>
-              <span class="student-panel-kicker">Movimiento</span>
-              <h2>Actividad reciente</h2>
-              <p>Un historial simple para que veas tu continuidad dentro de la plataforma.</p>
-            </div>
-            <span class="pill-note">Todo tu ritmo en un solo lugar</span>
-          </div>
-          <div id="studentHistoryList" class="list-box" style="margin-top:18px"></div>
         </section>
 
 
@@ -7634,7 +7690,6 @@ Este es un archivo de demostración generado desde el campus.`;
       });
       state.activityLog = state.activityLog.slice(0, 12);
       saveState();
-      renderStudentHistory();
     }
 
     function formatCurrencyCOP(value){
@@ -9290,26 +9345,22 @@ function renderPlayer(courseId){
       else if(progress > 0) message = 'Ya empezaste. No lo dejes a medias.';
       motivationBox.textContent = message;
 
-      const relatedResources = state.resources.filter(r => r.courseId === course.id).slice(0, 1);
-      resourcesBox.innerHTML = relatedResources.length
-        ? relatedResources.map(r => `
-          <button class="btn btn-dark btn-sm player-resource-action" onclick="downloadResource(${r.id})" title="${r.title}">
-            ⬇
-            <span>Descargar recurso</span>
-          </button>
-        `).join('')
-        : '';
+      if(resourcesBox){
+        resourcesBox.innerHTML = renderPlayerLessonResources(course, lesson, state.currentLessonIndex);
+      }
 
       list.innerHTML = course.lessons.map((ls, idx) => {
         const done = completedLessons.includes(idx);
         const active = idx === state.currentLessonIndex ? ' active' : '';
         const doneClass = done ? ' done' : '';
+        const lessonResourcesCount = getLessonResources(course, ls, idx).length;
+        const resourcesLabel = lessonResourcesCount ? ` · ${lessonResourcesCount} recurso${lessonResourcesCount === 1 ? '' : 's'}` : '';
         return `<div class="player-lesson-row${active}${doneClass}" onclick="selectLesson(${course.id}, ${idx})">
           <div class="player-lesson-index">${idx + 1}</div>
           <img class="player-lesson-thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='80'><rect width='100%25' height='100%25' fill='%23d9dee7'/><text x='50%25' y='50%25' font-size='12' text-anchor='middle' fill='%236b7280' dy='.3em'>Clase</text></svg>" alt="Miniatura de clase">
           <div class="player-lesson-text">
             <strong>${ls.title}</strong>
-            <small>${ls.module}</small>
+            <small>${ls.module}${resourcesLabel}</small>
           </div>
           <div class="player-lesson-check">${done ? '✓' : ''}</div>
         </div>`;
@@ -9426,9 +9477,7 @@ function renderPlayer(courseId){
       if(tabId === 'student-courses') renderStudentAssignedCourses();
       if(tabId === 'student-discover') renderStudentDiscover();
       if(tabId === 'student-progress') renderStudentProgress();
-      if(tabId === 'student-resources') renderStudentResources();
       if(tabId === 'student-certificates') renderStudentCertificates();
-      if(tabId === 'student-history') renderStudentHistory();
       if(tabId === 'student-player') renderPlayer(state.currentCourseId);
       if(tabId === 'student-profile') renderStudentProfileSummary();
     }
@@ -9503,9 +9552,7 @@ function renderPlayer(courseId){
         renderStudentAssignedCourses();
         renderStudentDiscover();
         renderStudentProgress();
-        renderStudentResources();
-        renderStudentCertificates();
-        renderStudentHistory();
+          renderStudentCertificates();
         const firstCourse = getStudentCourses()[0];
         if(firstCourse) renderPlayer(firstCourse.id);
         updateStudentDesire();
@@ -10154,7 +10201,6 @@ function renderPlayer(courseId){
       renderStudentDiscover();
       renderStudentAssignedCourses();
       renderStudentProgress();
-      renderStudentResources();
       renderStudentCertificates();
       renderUsersTable();
       fillCourseSelects();
@@ -10182,9 +10228,7 @@ function renderPlayer(courseId){
       renderStudentDiscover();
       renderStudentAssignedCourses();
       renderStudentProgress();
-      renderStudentResources();
       renderStudentCertificates();
-      renderStudentHistory();
       if(state.currentUser && state.currentUser.role === 'student' && Number(state.currentCourseId) === Number(id) && !nextVisible){
         const firstVisible = getStudentCourses()[0];
         state.currentCourseId = firstVisible ? firstVisible.id : 0;
@@ -10396,9 +10440,7 @@ function renderPlayer(courseId){
       renderStudentDiscover();
       renderStudentAssignedCourses();
       renderStudentProgress();
-      renderStudentResources();
       renderStudentCertificates();
-      renderStudentHistory();
       renderPlayer(state.currentCourseId);
       fillCourseSelects();
       addActivity(`Se eliminó el curso ${courseTitle}.`);
@@ -11324,7 +11366,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       byId('btnAddResource')?.addEventListener('click', () => {
         const firstCourse = state.courses[0];
         state.resources.unshift({ id: Date.now(), title: 'Nuevo recurso demo', courseId: firstCourse.id, type: 'PDF' });
-        if (typeof saveState === 'function') saveState(); renderAdminResources(); renderStudentResources(); addActivity('Se agregó un nuevo recurso'); toast('Recurso agregado');
+        if (typeof saveState === 'function') saveState(); renderAdminResources(); renderPlayer(state.currentCourseId); addActivity('Se agregó un nuevo recurso'); toast('Recurso agregado');
       });
 
       byId('btnSaveStudentProfile')?.addEventListener('click', () => {
@@ -11397,9 +11439,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       renderStudentAssignedCourses();
       renderStudentDiscover();
       renderStudentProgress();
-      renderStudentResources();
       renderStudentCertificates();
-      renderStudentHistory();
       renderPlayer(state.currentCourseId);
       updateStudentDesire();
       if(state.currentUser && state.currentUser.role){
@@ -11417,7 +11457,6 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     renderStudentAssignedCourses();
     renderStudentDiscover();
     renderStudentProgress();
-    renderStudentResources();
     renderStudentCertificates();
     renderStudentHistory();
     renderPlayer(state.currentCourseId);
