@@ -4797,7 +4797,95 @@
       }
     }
 
-  </style>
+  
+
+    /* === Barra de avance para subida de videos a Cloudflare Stream === */
+    .upload-progress-wrap{
+      margin-top:10px;
+      padding:12px 13px;
+      border:1px solid #dbe6f3;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+      border-radius:14px;
+      box-shadow:0 10px 20px rgba(15,23,42,.04);
+    }
+    .upload-progress-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .upload-progress-label{
+      color:#51627e;
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .upload-progress-number{
+      color:#172033;
+      font-size:13px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .upload-progress-track{
+      height:12px;
+      border-radius:999px;
+      background:#e5ebf5;
+      overflow:hidden;
+      box-shadow:inset 0 1px 2px rgba(15,23,42,.08);
+    }
+    .upload-progress-bar{
+      display:block;
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#5b5bd6 0%,#2f6b8a 100%);
+      transition:width .28s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .upload-progress-bar::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+      transform:translateX(-100%);
+      animation:uploadProgressSheen 1.6s ease infinite;
+    }
+    .upload-progress-note{
+      margin-top:8px;
+      color:#63728a;
+      font-size:12px;
+      line-height:1.45;
+    }
+    .upload-progress-wrap.is-done{
+      border-color:#b7e4cf;
+      background:#ecfdf5;
+    }
+    .upload-progress-wrap.is-done .upload-progress-bar{
+      background:linear-gradient(90deg,#18c27e 0%,#047857 100%);
+    }
+    .upload-progress-wrap.is-done .upload-progress-number,
+    .upload-progress-wrap.is-done .upload-progress-note{
+      color:#047857;
+    }
+    .upload-progress-wrap.is-error{
+      border-color:#f5c7c7;
+      background:#fff5f5;
+    }
+    .upload-progress-wrap.is-error .upload-progress-bar{
+      background:linear-gradient(90deg,#ff6378 0%,#b42318 100%);
+    }
+    .upload-progress-wrap.is-error .upload-progress-number,
+    .upload-progress-wrap.is-error .upload-progress-note{
+      color:#b42318;
+    }
+    @keyframes uploadProgressSheen{
+      0%{transform:translateX(-100%)}
+      70%,100%{transform:translateX(100%)}
+    }
+</style>
 </head>
 <body>
 
@@ -6206,7 +6294,7 @@
           ? firebase.app()
           : firebase.initializeApp(firebaseConfig);
         firebaseDb = firebase.firestore();
-        firebaseDb.settings({ ignoreUndefinedProperties: true });
+        firebaseDb.settings({ ignoreUndefinedProperties: true, merge: true });
         if(firebase.auth){
           firebaseAuth = firebase.auth(firebaseApp);
           firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error => {
@@ -8254,7 +8342,7 @@ function toggleUserCard(userId, event){
     function isAcceptedVideoFile(file){
       if(!file) return false;
       const name = String(file.name || '').toLowerCase();
-      return String(file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mov|m4v|m3u8)$/i.test(name);
+      return String(file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mov|m4v|m3u8|avi|mkv)$/i.test(name);
     }
 
     function formatFileSize(bytes){
@@ -8264,6 +8352,76 @@ function toggleUserCard(userId, event){
       if(size >= 1024) return (size / 1024).toFixed(1) + ' KB';
       return size + ' B';
     }
+
+    function ensureUploadProgressUI(statusEl){
+      if(!statusEl) return null;
+      const statusId = statusEl.id || '';
+      const progressId = statusId ? `${statusId}Progress` : '';
+      let progressWrap = progressId ? document.getElementById(progressId) : null;
+      if(!progressWrap){
+        progressWrap = document.createElement('div');
+        progressWrap.className = 'upload-progress-wrap hidden';
+        if(progressId) progressWrap.id = progressId;
+        progressWrap.innerHTML = `
+          <div class="upload-progress-head">
+            <span class="upload-progress-label">Progreso de subida</span>
+            <strong class="upload-progress-number">0%</strong>
+          </div>
+          <div class="upload-progress-track" aria-hidden="true">
+            <span class="upload-progress-bar" style="width:0%"></span>
+          </div>
+          <div class="upload-progress-note">Esperando archivo de video.</div>
+        `;
+        statusEl.insertAdjacentElement('afterend', progressWrap);
+      }
+      return progressWrap;
+    }
+
+    function updateUploadProgress(statusEl, progress, kind = ''){
+      const progressWrap = ensureUploadProgressUI(statusEl);
+      if(!progressWrap) return;
+
+      const shouldShow = typeof progress === 'number' || kind === 'uploading' || kind === 'done' || kind === 'error';
+      if(!shouldShow){
+        progressWrap.classList.add('hidden');
+        progressWrap.classList.remove('is-uploading','is-done','is-error');
+        return;
+      }
+
+      const value = Math.max(0, Math.min(100, Math.round(Number(progress ?? (kind === 'done' ? 100 : 0)))));
+      const bar = progressWrap.querySelector('.upload-progress-bar');
+      const number = progressWrap.querySelector('.upload-progress-number');
+      const note = progressWrap.querySelector('.upload-progress-note');
+
+      progressWrap.classList.remove('hidden','is-uploading','is-done','is-error');
+      if(kind === 'done') progressWrap.classList.add('is-done');
+      else if(kind === 'error') progressWrap.classList.add('is-error');
+      else progressWrap.classList.add('is-uploading');
+
+      if(bar) bar.style.width = `${value}%`;
+      if(number) number.textContent = `${value}%`;
+      if(note){
+        if(kind === 'done') note.textContent = '100% completado. El video ya se subió y la URL quedó lista para guardar.';
+        else if(kind === 'error') note.textContent = 'La subida no se completó. Revisa el mensaje y vuelve a intentarlo.';
+        else note.textContent = value >= 100 ? 'Procesando confirmación de Cloudflare Stream…' : 'No cierres esta ventana hasta que llegue al 100%.';
+      }
+    }
+
+    function setUploadStatus(statusId, message, kind = '', progress = null){
+      if(!statusId) return;
+      const statusEl = document.getElementById(statusId);
+      if(!statusEl) return;
+      const cleanMessage = String(message || 'No has seleccionado ningún video.');
+      statusEl.textContent = cleanMessage;
+      if(kind){
+        statusEl.dataset.uploadKind = kind;
+      }else{
+        delete statusEl.dataset.uploadKind;
+      }
+      updateUploadProgress(statusEl, progress, kind);
+    }
+
+    window.setUploadStatus = setUploadStatus;
 
     function buildCloudflareStreamPlaybackUrl(uid){
       const id = String(uid || '').trim();
@@ -8352,11 +8510,12 @@ function toggleUserCard(userId, event){
         xhr.upload.onprogress = event => {
           if(event.lengthComputable){
             const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadStatus(statusId, `Subiendo a Cloudflare Stream · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading');
+            setUploadStatus(statusId, `Subiendo a Cloudflare Stream · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading', progress);
           }
         };
         xhr.onload = () => {
           if(xhr.status >= 200 && xhr.status < 300){
+            setUploadStatus(statusId, `100% · Confirmando subida de ${file.name} en Cloudflare Stream…`, 'uploading', 100);
             resolve(true);
           }else{
             reject(new Error(`Cloudflare respondió ${xhr.status}. ${xhr.responseText || ''}`.trim()));
@@ -8368,9 +8527,9 @@ function toggleUserCard(userId, event){
     }
 
     async function uploadCloudflareStreamBasic(file, statusId, options = {}){
-      setUploadStatus(statusId, `Preparando URL temporal en Cloudflare Stream · ${file.name}`, 'uploading');
+      setUploadStatus(statusId, `Preparando URL temporal en Cloudflare Stream · ${file.name}`, 'uploading', 3);
       const direct = await requestCloudflareDirectUpload(file, options);
-      setUploadStatus(statusId, `URL temporal creada · iniciando subida de ${file.name}`, 'uploading');
+      setUploadStatus(statusId, `URL temporal creada · iniciando subida de ${file.name}`, 'uploading', 8);
       await uploadFileToCloudflarePost(file, direct.uploadURL, statusId);
       return {
         uid: direct.uid,
@@ -8399,7 +8558,7 @@ function toggleUserCard(userId, event){
           onProgress(bytesUploaded, bytesTotal){
             const total = bytesTotal || file.size || 1;
             const progress = Math.round((bytesUploaded / total) * 100);
-            setUploadStatus(statusId, `Subiendo a Cloudflare Stream con TUS · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading');
+            setUploadStatus(statusId, `Subiendo a Cloudflare Stream con TUS · ${file.name} · ${formatFileSize(file.size)} · ${progress}%`, 'uploading', progress);
           },
           onAfterResponse(req, res){
             return new Promise(resolveAfter => {
@@ -8425,7 +8584,7 @@ function toggleUserCard(userId, event){
             });
           }
         });
-        setUploadStatus(statusId, `Preparando subida resumible TUS · ${file.name} · ${formatFileSize(file.size)}`, 'uploading');
+        setUploadStatus(statusId, `Preparando subida resumible TUS · ${file.name} · ${formatFileSize(file.size)}`, 'uploading', 3);
         upload.start();
       });
     }
@@ -8433,9 +8592,9 @@ function toggleUserCard(userId, event){
     async function uploadVideoFileAndSetUrl(file, urlInputId, statusId, options = {}){
       const input = document.getElementById(urlInputId);
       if(!input){ toast('No se encontró el campo de URL del video.'); return; }
-      if(!file){ setUploadStatus(statusId, 'No has seleccionado ningún video.'); return; }
+      if(!file){ setUploadStatus(statusId, 'No has seleccionado ningún video.', '', null); return; }
       if(!isAcceptedVideoFile(file)){
-        setUploadStatus(statusId, 'Archivo no válido. Sube un video MP4, WEBM, OGG, MOV, M4V, AVI o MKV.', 'error');
+        setUploadStatus(statusId, 'Archivo no válido. Sube un video MP4, WEBM, OGG, MOV, M4V, AVI o MKV.', 'error', 0);
         toast('Sube un archivo de video válido.');
         return;
       }
@@ -8451,7 +8610,7 @@ function toggleUserCard(userId, event){
         input.dataset.cloudflareUid = result.uid || '';
         input.dataset.cloudflareUploadMethod = result.method || '';
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        setUploadStatus(statusId, `Video subido a Cloudflare Stream · ${file.name} · ID: ${result.uid}`, 'done');
+        setUploadStatus(statusId, `100% · Video subido correctamente a Cloudflare Stream · ${file.name} · ID: ${result.uid}`, 'done', 100);
         toast('Video subido a Cloudflare Stream y URL agregada a la clase.');
         return result;
       }catch(error){
@@ -8459,7 +8618,7 @@ function toggleUserCard(userId, event){
         const message = String(error && error.message ? error.message : error || '').includes('Failed to fetch')
           ? 'No se pudo conectar con el endpoint seguro de Cloudflare. Revisa el Worker o la ruta /api/cloudflare-stream.'
           : (error && error.message ? error.message : 'No se pudo subir el video a Cloudflare Stream.');
-        setUploadStatus(statusId, message, 'error');
+        setUploadStatus(statusId, message, 'error', 0);
         toast(message);
       }
     }
@@ -9439,7 +9598,7 @@ function renderPlayer(courseId){
       document.getElementById('editNewLessonUrlField').value = '';
       const newUploadField = document.getElementById('editNewLessonVideoUploadField');
       if(newUploadField) newUploadField.value = '';
-      setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.');
+      setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
       renderCourseEditLessonsDraft();
       toast('Clase agregada al editor.');
     }
@@ -10517,7 +10676,7 @@ function bindButtons(){
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
         const lessonUploadField = byId('lessonVideoUploadField');
         if(lessonUploadField) lessonUploadField.value = '';
-        setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.');
+        setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
         renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}`);
       });
 
