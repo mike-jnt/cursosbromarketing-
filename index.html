@@ -4881,6 +4881,103 @@
     .upload-progress-wrap.is-error .upload-progress-note{
       color:#b42318;
     }
+    .upload-progress-wrap.is-processing{
+      border-color:#bfdbfe;
+      background:#eff6ff;
+    }
+    .upload-progress-wrap.is-processing .upload-progress-bar{
+      background:linear-gradient(90deg,#3b82f6 0%,#1d4ed8 100%);
+    }
+    .upload-progress-wrap.is-processing .upload-progress-number,
+    .upload-progress-wrap.is-processing .upload-progress-note{
+      color:#1d4ed8;
+    }
+    .video-ready-notice{
+      margin-top:10px;
+      padding:12px 13px;
+      border-radius:14px;
+      border:1px solid #dbe6f3;
+      background:#f8fafc;
+      color:#52627f;
+      font-size:13px;
+      line-height:1.5;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      box-shadow:0 10px 20px rgba(15,23,42,.04);
+    }
+    .video-ready-notice strong{
+      color:#172033;
+      font-size:13px;
+      line-height:1.35;
+    }
+    .video-ready-notice span{
+      color:#63728a;
+      font-size:12px;
+      line-height:1.45;
+    }
+    .video-ready-notice.is-ready{
+      border-color:#b7e4cf;
+      background:#ecfdf5;
+    }
+    .video-ready-notice.is-ready strong,
+    .video-ready-notice.is-ready span{
+      color:#047857;
+    }
+    .video-ready-notice.is-processing{
+      border-color:#bfdbfe;
+      background:#eff6ff;
+    }
+    .video-ready-notice.is-processing strong,
+    .video-ready-notice.is-processing span{
+      color:#1d4ed8;
+    }
+    .video-ready-notice.is-error{
+      border-color:#f5c7c7;
+      background:#fff5f5;
+    }
+    .video-ready-notice.is-error strong,
+    .video-ready-notice.is-error span{
+      color:#b42318;
+    }
+    .course-video-ready-strip{
+      margin-top:12px;
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid #dbe6f3;
+      background:#f8fafc;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:12px;
+      line-height:1.4;
+    }
+    .course-video-ready-strip strong{
+      color:#172033;
+      font-size:13px;
+    }
+    .course-video-ready-strip span{
+      color:#63728a;
+      font-weight:700;
+    }
+    .course-video-ready-strip.is-ready{
+      background:#ecfdf5;
+      border-color:#b7e4cf;
+    }
+    .course-video-ready-strip.is-ready strong,
+    .course-video-ready-strip.is-ready span{color:#047857}
+    .course-video-ready-strip.is-partial{
+      background:#fff7ed;
+      border-color:#fed7aa;
+    }
+    .course-video-ready-strip.is-partial strong,
+    .course-video-ready-strip.is-partial span{color:#c2410c}
+    .course-video-ready-strip.is-empty{
+      background:#f8fafc;
+      border-color:#dbe2eb;
+    }
     @keyframes uploadProgressSheen{
       0%{transform:translateX(-100%)}
       70%,100%{transform:translateX(100%)}
@@ -6043,6 +6140,7 @@
     const FIREBASE_STATE_DOC = 'mainState';
     const CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/direct-upload';
     const CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/tus-upload';
+    const CLOUDFLARE_STREAM_STATUS_ENDPOINT = window.CLOUDFLARE_STREAM_STATUS_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/video-status';
     const CLOUDFLARE_STREAM_BASIC_LIMIT_BYTES = 200 * 1024 * 1024;
     const CLOUDFLARE_STREAM_TUS_CHUNK_BYTES = 50 * 1024 * 1024;
     const CLOUDFLARE_STREAM_DEFAULT_MAX_DURATION_SECONDS = Number(window.CLOUDFLARE_STREAM_MAX_DURATION_SECONDS || 3600);
@@ -7731,6 +7829,31 @@ function renderAdminDashboard(){
       return;
     }
 
+    function getLessonPlayableUrl(lesson){
+      return normalizeVideoUrl((lesson && lesson.url) || '').trim();
+    }
+
+    function getCourseVideoReadyStats(course){
+      const lessons = Array.isArray(course && course.lessons) ? course.lessons : [];
+      const total = lessons.length;
+      const ready = lessons.filter(lesson => !!getLessonPlayableUrl(lesson)).length;
+      return { total, ready, missing: Math.max(0, total - ready) };
+    }
+
+    function renderCourseVideoReadyStrip(course){
+      const stats = getCourseVideoReadyStats(course);
+      if(!stats.total){
+        return `<div class="course-video-ready-strip is-empty"><strong>Sin clases cargadas</strong><span>Agrega clases y videos</span></div>`;
+      }
+      if(stats.ready === stats.total){
+        return `<div class="course-video-ready-strip is-ready"><strong>✅ Videos listos para ver</strong><span>${stats.ready}/${stats.total} clases con video</span></div>`;
+      }
+      if(stats.ready > 0){
+        return `<div class="course-video-ready-strip is-partial"><strong>⚠️ Videos incompletos</strong><span>${stats.ready}/${stats.total} clases con video · faltan ${stats.missing}</span></div>`;
+      }
+      return `<div class="course-video-ready-strip is-empty"><strong>Sin videos listos</strong><span>0/${stats.total} clases con video</span></div>`;
+    }
+
     function renderAdminCourses(){
       const grid = document.getElementById('adminCoursesGrid');
       if(!grid) return;
@@ -7754,6 +7877,7 @@ function renderAdminDashboard(){
             <span class="course-price-pill">${course.paymentType || 'Único'}</span>
             <span class="course-price-pill">${course.allowPartial === false ? 'Sin abonos' : 'Permite abonos'}</span>
           </div>
+          ${renderCourseVideoReadyStrip(course)}
           <div class="course-actions-row">
             <button class="btn btn-soft" onclick="editCourse(${course.id})">Editar</button>
             <button class="btn btn-dark" onclick="viewCourseStructure(${course.id})">Ver curso</button>
@@ -8381,29 +8505,69 @@ function toggleUserCard(userId, event){
       const progressWrap = ensureUploadProgressUI(statusEl);
       if(!progressWrap) return;
 
-      const shouldShow = typeof progress === 'number' || kind === 'uploading' || kind === 'done' || kind === 'error';
+      const shouldShow = typeof progress === 'number' || kind === 'uploading' || kind === 'processing' || kind === 'done' || kind === 'error';
       if(!shouldShow){
         progressWrap.classList.add('hidden');
-        progressWrap.classList.remove('is-uploading','is-done','is-error');
+        progressWrap.classList.remove('is-uploading','is-processing','is-done','is-error');
         return;
       }
 
-      const value = Math.max(0, Math.min(100, Math.round(Number(progress ?? (kind === 'done' ? 100 : 0)))));
+      const value = Math.max(0, Math.min(100, Math.round(Number(progress ?? ((kind === 'done' || kind === 'processing') ? 100 : 0)))));
       const bar = progressWrap.querySelector('.upload-progress-bar');
       const number = progressWrap.querySelector('.upload-progress-number');
       const note = progressWrap.querySelector('.upload-progress-note');
 
-      progressWrap.classList.remove('hidden','is-uploading','is-done','is-error');
+      progressWrap.classList.remove('hidden','is-uploading','is-processing','is-done','is-error');
       if(kind === 'done') progressWrap.classList.add('is-done');
+      else if(kind === 'processing') progressWrap.classList.add('is-processing');
       else if(kind === 'error') progressWrap.classList.add('is-error');
       else progressWrap.classList.add('is-uploading');
 
       if(bar) bar.style.width = `${value}%`;
       if(number) number.textContent = `${value}%`;
       if(note){
-        if(kind === 'done') note.textContent = '100% completado. El video ya se subió y la URL quedó lista para guardar.';
+        if(kind === 'done') note.textContent = '100% completado. Cloudflare confirmó que el video ya está listo para ver.';
+        else if(kind === 'processing') note.textContent = '100% subido. Cloudflare está procesando el video para dejarlo listo para reproducción.';
         else if(kind === 'error') note.textContent = 'La subida no se completó. Revisa el mensaje y vuelve a intentarlo.';
         else note.textContent = value >= 100 ? 'Procesando confirmación de Cloudflare Stream…' : 'No cierres esta ventana hasta que llegue al 100%.';
+      }
+    }
+
+    function ensureVideoReadyNotice(statusEl){
+      if(!statusEl) return null;
+      const statusId = statusEl.id || '';
+      const noticeId = statusId ? `${statusId}ReadyNotice` : '';
+      let notice = noticeId ? document.getElementById(noticeId) : null;
+      if(!notice){
+        const progressWrap = ensureUploadProgressUI(statusEl);
+        notice = document.createElement('div');
+        notice.className = 'video-ready-notice hidden';
+        if(noticeId) notice.id = noticeId;
+        notice.innerHTML = '<strong>Estado del video</strong><span>Esperando subida.</span>';
+        if(progressWrap) progressWrap.insertAdjacentElement('afterend', notice);
+        else statusEl.insertAdjacentElement('afterend', notice);
+      }
+      return notice;
+    }
+
+    function updateVideoReadyNotice(statusEl, kind, message){
+      const notice = ensureVideoReadyNotice(statusEl);
+      if(!notice) return;
+      notice.classList.remove('is-ready','is-processing','is-error');
+      if(kind === 'done'){
+        notice.classList.remove('hidden');
+        notice.classList.add('is-ready');
+        notice.innerHTML = '<strong>✅ Video completamente subido y listo para ver</strong><span>Cloudflare ya confirmó la reproducción. Guarda los cambios para dejarlo asociado a esta clase.</span>';
+      }else if(kind === 'processing'){
+        notice.classList.remove('hidden');
+        notice.classList.add('is-processing');
+        notice.innerHTML = '<strong>⏳ Video subido, preparando reproducción</strong><span>La carga llegó al 100%. Cloudflare sigue procesando el video; espera la confirmación de listo para ver.</span>';
+      }else if(kind === 'error'){
+        notice.classList.remove('hidden');
+        notice.classList.add('is-error');
+        notice.innerHTML = `<strong>❌ Video no listo</strong><span>${escapeHtml(message || 'La subida no se completó. Intenta nuevamente.')}</span>`;
+      }else{
+        notice.classList.add('hidden');
       }
     }
 
@@ -8419,6 +8583,7 @@ function toggleUserCard(userId, event){
         delete statusEl.dataset.uploadKind;
       }
       updateUploadProgress(statusEl, progress, kind);
+      updateVideoReadyNotice(statusEl, kind, cleanMessage);
     }
 
     window.setUploadStatus = setUploadStatus;
@@ -8589,6 +8754,59 @@ function toggleUserCard(userId, event){
       });
     }
 
+    function delay(ms){
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function normalizeCloudflareStatusPayload(payload){
+      const root = payload && payload.result ? payload.result : payload;
+      const status = root && root.status ? root.status : {};
+      return {
+        uid: (root && (root.uid || root.id)) || '',
+        readyToStream: Boolean(root && root.readyToStream),
+        state: String((status && status.state) || (root && root.state) || '').toLowerCase(),
+        pctComplete: Number((status && (status.pctComplete ?? status.percentComplete)) ?? (root && root.pctComplete) ?? 0),
+        raw: payload
+      };
+    }
+
+    async function getCloudflareVideoStatus(uid){
+      const id = String(uid || '').trim();
+      if(!id) throw new Error('No se recibió el ID del video para verificar si está listo.');
+      const url = `${CLOUDFLARE_STREAM_STATUS_ENDPOINT}?uid=${encodeURIComponent(id)}`;
+      const response = await fetch(url, { method: 'GET' });
+      const text = await response.text();
+      let payload = {};
+      try{ payload = text ? JSON.parse(text) : {}; }catch(error){ payload = { success:false, message:text }; }
+      if(!response.ok){
+        throw new Error(payload.message || payload.errors?.[0]?.message || `No se pudo consultar el estado del video (${response.status}).`);
+      }
+      return normalizeCloudflareStatusPayload(payload);
+    }
+
+    async function waitForCloudflareStreamReady(uid, statusId, options = {}){
+      const attempts = Number(options.readinessAttempts || window.CLOUDFLARE_STREAM_READY_ATTEMPTS || 30);
+      const intervalMs = Number(options.readinessIntervalMs || window.CLOUDFLARE_STREAM_READY_INTERVAL_MS || 4000);
+      if(!uid) return { ready:false, reason:'Sin UID' };
+
+      for(let attempt = 1; attempt <= attempts; attempt += 1){
+        try{
+          const status = await getCloudflareVideoStatus(uid);
+          if(status.readyToStream || status.state === 'ready'){
+            setUploadStatus(statusId, `✅ Video completamente subido y listo para ver · ID: ${uid}`, 'done', 100);
+            return { ready:true, status };
+          }
+          const stateLabel = status.state ? `Estado: ${status.state}` : `verificación ${attempt}/${attempts}`;
+          setUploadStatus(statusId, `100% subido · Cloudflare está procesando el video para dejarlo listo · ${stateLabel}`, 'processing', 100);
+        }catch(error){
+          setUploadStatus(statusId, `100% subido · Esperando confirmación de Cloudflare Stream · verificación ${attempt}/${attempts}`, 'processing', 100);
+        }
+        if(attempt < attempts) await delay(intervalMs);
+      }
+      setUploadStatus(statusId, `100% subido · Cloudflare aún está procesando el video. Guarda los cambios y vuelve a revisar en unos minutos.`, 'processing', 100);
+      return { ready:false, reason:'timeout' };
+    }
+
     async function uploadVideoFileAndSetUrl(file, urlInputId, statusId, options = {}){
       const input = document.getElementById(urlInputId);
       if(!input){ toast('No se encontró el campo de URL del video.'); return; }
@@ -8610,9 +8828,14 @@ function toggleUserCard(userId, event){
         input.dataset.cloudflareUid = result.uid || '';
         input.dataset.cloudflareUploadMethod = result.method || '';
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        setUploadStatus(statusId, `100% · Video subido correctamente a Cloudflare Stream · ${file.name} · ID: ${result.uid}`, 'done', 100);
-        toast('Video subido a Cloudflare Stream y URL agregada a la clase.');
-        return result;
+        setUploadStatus(statusId, `100% · Video subido a Cloudflare Stream · esperando confirmación para reproducción · ${file.name}`, 'processing', 100);
+        const readyResult = await waitForCloudflareStreamReady(result.uid, statusId, options);
+        if(readyResult.ready){
+          toast('Video completamente subido y listo para ver.');
+        }else{
+          toast('Video subido al 100%. Cloudflare aún lo está procesando para dejarlo listo para ver.');
+        }
+        return { ...result, readyToStream: Boolean(readyResult.ready) };
       }catch(error){
         console.warn('Error subiendo video a Cloudflare Stream.', error);
         const message = String(error && error.message ? error.message : error || '').includes('Failed to fetch')
