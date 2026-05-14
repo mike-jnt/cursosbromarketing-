@@ -528,6 +528,62 @@
       padding:26px;
       gap:16px;
     }
+
+    #tab-student-home .continue-course-thumb{
+      width:100%;
+      min-height:210px;
+      border-radius:18px;
+      border:1px solid #d5e5ef;
+      background:
+        radial-gradient(circle at top right, rgba(47,107,138,.18), transparent 34%),
+        linear-gradient(135deg,#eef6fb 0%, #dbeaf4 100%);
+      background-size:cover;
+      background-position:center;
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-start;
+      padding:18px;
+      color:var(--student-accent-strong);
+      font-weight:900;
+      letter-spacing:-.02em;
+      position:relative;
+      overflow:hidden;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+      isolation:isolate;
+    }
+    #tab-student-home .continue-course-thumb.has-image{
+      color:#ffffff;
+      border-color:#c4d9e8;
+    }
+    #tab-student-home .continue-course-thumb.has-image::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      z-index:0;
+      background:linear-gradient(180deg, rgba(10,18,28,.08) 0%, rgba(10,18,28,.68) 100%);
+    }
+    #tab-student-home .continue-course-thumb span{
+      position:relative;
+      z-index:1;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      max-width:100%;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.78);
+      border:1px solid rgba(255,255,255,.72);
+      color:var(--student-accent-strong);
+      font-size:13px;
+      line-height:1.25;
+      box-shadow:0 10px 22px rgba(18,41,56,.10);
+    }
+    #tab-student-home .continue-course-thumb.has-image span{
+      background:rgba(17,24,39,.62);
+      border-color:rgba(255,255,255,.18);
+      color:#ffffff;
+      backdrop-filter:blur(10px);
+    }
     #tab-student-home .continue-kicker,
     #tab-student-courses .section-mini-title,
     #tab-student-home .section-mini-title,
@@ -3798,6 +3854,18 @@
     .purchase-note{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f8fafc;border:1px solid #e5ebf5;color:#55627d;font-size:13px;line-height:1.6}
     .checkout-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
     .checkout-reference{margin-top:14px;padding:10px 12px;border-radius:14px;background:#eef4ff;border:1px solid #dbe6fd;color:#315d93;font-size:12px;font-weight:800;word-break:break-word}
+    .wompi-checkout-box{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;border:1px solid #dbe6fd;background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%)}
+    .wompi-checkout-box.is-ready{border-color:#c7d2fe;background:linear-gradient(180deg,#f8faff 0%,#eef4ff 100%)}
+    .wompi-checkout-box.is-error{border-color:#fecaca;background:#fff7f7}
+    .wompi-checkout-box strong{color:#172033;line-height:1.35}
+    .wompi-checkout-box p{margin:0;color:#5f6f8d;line-height:1.6;font-size:14px}
+    .wompi-checkout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .wompi-checkout-mini{padding:10px 12px;border:1px solid #dfe7f7;border-radius:14px;background:#fff;min-width:0}
+    .wompi-checkout-mini small{display:block;color:#6b7d98;font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:800;margin-bottom:4px}
+    .wompi-checkout-mini span{display:block;color:#172033;font-size:13px;font-weight:800;overflow-wrap:anywhere}
+    .wompi-checkout-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+    .wompi-checkout-actions .btn{min-width:160px}
+    @media (max-width:760px){.wompi-checkout-grid{grid-template-columns:1fr}.wompi-checkout-actions .btn{width:100%}}
     @media (max-width:1100px){.finance-inline-grid,.user-finance-strip,.modal-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media (max-width:980px){.purchase-modal-shell{grid-template-columns:1fr;}}
     @media (max-width:760px){.finance-inline-grid,.user-finance-strip,.modal-payment-grid,.modal-ledger-summary{grid-template-columns:1fr;}}
@@ -5993,6 +6061,9 @@
           <div class="student-hero-grid">
             <div class="continue-card">
               <span class="continue-kicker">Continúa donde quedaste</span>
+              <div class="continue-course-thumb" id="continueCourseThumb">
+                <span id="continueCourseThumbLabel">Miniatura del curso</span>
+              </div>
               <h2 id="continueCourseTitle" class="continue-title">Sigue avanzando con tu curso principal</h2>
               <p id="continueCourseDesc" class="continue-sub">Retoma la última clase sin perder tiempo buscando dónde ibas.</p>
               <div class="student-bar"><span id="continueCourseBar" style="width:0%"></span></div>
@@ -6332,6 +6403,11 @@
     const CLOUDFLARE_STREAM_TUS_CHUNK_BYTES = 50 * 1024 * 1024;
     const CLOUDFLARE_STREAM_DEFAULT_MAX_DURATION_SECONDS = Number(window.CLOUDFLARE_STREAM_MAX_DURATION_SECONDS || 3600);
     const CLOUDFLARE_STREAM_PLAYBACK_BASE = 'https://iframe.videodelivery.net/';
+    const WOMPI_WORKER_BASE = (window.WOMPI_WORKER_BASE || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev').replace(/\/$/, '');
+    const WOMPI_SIGNATURE_ENDPOINT = window.WOMPI_SIGNATURE_ENDPOINT || `${WOMPI_WORKER_BASE}/api/wompi/signature`;
+    const WOMPI_CHECKOUT_URL = window.WOMPI_CHECKOUT_URL || 'https://checkout.wompi.co/p/';
+    const WOMPI_DEFAULT_PUBLIC_KEY = window.WOMPI_PUBLIC_KEY || '';
+    const WOMPI_REDIRECT_URL = window.WOMPI_REDIRECT_URL || `${window.location.origin}${window.location.pathname}`;
 
     const DEMO_USERS = {
       admin: {
@@ -10649,42 +10725,141 @@ function openPaymentHistoryModal(id){
       return state.currentUser ? state.currentUser.email : 'alumno@campus.com';
     }
 
+    function getStudentDisplayName(){
+      return state.currentUser ? (state.currentUser.name || state.currentUser.email || 'Alumno') : 'Alumno Demo';
+    }
+
     function findOpenCoursePurchase(courseId){
       return (state.accessRequests || []).find(request => request.courseId === courseId && request.requestedBy === getStudentIdentifier() && request.type === 'Compra' && !['Pagado','Cancelado','Anulado'].includes(request.status));
     }
 
     function buildCoursePurchaseReference(course){
-      return `CAMPUS-${course.id}-${Date.now().toString().slice(-6)}`;
+      const safeUser = String(getStudentIdentifier()).replace(/[^a-zA-Z0-9]/g, '').slice(0, 10).toUpperCase() || 'ALUMNO';
+      return `CAMPUS-${course.id}-${safeUser}-${Date.now().toString().slice(-7)}`;
     }
 
-    function buildWompiCheckoutConfig(course){
+    function buildWompiCheckoutConfig(course, existingPurchase = null){
+      const amountInCents = Math.max(0, Math.round((Number(estimateCoursePrice(course)) || 0) * 100));
+      const reference = existingPurchase?.reference || existingPurchase?.checkoutConfig?.reference || buildCoursePurchaseReference(course);
       return {
         courseId: course.id,
         courseTitle: course.title,
-        amountInCents: Math.round((Number(estimateCoursePrice(course)) || 0) * 100),
+        amountInCents,
+        amount: amountInCents / 100,
         currency: 'COP',
-        reference: buildCoursePurchaseReference(course),
+        reference,
+        redirectUrl: WOMPI_REDIRECT_URL,
         paymentType: course.paymentType || 'Único',
         allowPartial: course.allowPartial !== false,
         installments: Number(course.installments || 1),
-        customerEmail: getStudentIdentifier()
+        customerEmail: getStudentIdentifier(),
+        customerName: getStudentDisplayName(),
+        publicKey: WOMPI_DEFAULT_PUBLIC_KEY,
+        signature: '',
+        checkoutUrl: existingPurchase?.checkoutUrl || existingPurchase?.checkoutConfig?.checkoutUrl || ''
       };
     }
 
-    function renderWompiCheckoutPlaceholder(containerId, config, ready = false){
+    function buildWompiCheckoutUrl(config){
+      const params = new URLSearchParams();
+      params.set('public-key', config.publicKey || WOMPI_DEFAULT_PUBLIC_KEY || '');
+      params.set('currency', config.currency || 'COP');
+      params.set('amount-in-cents', String(config.amountInCents || 0));
+      params.set('reference', config.reference || '');
+      params.set('signature:integrity', config.signature || '');
+      params.set('redirect-url', config.redirectUrl || WOMPI_REDIRECT_URL);
+      if(config.customerEmail) params.set('customer-data:email', config.customerEmail);
+      if(config.customerName) params.set('customer-data:full-name', config.customerName);
+      return `${WOMPI_CHECKOUT_URL}?${params.toString()}`;
+    }
+
+    async function requestWompiSignature(config){
+      const response = await fetch(WOMPI_SIGNATURE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reference: config.reference,
+          amountInCents: config.amountInCents,
+          currency: config.currency || 'COP',
+          redirectUrl: config.redirectUrl || WOMPI_REDIRECT_URL,
+          customerEmail: config.customerEmail || '',
+          customerName: config.customerName || '',
+          courseId: config.courseId,
+          courseTitle: config.courseTitle
+        })
+      });
+
+      let payload = {};
+      try { payload = await response.json(); } catch(error) { payload = {}; }
+
+      if(!response.ok || payload.success === false){
+        throw new Error(payload.message || 'No se pudo preparar la firma de Wompi.');
+      }
+
+      const signedConfig = {
+        ...config,
+        ...payload,
+        publicKey: payload.publicKey || config.publicKey || WOMPI_DEFAULT_PUBLIC_KEY,
+        signature: payload.signature || payload.integrity || payload.signatureIntegrity || '',
+        redirectUrl: payload.redirectUrl || config.redirectUrl || WOMPI_REDIRECT_URL,
+        currency: payload.currency || config.currency || 'COP',
+        amountInCents: Number(payload.amountInCents || config.amountInCents || 0),
+        reference: payload.reference || config.reference
+      };
+      signedConfig.checkoutUrl = payload.checkoutUrl || buildWompiCheckoutUrl(signedConfig);
+      return signedConfig;
+    }
+
+    function renderWompiCheckoutPlaceholder(containerId, config, ready = false, errorMessage = ''){
       const container = document.getElementById(containerId);
       if(!container) return;
       window.__wompiCourseCheckoutConfig = config;
-      if(typeof window.mountWompiCourseCarousel === 'function' && ready){
-        window.mountWompiCourseCarousel(container, config);
+      const statusClass = errorMessage ? 'is-error' : ready ? 'is-ready' : '';
+      const statusBadge = errorMessage ? 'Error en Wompi' : ready ? 'Checkout listo' : 'Checkout pendiente';
+      const title = errorMessage
+        ? 'No se pudo preparar el pago'
+        : ready
+          ? 'Pago seguro listo para abrir'
+          : 'Prepara el pago seguro del curso';
+      const description = errorMessage
+        ? errorMessage
+        : ready
+          ? 'Haz clic en el botón para abrir la pasarela segura de Wompi y completar el pago del curso.'
+          : 'El sistema generará la referencia única y la firma de integridad antes de abrir Wompi.';
+      const checkoutUrl = config.checkoutUrl || '';
+      container.innerHTML = `
+        <div class="wompi-checkout-box ${statusClass}" data-course-id="${config.courseId}" data-amount="${config.amountInCents}" data-reference="${escapeHtml(config.reference || '')}">
+          <span class="wompi-badge">${statusBadge}</span>
+          <strong>${title}</strong>
+          <p>${description}</p>
+          <div class="wompi-checkout-grid">
+            <div class="wompi-checkout-mini"><small>Curso</small><span>${escapeHtml(config.courseTitle || 'Curso')}</span></div>
+            <div class="wompi-checkout-mini"><small>Valor</small><span>${formatCurrencyCOP((Number(config.amountInCents) || 0) / 100)}</span></div>
+            <div class="wompi-checkout-mini"><small>Referencia</small><span>${escapeHtml(config.reference || 'Se genera al preparar')}</span></div>
+            <div class="wompi-checkout-mini"><small>Estado</small><span>${ready ? 'Listo para pagar' : errorMessage ? 'Revisar configuración' : 'Pendiente'}</span></div>
+          </div>
+          <div class="wompi-checkout-actions">
+            ${ready && checkoutUrl ? `<button class="btn btn-primary" onclick="openWompiCheckout('${encodeURIComponent(checkoutUrl)}')">Pagar con Wompi</button>` : ''}
+            ${ready && checkoutUrl ? `<button class="btn btn-soft" onclick="copyText('${escapeHtml(config.reference || '')}', 'Referencia copiada')">Copiar referencia</button>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function openWompiCheckout(encodedUrl){
+      const url = decodeURIComponent(encodedUrl || '');
+      if(!url){
+        toast('Primero prepara el checkout de Wompi.');
         return;
       }
-      container.innerHTML = `
-        <div class="wompi-carousel-placeholder ${ready ? 'ready' : ''}" data-course-id="${config.courseId}" data-amount="${config.amountInCents}" data-reference="${config.reference}">
-          <span class="wompi-badge">${ready ? 'Checkout preparado' : 'Zona preparada para Wompi'}</span>
-          <strong>${ready ? 'Aquí montarás el carrusel o checkout de Wompi' : 'Aquí irá el carrusel o checkout de Wompi'}</strong>
-          <p>${ready ? 'La compra ya quedó iniciada. Cuando conectes el script de Wompi, este bloque puede montar automáticamente el carrusel con el curso, valor y referencia.' : 'Este bloque ya queda listo para conectar el script de Wompi con el curso seleccionado, el valor en centavos y la referencia de pago.'}</p>
-        </div>`;
+      window.location.href = url;
+    }
+
+    function copyText(text, message = 'Copiado'){
+      if(navigator.clipboard && text){
+        navigator.clipboard.writeText(text).then(() => toast(message)).catch(() => toast(text));
+      } else {
+        toast(text || message);
+      }
     }
 
     function markCoursePurchaseIntent(course, checkoutConfig){
@@ -10694,6 +10869,7 @@ function openPaymentHistoryModal(id){
         existing.updatedAt = new Date().toISOString();
         existing.reference = checkoutConfig.reference;
         existing.amount = estimateCoursePrice(course);
+        existing.checkoutUrl = checkoutConfig.checkoutUrl || existing.checkoutUrl || '';
         existing.checkoutConfig = checkoutConfig;
       } else {
         state.accessRequests.unshift({
@@ -10708,6 +10884,7 @@ function openPaymentHistoryModal(id){
           date: 'Hoy',
           reference: checkoutConfig.reference,
           amount: estimateCoursePrice(course),
+          checkoutUrl: checkoutConfig.checkoutUrl || '',
           checkoutConfig
         });
       }
@@ -10715,7 +10892,7 @@ function openPaymentHistoryModal(id){
       saveState();
     }
 
-    function prepareCourseCheckout(courseId, containerId){
+    async function prepareCourseCheckout(courseId, containerId){
       const course = courseById(courseId);
       if(!course) return;
       if(state.currentUser && state.currentUser.role === 'student' && !isCourseVisible(course)){
@@ -10724,12 +10901,30 @@ function openPaymentHistoryModal(id){
         closeModal();
         return;
       }
-      const checkoutConfig = buildWompiCheckoutConfig(course);
-      markCoursePurchaseIntent(course, checkoutConfig);
-      renderWompiCheckoutPlaceholder(containerId, checkoutConfig, true);
-      renderStudentDiscover();
-      toast('Flujo de compra preparado para ' + course.title);
-      if(typeof window.launchWompiCourseCheckout === 'function') window.launchWompiCourseCheckout(checkoutConfig);
+      const existingPurchase = findOpenCoursePurchase(course.id);
+      const checkoutConfig = buildWompiCheckoutConfig(course, existingPurchase);
+      const button = document.querySelector(`button[data-wompi-course="${courseId}"]`);
+      if(button){
+        button.disabled = true;
+        button.textContent = 'Preparando pago...';
+      }
+      renderWompiCheckoutPlaceholder(containerId, checkoutConfig, false);
+      try{
+        const signedConfig = await requestWompiSignature(checkoutConfig);
+        markCoursePurchaseIntent(course, signedConfig);
+        renderWompiCheckoutPlaceholder(containerId, signedConfig, true);
+        renderStudentDiscover();
+        toast('Checkout de Wompi listo para ' + course.title);
+      }catch(error){
+        console.error('Error preparando Wompi.', error);
+        renderWompiCheckoutPlaceholder(containerId, checkoutConfig, false, error.message || 'Error preparando Wompi. Revisa la llave pública y el secreto de integridad en el Worker.');
+        toast('No se pudo preparar Wompi.');
+      }finally{
+        if(button){
+          button.disabled = false;
+          button.textContent = existingPurchase ? 'Actualizar checkout' : 'Preparar pago seguro';
+        }
+      }
     }
 
     function openCoursePurchaseModal(courseId){
@@ -10742,7 +10937,7 @@ function openPaymentHistoryModal(id){
       }
       const price = estimateCoursePrice(course);
       const existingPurchase = findOpenCoursePurchase(courseId);
-      const checkoutConfig = buildWompiCheckoutConfig(course);
+      const checkoutConfig = buildWompiCheckoutConfig(course, existingPurchase);
       const mountId = `wompiCourseCheckout_${course.id}_${Date.now()}`;
       openModal('Comprar curso', `
         <div class="purchase-modal-shell">
@@ -10757,24 +10952,24 @@ function openPaymentHistoryModal(id){
             <ul class="purchase-feature-list">
               <li><strong>${course.lessons.length} clases</strong><span>Accede al contenido organizado dentro del campus.</span></li>
               <li><strong>${course.category}</strong><span>Curso pensado para llevarte a un resultado concreto.</span></li>
-              <li><strong>${course.installments > 1 ? `${course.installments} cuotas posibles` : 'Pago en una sola exhibición'}</strong><span>Deja el checkout listo según el tipo de cobro del curso.</span></li>
+              <li><strong>Pago seguro con Wompi</strong><span>El checkout usa referencia única, valor en centavos y firma de integridad.</span></li>
             </ul>
-            <div class="purchase-note">${existingPurchase ? 'Ya habías iniciado una compra para este curso. Puedes retomarla desde aquí y mantener la misma experiencia de checkout.' : 'Este flujo deja la compra lista para que luego conectes el checkout o carrusel de Wompi sin cambiar la estructura del campus.'}</div>
-            <div class="checkout-reference">Referencia sugerida: ${checkoutConfig.reference}</div>
+            <div class="purchase-note">${existingPurchase ? 'Ya habías iniciado una compra para este curso. Puedes retomarla desde aquí con la misma referencia si aún no fue pagada.' : 'El pago se abrirá en la pasarela segura de Wompi. Cuando el pago sea aprobado, el administrador podrá confirmar y activar el acceso.'}</div>
+            <div class="checkout-reference">Referencia: ${checkoutConfig.reference}</div>
           </div>
           <div class="purchase-checkout-card">
-            <span class="wompi-badge">Checkout preparado para Wompi</span>
-            <h4>Área de pago del curso</h4>
-            <p>Cuando conectes Wompi, aquí puedes montar su carrusel, widget o flujo de checkout con el valor, el curso y la referencia de pago ya preparados.</p>
+            <span class="wompi-badge">Wompi Checkout</span>
+            <h4>Pago del curso</h4>
+            <p>Presiona el botón para preparar la firma de integridad y abrir la pasarela de pago.</p>
             <div class="wompi-carousel-shell"><div id="${mountId}"></div></div>
             <div class="checkout-actions">
-              <button class="btn btn-primary" onclick="prepareCourseCheckout(${course.id}, '${mountId}')">${existingPurchase ? 'Actualizar checkout' : 'Preparar compra'}</button>
+              <button class="btn btn-primary" data-wompi-course="${course.id}" onclick="prepareCourseCheckout(${course.id}, '${mountId}')">${existingPurchase ? 'Actualizar checkout' : 'Preparar pago seguro'}</button>
               <button class="btn btn-soft" onclick="closeModal()">Cerrar</button>
             </div>
           </div>
         </div>
       `);
-      setTimeout(() => renderWompiCheckoutPlaceholder(mountId, checkoutConfig, Boolean(existingPurchase)), 0);
+      setTimeout(() => renderWompiCheckoutPlaceholder(mountId, checkoutConfig, Boolean(existingPurchase?.checkoutUrl)), 0);
     }
 
     function requestAccess(courseId){
@@ -10841,6 +11036,8 @@ function openPaymentHistoryModal(id){
       const continueBar = document.getElementById('continueCourseBar');
       const continueLessonText = document.getElementById('continueLessonText');
       const continueProgressText = document.getElementById('continueProgressText');
+      const continueThumb = document.getElementById('continueCourseThumb');
+      const continueThumbLabel = document.getElementById('continueCourseThumbLabel');
       const goalText = document.getElementById('dailyGoalText');
       const opportunityText = document.getElementById('studentOpportunityText');
       const quickWin = document.getElementById('studentQuickWinBox');
@@ -10853,6 +11050,17 @@ function openPaymentHistoryModal(id){
 
       if(next){
         const completedLessons = (next.completedLessons || []).length;
+        const cover = String(next.cover || '').trim();
+        if(continueThumb){
+          if(cover){
+            continueThumb.classList.add('has-image');
+            continueThumb.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+          } else {
+            continueThumb.classList.remove('has-image');
+            continueThumb.style.backgroundImage = '';
+          }
+        }
+        if(continueThumbLabel) continueThumbLabel.textContent = cover ? 'Miniatura del curso' : 'Curso sin miniatura cargada';
         if(continueTitle) continueTitle.textContent = next.title;
         if(continueDesc) continueDesc.textContent = next.benefit || next.description;
         if(continueBar) continueBar.style.width = (next.progress || 0) + '%';
@@ -10864,6 +11072,11 @@ function openPaymentHistoryModal(id){
         if(opportunityText) opportunityText.textContent = next.progress >= 80 ? 'Ya casi lo completas. Este es el mejor momento para terminar.' : 'Siempre hay un curso con potencial de avance esperando por ti.';
         if(quickWin) quickWin.textContent = next.progress >= 100 ? 'Ya lograste un avance importante. Aprovecha y abre tu siguiente curso.' : 'Un pequeño avance hoy mantiene viva la motivación y te acerca a un resultado real.';
       } else {
+        if(continueThumb){
+          continueThumb.classList.remove('has-image');
+          continueThumb.style.backgroundImage = '';
+        }
+        if(continueThumbLabel) continueThumbLabel.textContent = 'Sin miniatura disponible';
         if(continueTitle) continueTitle.textContent = 'Sin cursos asignados';
         if(continueDesc) continueDesc.textContent = 'Cuando el administrador active un curso para tu usuario, aparecerá aquí.';
         if(continueBar) continueBar.style.width = '0%';
@@ -11482,6 +11695,10 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.copyUserPassword = copyUserPassword;
     window.deleteUser = deleteUser;
     window.requestAccess = requestAccess;
+    window.prepareCourseCheckout = prepareCourseCheckout;
+    window.openCoursePurchaseModal = openCoursePurchaseModal;
+    window.openWompiCheckout = openWompiCheckout;
+    window.copyText = copyText;
     window.openCoursePlayer = openCoursePlayer;
     window.selectLesson = selectLesson;
     window.closeModal = closeModal;
