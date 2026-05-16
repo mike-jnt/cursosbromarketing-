@@ -6237,7 +6237,7 @@
                 <div class="finance-health-item">
                   <small>Videos listos</small>
                   <strong id="adminSummaryVideosReady">0</strong>
-                  <span id="adminSummaryVideosReadyText">Clases con URL reproducible.</span>
+                  <span id="adminSummaryVideosReadyText">Clases con video reproducible.</span>
                 </div>
                 <div class="finance-health-item">
                   <small>Videos pendientes</small>
@@ -6786,16 +6786,16 @@
                   <input type="text" id="lessonTitleField" placeholder="Clase 1 · Bienvenida">
                 </div>
                 <div class="field">
-                  <label>URL del video</label>
-                  <input type="text" id="lessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
-                  <small class="cover-upload-meta">Acepta enlace de Cloudflare Stream, URL embed, iframe completo, YouTube, Vimeo, MP4 directo o manifest HLS.</small>
+                  <label>Enlace privado del video</label>
+                  <input type="password" class="secure-video-url" id="lessonUrlField" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
+                  <small class="cover-upload-meta">El enlace quedará oculto en la vista del curso y el reproductor usará modo protegido cuando sea YouTube.</small>
                 </div>
                 <div class="field">
                   <label>Subir video desde admin</label>
                   <label class="cover-upload-drop" for="lessonVideoUploadField">
                     <input type="file" id="lessonVideoUploadField" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv">
                     <span class="cover-upload-title">Seleccionar video de la clase</span>
-                    <span class="cover-upload-meta">El video se sube a Cloudflare Stream y la URL se pega automáticamente arriba.</span>
+                    <span class="cover-upload-meta">El video se sube a Cloudflare Stream y el enlace privado se pega automáticamente arriba.</span>
                   </label>
                   <div class="cover-upload-file-name" id="lessonVideoUploadStatus">No has seleccionado ningún video.</div>
                 </div>
@@ -6991,7 +6991,7 @@
             <div class="player-main-card">
               <div class="player-video-wrap" style="display:block;width:100%;">
                 <div class="video-frame">
-                  <iframe id="playerIframe" src="" title="Clase del curso" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>
+                  <iframe id="playerIframe" src="" title="Clase del curso" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
                   <video id="playerVideo" controls preload="none" playsinline style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
                   <div class="placeholder" id="playerPlaceholder">
                     <div>
@@ -7249,10 +7249,10 @@
           installments: 1,
           completedLessons: [0,1,2],
           lessons: [
-            { module: 'Módulo 1 · Introducción', title: 'Bienvenida', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-            { module: 'Módulo 1 · Introducción', title: 'Qué decir al inicio', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-            { module: 'Módulo 1 · Introducción', title: 'Cómo responder el precio', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-            { module: 'Módulo 1 · Introducción', title: 'Seguimiento que cierra', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1 · Introducción', title: 'Bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+            { module: 'Módulo 1 · Introducción', title: 'Qué decir al inicio', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+            { module: 'Módulo 1 · Introducción', title: 'Cómo responder el precio', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+            { module: 'Módulo 1 · Introducción', title: 'Seguimiento que cierra', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         },
         {
@@ -7271,8 +7271,8 @@
           installments: 2,
           completedLessons: [0],
           lessons: [
-            { module: 'Módulo 1 · Canva', title: 'Introducción a Canva', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-            { module: 'Módulo 1 · Canva', title: 'Diseños base para negocios', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1 · Canva', title: 'Introducción a Canva', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+            { module: 'Módulo 1 · Canva', title: 'Diseños base para negocios', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         },
         {
@@ -7291,7 +7291,7 @@
           installments: 1,
           completedLessons: [],
           lessons: [
-            { module: 'Módulo 1 · IA', title: 'Fundamentos', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1 · IA', title: 'Fundamentos', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         },
         {
@@ -7310,7 +7310,7 @@
           installments: 3,
           completedLessons: [],
           lessons: [
-            { module: 'Módulo 1', title: 'Base de automatización', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1', title: 'Base de automatización', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         },
         {
@@ -7329,7 +7329,7 @@
           installments: 1,
           completedLessons: [],
           lessons: [
-            { module: 'Módulo 1', title: 'Estructura del catálogo', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1', title: 'Estructura del catálogo', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         },
         {
@@ -7348,7 +7348,7 @@
           installments: 1,
           completedLessons: [],
           lessons: [
-            { module: 'Módulo 1', title: 'Prompts de cierre', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            { module: 'Módulo 1', title: 'Prompts de cierre', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
           ]
         }
       ],
@@ -8963,7 +8963,7 @@ function renderAdminDashboard(){
         alerts.push(buildDashboardListItem('Cartera en riesgo', `Hay saldo vencido o bloqueado por ${formatCurrencyCOP(riskAmount)}.`, formatCurrencyCOP(riskAmount), 'revisar', 'danger'));
       }
       if(videosMissing > 0){
-        alerts.push(buildDashboardListItem('Clases sin video', `${videosMissing} clase${videosMissing === 1 ? '' : 's'} todavía no tiene${videosMissing === 1 ? '' : 'n'} URL de reproducción.`, String(videosMissing), 'pendientes', 'warning'));
+        alerts.push(buildDashboardListItem('Clases sin video', `${videosMissing} clase${videosMissing === 1 ? '' : 's'} todavía no tiene${videosMissing === 1 ? '' : 'n'} video de reproducción.`, String(videosMissing), 'pendientes', 'warning'));
       }
       if(hiddenCourses > 0){
         alerts.push(buildDashboardListItem('Cursos ocultos', `${hiddenCourses} curso${hiddenCourses === 1 ? '' : 's'} no se muestra${hiddenCourses === 1 ? '' : 'n'} en el área del alumno.`, String(hiddenCourses), 'ocultos', 'info'));
@@ -8984,7 +8984,7 @@ function renderAdminDashboard(){
         activityItems.push(buildDashboardListItem(item.text || 'Actividad registrada', item.time || 'Sin fecha', 'Actividad', 'historial', 'info'));
       });
       if(currentCourse){
-        activityItems.push(buildDashboardListItem('Curso actual en reproductor', `${currentCourse.title} · ${getCourseVideoReadyStats(currentCourse).ready}/${getCourseVideoReadyStats(currentCourse).total} videos con URL.`, 'Actual', 'curso', 'success'));
+        activityItems.push(buildDashboardListItem('Curso actual en reproductor', `${currentCourse.title} · ${getCourseVideoReadyStats(currentCourse).ready}/${getCourseVideoReadyStats(currentCourse).total} videos listos.`, 'Actual', 'curso', 'success'));
       }
       activityItems.push(buildDashboardListItem('Favoritos guardados', `${favorites.length} curso${favorites.length === 1 ? '' : 's'} marcado${favorites.length === 1 ? '' : 's'} como favorito${favorites.length === 1 ? '' : 's'}.`, String(favorites.length), 'favoritos', favorites.length ? 'success' : 'info'));
       activityItems.push(buildDashboardListItem('Recursos disponibles', `${resources.length} material${resources.length === 1 ? '' : 'es'} complementario${resources.length === 1 ? '' : 's'} dentro del campus.`, String(resources.length), 'recursos', resources.length ? 'success' : 'info'));
@@ -9574,6 +9574,74 @@ function toggleUserCard(userId, event){
       return url.pathname.split('/').filter(Boolean);
     }
 
+    function getYouTubeVideoId(value){
+      let raw = extractIframeSrc(value);
+      if(!raw) return '';
+      raw = raw.replace(/&amp;/g, '&').trim();
+      try{
+        const url = new URL(raw);
+        const host = url.hostname.replace(/^www\./, '').toLowerCase();
+        const parts = getPathPartsFromUrl(url);
+        if(host === 'youtu.be' && parts[0]) return parts[0];
+        if(host.includes('youtube.com') || host.includes('youtube-nocookie.com')){
+          if(parts[0] === 'embed' && parts[1]) return parts[1];
+          if(parts[0] === 'shorts' && parts[1]) return parts[1];
+          const id = url.searchParams.get('v');
+          if(id) return id;
+        }
+      } catch(err){
+        const directMatch = raw.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/)|[?&]v=)([a-zA-Z0-9_-]{6,})/);
+        return directMatch ? directMatch[1] : '';
+      }
+      return '';
+    }
+
+    function isYouTubeVideoUrl(value){
+      const raw = String(value || '').toLowerCase();
+      return !!getYouTubeVideoId(value) || raw.includes('youtube.com') || raw.includes('youtu.be') || raw.includes('youtube-nocookie.com');
+    }
+
+    function buildProtectedYouTubeEmbedUrl(value){
+      const videoId = getYouTubeVideoId(value);
+      if(!videoId) return String(value || '').trim();
+      const params = new URLSearchParams();
+      params.set('rel', '0');
+      params.set('modestbranding', '1');
+      params.set('playsinline', '1');
+      params.set('iv_load_policy', '3');
+      params.set('controls', '0');
+      params.set('disablekb', '1');
+      params.set('fs', '0');
+      params.set('vq', 'hd1080');
+      const origin = window.location && window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+      if(origin) params.set('origin', origin);
+      return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+    }
+
+    function configureEmbeddedVideoFrame(iframe, url){
+      if(!iframe) return;
+      const isYoutube = isYouTubeVideoUrl(url);
+      const host = iframe.closest('.video-frame, .admin-video-preview');
+      if(host) host.classList.toggle('is-youtube-protected', isYoutube);
+      if(isYoutube){
+        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+        iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        iframe.removeAttribute('allowfullscreen');
+        iframe.removeAttribute('allowFullScreen');
+      } else {
+        iframe.setAttribute('allow', 'accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen');
+        iframe.removeAttribute('sandbox');
+        iframe.removeAttribute('referrerpolicy');
+        iframe.setAttribute('allowfullscreen', '');
+      }
+    }
+
+    function getVideoAccessLabel(url){
+      if(!url) return 'Sin video protegido';
+      return `${getVideoProviderLabel(url)} · enlace oculto`;
+    }
+
     function normalizeVideoUrl(value){
       let raw = extractIframeSrc(value);
       if(!raw) return '';
@@ -9585,15 +9653,11 @@ function toggleUserCard(userId, event){
         const parts = getPathPartsFromUrl(url);
 
         if(host === 'youtu.be' && parts[0]){
-          return `https://www.youtube.com/embed/${parts[0]}`;
+          return buildProtectedYouTubeEmbedUrl(raw);
         }
 
-        if(host.includes('youtube.com')){
-          if(parts[0] === 'embed' && parts[1]) return raw;
-          if(parts[0] === 'shorts' && parts[1]) return `https://www.youtube.com/embed/${parts[1]}`;
-          const id = url.searchParams.get('v');
-          if(id) return `https://www.youtube.com/embed/${id}`;
-          return raw;
+        if(host.includes('youtube.com') || host.includes('youtube-nocookie.com')){
+          return buildProtectedYouTubeEmbedUrl(raw);
         }
 
         if(host === 'vimeo.com' && parts[0]){
@@ -9628,7 +9692,7 @@ function toggleUserCard(userId, event){
       const normalized = normalizeVideoUrl(url);
       const value = normalized.toLowerCase();
       if(value.includes('videodelivery.net') || value.includes('cloudflarestream.com') || value.includes('stream.cloudflare.com')) return 'Cloudflare Stream';
-      if(value.includes('youtube.com') || value.includes('youtu.be')) return 'YouTube';
+      if(value.includes('youtube.com') || value.includes('youtu.be') || value.includes('youtube-nocookie.com')) return 'YouTube protegido';
       if(value.includes('vimeo.com')) return 'Vimeo';
       if(value.endsWith('.m3u8') || value.includes('/manifest/video.m3u8')) return 'HLS';
       if(isDirectVideoUrl(value)) return 'Video directo';
@@ -10059,6 +10123,8 @@ function toggleUserCard(userId, event){
         activeHlsPlayer = null;
       }
       if(iframe){
+        const host = iframe.closest('.video-frame, .admin-video-preview');
+        if(host) host.classList.remove('is-youtube-protected');
         iframe.removeAttribute('src');
         iframe.style.display = 'none';
       }
@@ -10094,7 +10160,7 @@ function toggleUserCard(userId, event){
       if(localNote) localNote.style.display = 'none';
 
       if(!finalUrl){
-        showPlayerPlaceholder(placeholder, 'Agrega una URL de Cloudflare Stream, YouTube, Vimeo, MP4 o HLS para reproducir esta clase.');
+        showPlayerPlaceholder(placeholder, 'Agrega el enlace protegido del video para reproducir esta clase.');
         return;
       }
 
@@ -10119,6 +10185,7 @@ function toggleUserCard(userId, event){
       }
 
       if(iframe){
+        configureEmbeddedVideoFrame(iframe, finalUrl);
         iframe.src = finalUrl;
         iframe.style.display = 'block';
         if(placeholder) placeholder.style.display = 'none';
@@ -10808,7 +10875,7 @@ function renderPlayer(courseId){
 
           <div class="mini-card" style="padding:18px">
             <h3 style="margin:0 0 8px;color:#172033">Clases del curso</h3>
-            <p class="muted-text" style="margin:0">Edita módulo, título y URL del video. También puedes subir un video desde admin; la plataforma lo subirá a Cloudflare Stream y pegará la URL automáticamente.</p>
+            <p class="muted-text" style="margin:0">Edita módulo, título y enlace privado del video. También puedes subir un video desde admin; la plataforma lo subirá a Cloudflare Stream y pegará el enlace automáticamente.</p>
             <div id="courseEditLessonsBox" class="course-edit-lessons"></div>
 
             <div class="course-edit-add-card">
@@ -10823,8 +10890,8 @@ function renderPlayer(courseId){
                   <input type="text" id="editNewLessonTitleField" placeholder="Clase 1 · Bienvenida">
                 </div>
                 <div class="field course-edit-full">
-                  <label>URL del video</label>
-                  <input type="text" id="editNewLessonUrlField" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+                  <label>Enlace privado del video</label>
+                  <input type="password" class="secure-video-url" id="editNewLessonUrlField" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
                 </div>
                 <div class="field course-edit-full">
                   <label>Subir video desde admin</label>
@@ -10956,15 +11023,15 @@ function renderPlayer(courseId){
                 <input type="text" id="editLessonTitle_${idx}" value="${escapeHtml(lesson.title || '')}" placeholder="Título de la clase">
               </div>
               <div class="field course-edit-full">
-                <label>URL del video</label>
-                <input type="text" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" placeholder="Cloudflare Stream, YouTube, Vimeo, MP4 o HLS .m3u8">
+                <label>Enlace privado del video</label>
+                <input type="password" class="secure-video-url" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
               </div>
               <div class="field course-edit-full">
                 <label>Reemplazar/subir video</label>
                 <label class="cover-upload-drop" for="editLessonVideoUpload_${idx}">
                   <input type="file" id="editLessonVideoUpload_${idx}" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" data-video-upload-target="editLessonUrl_${idx}" data-video-upload-status="editLessonUploadStatus_${idx}" data-lesson-index="${idx + 1}">
                   <span class="cover-upload-title">Seleccionar nuevo video para esta clase</span>
-                  <span class="cover-upload-meta">Opcional. Si lo subes, reemplaza la URL actual por la nueva URL de Cloudflare Stream.</span>
+                  <span class="cover-upload-meta">Opcional. Si lo subes, reemplaza el enlace actual por el nuevo enlace protegido de Cloudflare Stream.</span>
                 </label>
                 <div class="cover-upload-file-name" id="editLessonUploadStatus_${idx}">No has seleccionado ningún video.</div>
               </div>
@@ -11133,9 +11200,13 @@ function renderPlayer(courseId){
           </div>
         `;
       }
+      const isYoutube = isYouTubeVideoUrl(finalUrl);
+      const frameAttrs = isYoutube
+        ? 'allow="autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-presentation" referrerpolicy="strict-origin-when-cross-origin"'
+        : 'allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen';
       return `
-        <div class="admin-video-preview">
-          <iframe src="${safeUrl}" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+        <div class="admin-video-preview${isYoutube ? ' is-youtube-protected' : ''}">
+          <iframe src="${safeUrl}" ${frameAttrs} loading="lazy"></iframe>
         </div>
       `;
     }
@@ -11163,10 +11234,10 @@ function renderPlayer(courseId){
                 <div class="admin-lesson-info">
                   <span class="pill-note">Clase ${Number(lesson.originalIndex) + 1} · ${escapeHtml(provider)}</span>
                   <strong>${escapeHtml(lesson.title || 'Clase sin título')}</strong>
-                  <small>${finalUrl ? escapeHtml(finalUrl) : 'Sin URL de video'}</small>
+                  <small>${finalUrl ? escapeHtml(getVideoAccessLabel(finalUrl)) : 'Sin video protegido'}</small>
                   <div class="admin-inline-actions" style="margin-top:0">
                     <button class="btn btn-soft btn-sm" type="button" onclick="editCourse(${Number(course.id)})">Editar curso</button>
-                    ${finalUrl ? `<a class="btn btn-dark btn-sm" href="${escapeHtml(finalUrl)}" target="_blank" rel="noopener">Abrir video</a>` : ''}
+                    ${finalUrl ? `<span class="pill-note" style="padding:7px 10px;font-size:11px">Enlace protegido</span>` : ''}
                   </div>
                 </div>
                 ${renderAdminLessonVideoPreview(lesson)}
@@ -12192,7 +12263,7 @@ function bindButtons(){
         const url = byId('lessonUrlField').value.trim();
         const normalizedUrl = normalizeVideoUrl(url);
         if(!module || !title){ toast('Agrega módulo y título.'); return; }
-        state.pendingLessons.push({ module, title, url: normalizedUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ' });
+        state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
         const lessonUploadField = byId('lessonVideoUploadField');
@@ -12214,7 +12285,7 @@ function bindButtons(){
         const installments = Math.max(1, Number(byId('courseInstallmentsField')?.value || 1));
         if(!title || !description){ toast('Completa título y descripción.'); return; }
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
-        const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }];
+        const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }];
         state.courses.unshift({
           id: Date.now(), title, category, status, visible, description, cover, createdAt: new Date().toISOString(),
           progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
