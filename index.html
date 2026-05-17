@@ -7522,8 +7522,35 @@
       }
     }
 
+    function getFirebaseSignedEmail(){
+      try{
+        return normalizeEmail(firebaseAuth && firebaseAuth.currentUser && firebaseAuth.currentUser.email ? firebaseAuth.currentUser.email : '');
+      }catch(error){
+        return '';
+      }
+    }
+
+    function hasFirebaseAuthSession(){
+      return Boolean(firebaseAuth && firebaseAuth.currentUser && getFirebaseSignedEmail());
+    }
+
+    function canWriteSharedFirebaseState(){
+      const authEmail = getFirebaseSignedEmail();
+      return Boolean(
+        firebaseDb
+        && firebaseRemoteLoaded
+        && state.currentUser
+        && state.currentUser.role === 'admin'
+        && authEmail
+        && isAdminEmail(authEmail)
+      );
+    }
+
     function scheduleFirebaseSave(){
-      if(!firebaseDb || !firebaseRemoteLoaded) return;
+      // Evita popups y errores cuando el visitante aún no ha iniciado sesión
+      // o cuando un alumno actualiza progreso local. En producción solo el admin
+      // autenticado en Firebase debe escribir el documento compartido mainState.
+      if(!canWriteSharedFirebaseState()) return;
       clearTimeout(firebaseSaveTimer);
       firebaseSaveTimer = setTimeout(async () => {
         try{
@@ -7532,7 +7559,9 @@
           await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
         }catch(error){
           console.warn('No se pudo guardar en Firestore. Se conserva la copia local.', error);
-          toast('No se pudo sincronizar con Firebase. Revisa reglas o conexión.');
+          if(state.currentUser && state.currentUser.role === 'admin'){
+            toast('No se pudo sincronizar con Firebase. Revisa reglas o sesión del administrador.');
+          }
         }
       }, 650);
     }
@@ -7578,8 +7607,15 @@
       }
     }
 
-    async function loadFirebaseState(){
+    async function loadFirebaseState(options = {}){
+      const silent = Boolean(options.silent);
+      const requireAuth = Boolean(options.requireAuth);
       if(!initFirebaseConnection()) return false;
+      if(requireAuth && !hasFirebaseAuthSession()){
+        // Con reglas de producción, Firestore no debe leerse antes del login.
+        // Por eso se omite la carga remota inicial y se usa localStorage hasta autenticar.
+        return false;
+      }
       try{
         const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).get();
         if(doc.exists){
@@ -7589,17 +7625,23 @@
           saveState({ localOnly: true });
           firebaseRemoteLoaded = true;
           if(typeof refreshAllViews === 'function') refreshAllViews();
-          toast('Base de datos Firebase sincronizada.');
+          if(!silent) toast('Base de datos Firebase sincronizada.');
           return true;
         }
         firebaseRemoteLoaded = true;
-        saveState();
-        toast('Base de datos Firebase creada con el estado inicial.');
+        if(canWriteSharedFirebaseState() || (hasFirebaseAuthSession() && isAdminEmail(getFirebaseSignedEmail()))){
+          saveState();
+          if(!silent) toast('Base de datos Firebase creada con el estado inicial.');
+        }else if(!silent){
+          toast('Firebase está conectado, pero todavía no existe la base inicial. Ingresa como administrador para crearla.');
+        }
         return true;
       }catch(error){
         firebaseRemoteLoaded = false;
         console.warn('No se pudo cargar Firestore. Se usará la copia local.', error);
-        toast('Firebase no cargó datos. Revisa que Firestore esté activo y las reglas permitan acceso.');
+        if(!silent){
+          toast('Firebase no cargó datos. Revisa reglas, dominio autorizado o sesión.');
+        }
         return false;
       }
     }
@@ -7615,7 +7657,9 @@
     }
 
     loadState();
-    loadFirebaseState();
+    // No se intenta leer Firestore antes del login para evitar popups de permisos
+    // con reglas de producción. La sincronización remota se hace después de Auth.
+    loadFirebaseState({ silent: true, requireAuth: true });
 
 function getTodayDate(){
   return new Date('2026-04-06T00:00:00');
@@ -10651,6 +10695,9 @@ function renderPlayer(courseId){
       if(!connected || !firebaseDb){
         throw new Error('Firestore no está disponible. Revisa Firebase antes de subir miniaturas.');
       }
+      if(!hasFirebaseAuthSession() || !isAdminEmail(getFirebaseSignedEmail())){
+        throw new Error('Debes iniciar sesión como administrador real de Firebase para subir miniaturas a Firestore.');
+      }
       const safeName = String(file?.name || 'portada').replace(/[^a-z0-9._-]/gi, '_').slice(0, 80) || 'portada';
       const docId = `${FIRESTORE_COVER_DOC_PREFIX}${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       firestoreCoverCache[docId] = prepared.dataUrl;
@@ -11142,6 +11189,7 @@ function renderPlayer(courseId){
       try{
         const credential = await firebaseAuth.signInWithEmailAndPassword(normalizeEmail(email), password);
         const authEmail = normalizeEmail(credential.user && credential.user.email ? credential.user.email : email);
+        await loadFirebaseState({ silent: true, requireAuth: true });
         if(isAdminEmail(authEmail)){
           const admin = ensureDefaultAdminProfile();
           admin.authUid = credential.user ? credential.user.uid : admin.authUid || '';
