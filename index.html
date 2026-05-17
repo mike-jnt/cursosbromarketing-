@@ -5133,6 +5133,37 @@
       70%,100%{transform:translateX(100%)}
     }
 
+    /* === Protección visual para embeds de YouTube === */
+    .video-frame.is-youtube-protected,
+    .admin-video-preview.is-youtube-protected{
+      position:relative;
+      background:#000;
+    }
+    .video-frame.is-youtube-protected::after,
+    .admin-video-preview.is-youtube-protected::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:74px;
+      z-index:4;
+      pointer-events:auto;
+      background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.22) 100%);
+    }
+    .video-frame.is-youtube-protected::before,
+    .admin-video-preview.is-youtube-protected::before{
+      content:"";
+      position:absolute;
+      right:0;
+      top:0;
+      width:170px;
+      height:58px;
+      z-index:4;
+      pointer-events:auto;
+      background:transparent;
+    }
+
 
     /* === Resumen conectado con toda la información del campus === */
     .dashboard-connected-grid{
@@ -9642,6 +9673,88 @@ function toggleUserCard(userId, event){
       return `${getVideoProviderLabel(url)} · enlace oculto`;
     }
 
+    function normalizeResourceCourseId(resource){
+      return Number(resource && (resource.courseId ?? resource.course_id ?? resource.course)) || 0;
+    }
+
+    function resourceMatchesLesson(resource, lesson, lessonIndex){
+      if(!resource) return false;
+      const hasSpecificLesson = resource.lessonIndex !== undefined
+        || resource.lessonIdx !== undefined
+        || resource.lessonId !== undefined
+        || resource.lessonTitle
+        || resource.module;
+      if(!hasSpecificLesson) return true;
+
+      const idx = Number(resource.lessonIndex ?? resource.lessonIdx);
+      if(Number.isFinite(idx) && idx === Number(lessonIndex)) return true;
+
+      if(resource.lessonId !== undefined && lesson && lesson.id !== undefined){
+        return String(resource.lessonId) === String(lesson.id);
+      }
+
+      const resourceLessonTitle = String(resource.lessonTitle || '').trim().toLowerCase();
+      const currentLessonTitle = String(lesson && lesson.title || '').trim().toLowerCase();
+      if(resourceLessonTitle && currentLessonTitle && resourceLessonTitle === currentLessonTitle) return true;
+
+      const resourceModule = String(resource.module || '').trim().toLowerCase();
+      const currentModule = String(lesson && lesson.module || '').trim().toLowerCase();
+      if(resourceModule && currentModule && resourceModule === currentModule) return true;
+
+      return false;
+    }
+
+    function getLessonResources(course, lesson, lessonIndex){
+      if(!course) return [];
+      const courseId = Number(course.id) || 0;
+      return (state.resources || []).filter(resource => {
+        if(normalizeResourceCourseId(resource) !== courseId) return false;
+        return resourceMatchesLesson(resource, lesson, lessonIndex);
+      });
+    }
+
+    function renderPlayerLessonResources(course, lesson, lessonIndex){
+      const resources = getLessonResources(course, lesson, lessonIndex);
+      const lessonTitle = lesson && lesson.title ? lesson.title : 'esta clase';
+
+      if(!resources.length){
+        return `<div class="player-class-resources-card">
+          <div class="player-class-resources-head">
+            <div>
+              <strong>Material de apoyo</strong>
+              <small>No hay recursos asociados a ${escapeHtml(lessonTitle)} por ahora.</small>
+            </div>
+            <span class="player-class-resources-count">0 recursos</span>
+          </div>
+          <div class="player-class-resources-empty">Cuando agregues PDFs, plantillas o documentos para este curso, aparecerán aquí sin mostrar enlaces privados.</div>
+        </div>`;
+      }
+
+      return `<div class="player-class-resources-card">
+        <div class="player-class-resources-head">
+          <div>
+            <strong>Material de apoyo</strong>
+            <small>Recursos disponibles para reforzar ${escapeHtml(lessonTitle)}.</small>
+          </div>
+          <span class="player-class-resources-count">${resources.length} recurso${resources.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="player-class-resources-list">
+          ${resources.map(resource => {
+            const id = Number(resource.id) || 0;
+            const type = escapeHtml(resource.type || 'Recurso');
+            const title = escapeHtml(resource.title || 'Material de apoyo');
+            return `<div class="player-class-resource-item">
+              <div>
+                <strong>${title}</strong>
+                <small>${type} · enlace protegido</small>
+              </div>
+              <button class="player-resource-action" onclick="downloadResource(${id})">Descargar</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+
     function normalizeVideoUrl(value){
       let raw = extractIframeSrc(value);
       if(!raw) return '';
@@ -10469,7 +10582,7 @@ function renderPlayer(courseId){
         renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
-        setTimeout(() => syncExistingStudentsToFirebaseAuth({ silent: false }), 800);
+        // Sincronización automática desactivada: evita intentos repetidos de signUp en Firebase Auth.
       }else{
         roleChip.textContent = 'ALUMNO';
         sideRoleBadge.textContent = 'Alumno';
@@ -10744,12 +10857,6 @@ function renderPlayer(courseId){
       }
 
       if(email === normalizeEmail(DEMO_USERS.admin.email) && password === DEMO_USERS.admin.password){
-        const adminSync = await ensureDefaultAdminAuthAccount();
-        if(adminSync && !adminSync.ok){
-          loginError.textContent = 'No se pudo crear/iniciar el admin en Firebase Authentication: ' + (adminSync.message || 'revisa Firebase.');
-          loginError.classList.remove('hidden');
-          return;
-        }
         enterApp(DEMO_USERS.admin);
         return;
       }
