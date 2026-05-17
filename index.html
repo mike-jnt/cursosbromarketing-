@@ -5211,13 +5211,100 @@
     .admin-video-preview.is-youtube-protected::before{
       content:"";
       position:absolute;
+      left:0;
       right:0;
       top:0;
-      width:170px;
-      height:58px;
+      width:auto;
+      height:70px;
       z-index:4;
       pointer-events:auto;
-      background:transparent;
+      background:linear-gradient(180deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.28) 62%, rgba(0,0,0,0) 100%);
+    }
+    .video-frame.is-youtube-protected::after,
+    .admin-video-preview.is-youtube-protected::after{
+      height:106px;
+      background:linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.50) 58%, rgba(0,0,0,0) 100%);
+    }
+    .video-frame.is-youtube-custom-controls iframe{
+      pointer-events:none;
+    }
+    .youtube-custom-controls{
+      position:absolute;
+      left:18px;
+      right:18px;
+      bottom:16px;
+      z-index:9;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(5,5,7,.72);
+      box-shadow:0 18px 34px rgba(0,0,0,.34);
+      backdrop-filter:blur(14px);
+    }
+    .video-frame.is-youtube-custom-controls .youtube-custom-controls{
+      display:flex;
+    }
+    .youtube-control-btn{
+      width:42px;
+      height:42px;
+      min-width:42px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:#ffffff;
+      cursor:pointer;
+      display:inline-grid;
+      place-items:center;
+      font-size:16px;
+      font-weight:900;
+      line-height:1;
+      transition:transform .18s ease, background-color .18s ease, border-color .18s ease;
+    }
+    .youtube-control-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(255,90,31,.24);
+      border-color:rgba(255,90,31,.42);
+    }
+    .youtube-control-btn.is-main{
+      width:50px;
+      height:50px;
+      min-width:50px;
+      background:linear-gradient(90deg,#ff5a1f 0%,#ff762e 100%);
+      border-color:rgba(255,90,31,.72);
+      box-shadow:0 12px 24px rgba(255,90,31,.24);
+      font-size:18px;
+    }
+    .youtube-control-spacer{
+      flex:1;
+      min-width:10px;
+    }
+    .youtube-control-label{
+      color:rgba(255,255,255,.82);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      margin-right:auto;
+    }
+    @media (max-width:760px){
+      .youtube-custom-controls{
+        left:10px;
+        right:10px;
+        bottom:10px;
+        gap:7px;
+        padding:9px;
+        border-radius:16px;
+      }
+      .youtube-control-label{display:none}
+      .youtube-control-btn{width:38px;height:38px;min-width:38px;font-size:14px}
+      .youtube-control-btn.is-main{width:44px;height:44px;min-width:44px}
+      .video-frame.is-youtube-protected::after,
+      .admin-video-preview.is-youtube-protected::after{height:92px}
     }
 
 
@@ -7026,8 +7113,16 @@
 <div class="player-main-card">
 <div class="player-video-wrap" style="display:block;width:100%;">
 <div class="video-frame">
-<iframe allow="autoplay; encrypted-media; picture-in-picture" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
+<iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
 <video controls="" id="playerVideo" playsinline="" preload="none" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
+<div class="youtube-custom-controls" id="youtubeCustomControls" aria-label="Controles personalizados de YouTube">
+<button aria-label="Retroceder 10 segundos" class="youtube-control-btn" id="btnYoutubeBack" type="button">⏪</button>
+<button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
+<button aria-label="Adelantar 10 segundos" class="youtube-control-btn" id="btnYoutubeForward" type="button">⏩</button>
+<span class="youtube-control-spacer"></span>
+<span class="youtube-control-label">Controles del campus</span>
+<button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
+</div>
 <div class="placeholder" id="playerPlaceholder">
 <div>
 <strong id="playerTitleMain">Video de la clase</strong>
@@ -9776,6 +9871,14 @@ function toggleUserCard(userId, event){
 
     
     let activeHlsPlayer = null;
+    const youtubeCustomState = {
+      iframe: null,
+      playing: false,
+      currentTime: 0,
+      lastTick: 0,
+      timer: null,
+      activeUrl: ''
+    };
 
     function isLocalFileMode(){
       return window.location.protocol === 'file:';
@@ -9829,6 +9932,8 @@ function toggleUserCard(userId, event){
       params.set('controls', '0');
       params.set('disablekb', '1');
       params.set('fs', '0');
+      params.set('enablejsapi', '1');
+      params.set('cc_load_policy', '0');
       params.set('vq', 'hd1080');
       const origin = window.location && window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
       if(origin) params.set('origin', origin);
@@ -9841,16 +9946,18 @@ function toggleUserCard(userId, event){
       const host = iframe.closest('.video-frame, .admin-video-preview');
       if(host) host.classList.toggle('is-youtube-protected', isYoutube);
       if(isYoutube){
-        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+        iframe.removeAttribute('sandbox');
         iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         iframe.removeAttribute('allowfullscreen');
         iframe.removeAttribute('allowFullScreen');
+        iframe.style.pointerEvents = 'none';
       } else {
         iframe.setAttribute('allow', 'accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen');
         iframe.removeAttribute('sandbox');
         iframe.removeAttribute('referrerpolicy');
         iframe.setAttribute('allowfullscreen', '');
+        iframe.style.pointerEvents = '';
       }
     }
 
@@ -10422,16 +10529,131 @@ function toggleUserCard(userId, event){
       });
     }
 
+    function getYoutubeCustomControlsNode(){
+      return document.getElementById('youtubeCustomControls');
+    }
+
+    function setYoutubePlayButtonState(isPlaying){
+      const btn = document.getElementById('btnYoutubePlayPause');
+      if(!btn) return;
+      btn.textContent = isPlaying ? '⏸' : '▶';
+      btn.setAttribute('aria-label', isPlaying ? 'Pausar video' : 'Reproducir video');
+      btn.title = isPlaying ? 'Pausar video' : 'Reproducir video';
+    }
+
+    function syncYoutubeApproximateTime(){
+      if(!youtubeCustomState.playing || !youtubeCustomState.lastTick) return;
+      const now = Date.now();
+      const diff = Math.max(0, (now - youtubeCustomState.lastTick) / 1000);
+      youtubeCustomState.currentTime += diff;
+      youtubeCustomState.lastTick = now;
+    }
+
+    function sendYoutubePlayerCommand(func, args = []){
+      const iframe = youtubeCustomState.iframe || document.getElementById('playerIframe');
+      if(!iframe || !iframe.contentWindow) return;
+      const payload = JSON.stringify({ event: 'command', func, args });
+      iframe.contentWindow.postMessage(payload, '*');
+    }
+
+    function startYoutubeClock(){
+      stopYoutubeClock();
+      youtubeCustomState.lastTick = Date.now();
+      youtubeCustomState.timer = window.setInterval(() => {
+        syncYoutubeApproximateTime();
+      }, 1000);
+    }
+
+    function stopYoutubeClock(){
+      if(youtubeCustomState.timer){
+        window.clearInterval(youtubeCustomState.timer);
+        youtubeCustomState.timer = null;
+      }
+    }
+
+    function resetYoutubeCustomControls(){
+      stopYoutubeClock();
+      youtubeCustomState.iframe = null;
+      youtubeCustomState.playing = false;
+      youtubeCustomState.currentTime = 0;
+      youtubeCustomState.lastTick = 0;
+      youtubeCustomState.activeUrl = '';
+      setYoutubePlayButtonState(false);
+      const controls = getYoutubeCustomControlsNode();
+      if(controls) controls.style.display = 'none';
+      const frame = document.querySelector('.video-frame');
+      if(frame) frame.classList.remove('is-youtube-custom-controls');
+    }
+
+    function prepareYoutubeCustomControls(iframe, url){
+      stopYoutubeClock();
+      youtubeCustomState.iframe = iframe || document.getElementById('playerIframe');
+      youtubeCustomState.playing = false;
+      youtubeCustomState.currentTime = 0;
+      youtubeCustomState.lastTick = 0;
+      youtubeCustomState.activeUrl = url || '';
+      setYoutubePlayButtonState(false);
+      const controls = getYoutubeCustomControlsNode();
+      if(controls) controls.style.display = 'flex';
+      const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('.video-frame');
+      if(frame) frame.classList.add('is-youtube-custom-controls');
+      window.setTimeout(() => {
+        sendYoutubePlayerCommand('pauseVideo');
+      }, 450);
+    }
+
+    function toggleYoutubePlayPause(){
+      if(!youtubeCustomState.iframe) return;
+      syncYoutubeApproximateTime();
+      if(youtubeCustomState.playing){
+        sendYoutubePlayerCommand('pauseVideo');
+        youtubeCustomState.playing = false;
+        stopYoutubeClock();
+        setYoutubePlayButtonState(false);
+      }else{
+        sendYoutubePlayerCommand('playVideo');
+        youtubeCustomState.playing = true;
+        startYoutubeClock();
+        setYoutubePlayButtonState(true);
+      }
+    }
+
+    function seekYoutubeBy(seconds){
+      if(!youtubeCustomState.iframe) return;
+      syncYoutubeApproximateTime();
+      youtubeCustomState.currentTime = Math.max(0, youtubeCustomState.currentTime + seconds);
+      youtubeCustomState.lastTick = Date.now();
+      sendYoutubePlayerCommand('seekTo', [youtubeCustomState.currentTime, true]);
+      if(youtubeCustomState.playing){
+        window.setTimeout(() => sendYoutubePlayerCommand('playVideo'), 120);
+      }
+    }
+
+    function toggleYoutubeFullscreen(){
+      const frame = document.querySelector('.video-frame') || document.querySelector('.player-video-wrap');
+      if(!frame) return;
+      const doc = document;
+      if(doc.fullscreenElement){
+        doc.exitFullscreen?.();
+        return;
+      }
+      if(frame.requestFullscreen) frame.requestFullscreen();
+      else if(frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+      else if(frame.msRequestFullscreen) frame.msRequestFullscreen();
+    }
+
     function resetPlayerMedia(iframe, video){
       if(activeHlsPlayer){
         try{ activeHlsPlayer.destroy(); } catch(err){}
         activeHlsPlayer = null;
       }
+      resetYoutubeCustomControls();
       if(iframe){
         const host = iframe.closest('.video-frame, .admin-video-preview');
-        if(host) host.classList.remove('is-youtube-protected');
+        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls');
         iframe.removeAttribute('src');
         iframe.style.display = 'none';
+        iframe.style.pointerEvents = '';
       }
       if(video){
         try{ video.pause(); } catch(err){}
@@ -10490,10 +10712,13 @@ function toggleUserCard(userId, event){
       }
 
       if(iframe){
+        const isYoutube = isYouTubeVideoUrl(finalUrl);
         configureEmbeddedVideoFrame(iframe, finalUrl);
         iframe.src = finalUrl;
         iframe.style.display = 'block';
         if(placeholder) placeholder.style.display = 'none';
+        if(isYoutube) prepareYoutubeCustomControls(iframe, finalUrl);
+        else resetYoutubeCustomControls();
       } else {
         showPlayerPlaceholder(placeholder, 'No se encontró el reproductor para mostrar esta clase.');
       }
@@ -13533,6 +13758,11 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
           btn.classList.toggle('is-favorite', isFavorite);
         }
       });
+
+      byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
+      byId('btnYoutubeBack')?.addEventListener('click', () => seekYoutubeBy(-10));
+      byId('btnYoutubeForward')?.addEventListener('click', () => seekYoutubeBy(10));
+      byId('btnYoutubeFullscreen')?.addEventListener('click', toggleYoutubeFullscreen);
 
       byId('btnDownloadCurrentResource')?.addEventListener('click', () => {
         const c = courseById(state.currentCourseId);
