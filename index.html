@@ -7063,6 +7063,84 @@
       height:clamp(96px, 10vh, 128px) !important;
       border-radius:26px !important;
     }
+
+
+    /* === Máscaras más oscuras para ocultar completamente capas de YouTube === */
+    .video-frame.is-youtube-protected::before,
+    .admin-video-preview.is-youtube-protected::before{
+      background:
+        linear-gradient(180deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 52%,
+          rgba(0,0,0,.985) 72%,
+          rgba(0,0,0,.94) 86%,
+          rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(2px) saturate(100%) !important;
+      -webkit-backdrop-filter:blur(2px) saturate(100%) !important;
+    }
+    .video-frame.is-youtube-protected::after,
+    .admin-video-preview.is-youtube-protected::after{
+      background:
+        linear-gradient(0deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 54%,
+          rgba(0,0,0,.985) 74%,
+          rgba(0,0,0,.94) 88%,
+          rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(2px) saturate(100%) !important;
+      -webkit-backdrop-filter:blur(2px) saturate(100%) !important;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden::before{
+      opacity:.96 !important;
+      background:
+        linear-gradient(180deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 50%,
+          rgba(0,0,0,.99) 72%,
+          rgba(0,0,0,.95) 86%,
+          rgba(0,0,0,0) 100%) !important;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden::after{
+      opacity:.96 !important;
+      background:
+        linear-gradient(0deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 54%,
+          rgba(0,0,0,.99) 74%,
+          rgba(0,0,0,.95) 88%,
+          rgba(0,0,0,0) 100%) !important;
+    }
+    .youtube-private-titlebar,
+    .youtube-custom-controls{
+      background:
+        linear-gradient(135deg, rgba(8,7,10,.98), rgba(3,3,5,.98)) !important;
+      border-color:rgba(255,255,255,.14) !important;
+      box-shadow:0 18px 42px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.08) !important;
+    }
+    .youtube-custom-controls::before{
+      background:linear-gradient(90deg, transparent, rgba(255,90,31,.34), transparent) !important;
+      opacity:.9 !important;
+    }
+    .video-frame.is-youtube-protected:fullscreen::before,
+    .video-frame.is-youtube-protected:-webkit-full-screen::before{
+      background:
+        linear-gradient(180deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 54%,
+          rgba(0,0,0,.985) 76%,
+          rgba(0,0,0,.94) 90%,
+          rgba(0,0,0,0) 100%) !important;
+    }
+    .video-frame.is-youtube-protected:fullscreen::after,
+    .video-frame.is-youtube-protected:-webkit-full-screen::after{
+      background:
+        linear-gradient(0deg,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) 56%,
+          rgba(0,0,0,.985) 78%,
+          rgba(0,0,0,.94) 92%,
+          rgba(0,0,0,0) 100%) !important;
+    }
 </style>
 </head>
 <body>
