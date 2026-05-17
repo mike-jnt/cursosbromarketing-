@@ -6745,14 +6745,14 @@
 
                     <div class="cover-source-panel active" data-cover-panel="url">
                       <input type="text" id="courseCoverField" placeholder="https://tu-sitio.com/portada-del-curso.jpg">
-                      <small class="cover-upload-meta">Pega una URL directa para la portada del curso.</small>
+                      <small class="cover-upload-meta">Pega una URL directa o sube una imagen para guardarla en Firestore.</small>
                     </div>
 
                     <div class="cover-source-panel" data-cover-panel="file">
                       <label class="cover-upload-drop" for="courseCoverUploadField">
                         <input type="file" id="courseCoverUploadField" accept="image/*">
                         <span class="cover-upload-title">Haz clic aquí para subir la imagen de portada</span>
-                        <span class="cover-upload-meta">PNG, JPG o WEBP · recomendado formato horizontal</span>
+                        <span class="cover-upload-meta">PNG, JPG o WEBP · se comprime y se guarda en Firestore</span>
                       </label>
                       <div class="cover-upload-file-name" id="courseCoverUploadName">No has seleccionado ningún archivo.</div>
                     </div>
@@ -6761,7 +6761,7 @@
                       <div class="cover-preview-media" id="courseCoverPreviewMedia"><span>Vista previa de portada</span></div>
                       <div class="cover-preview-info">
                         <strong>Vista previa</strong>
-                        <small id="courseCoverPreviewText">Puedes usar una URL o subir una imagen desde tu equipo.</small>
+                        <small id="courseCoverPreviewText">Puedes usar una URL o subir una imagen; si subes archivo se guardará en Firestore.</small>
                       </div>
                     </div>
                   </div>
@@ -7228,6 +7228,13 @@
     const WOMPI_CHECKOUT_URL = window.WOMPI_CHECKOUT_URL || 'https://checkout.wompi.co/p/';
     const WOMPI_DEFAULT_PUBLIC_KEY = window.WOMPI_PUBLIC_KEY || '';
     const WOMPI_REDIRECT_URL = window.WOMPI_REDIRECT_URL || `${window.location.origin}${window.location.pathname}`;
+    const FIRESTORE_COVER_REF_PREFIX = `firestore://${FIREBASE_COLLECTION}/`;
+    const FIRESTORE_COVER_DOC_PREFIX = 'coverAsset_';
+    const FIRESTORE_COVER_MAX_WIDTH = 1280;
+    const FIRESTORE_COVER_MAX_HEIGHT = 720;
+    const FIRESTORE_COVER_MAX_BYTES = 850 * 1024;
+    const firestoreCoverCache = {};
+    let firestoreCoverHydrateTimer = null;
 
     const DEMO_USERS = {
       admin: {
@@ -10453,8 +10460,12 @@ function renderPlayer(courseId){
       if(uploadField){
         uploadField.value = '';
         delete uploadField.dataset.fileData;
+        delete uploadField.dataset.firestoreCoverRef;
       }
-      if(uploadName) uploadName.textContent = 'No has seleccionado ningún archivo.';
+      if(uploadName){
+        delete uploadName.dataset.uploadKind;
+        uploadName.textContent = 'No has seleccionado ningún archivo.';
+      }
       updateCourseCoverPreview('');
       setCoverMode('url');
     }
@@ -10462,36 +10473,230 @@ function renderPlayer(courseId){
     function getSelectedCourseCover(){
       const uploadField = document.getElementById('courseCoverUploadField');
       const urlField = document.getElementById('courseCoverField');
-      const uploadCover = uploadField?.dataset?.fileData || '';
+      const uploadCover = uploadField?.dataset?.firestoreCoverRef || uploadField?.dataset?.fileData || '';
       const urlCover = urlField?.value?.trim() || '';
       return uploadCover || urlCover || '';
+    }
+
+    function isFirestoreCoverRef(src){
+      return String(src || '').trim().startsWith(FIRESTORE_COVER_REF_PREFIX);
+    }
+
+    function getFirestoreCoverDocId(src){
+      const value = String(src || '').trim();
+      return isFirestoreCoverRef(value) ? value.slice(FIRESTORE_COVER_REF_PREFIX.length) : '';
+    }
+
+    function buildFirestoreCoverRef(docId){
+      return `${FIRESTORE_COVER_REF_PREFIX}${docId}`;
+    }
+
+    function formatFileSize(bytes){
+      const n = Number(bytes) || 0;
+      if(n >= 1024 * 1024) return `${(n / 1024 / 1024).toFixed(2)} MB`;
+      return `${Math.max(1, Math.round(n / 1024))} KB`;
+    }
+
+    function estimateDataUrlBytes(dataUrl){
+      const raw = String(dataUrl || '');
+      const commaIndex = raw.indexOf(',');
+      const base64 = commaIndex >= 0 ? raw.slice(commaIndex + 1) : raw;
+      return Math.ceil((base64.length * 3) / 4);
+    }
+
+    function loadImageFromFile(file){
+      return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(img);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('No se pudo leer la imagen seleccionada.'));
+        };
+        img.src = objectUrl;
+      });
+    }
+
+    async function prepareImageForFirestore(file){
+      if(!file || !file.type || !file.type.startsWith('image/')){
+        throw new Error('Selecciona una imagen válida.');
+      }
+      const img = await loadImageFromFile(file);
+      const originalWidth = img.naturalWidth || img.width || 1;
+      const originalHeight = img.naturalHeight || img.height || 1;
+      let scale = Math.min(1, FIRESTORE_COVER_MAX_WIDTH / originalWidth, FIRESTORE_COVER_MAX_HEIGHT / originalHeight);
+      let quality = 0.82;
+      let best = null;
+
+      for(let attempt = 0; attempt < 8; attempt++){
+        const width = Math.max(320, Math.round(originalWidth * scale));
+        const height = Math.max(180, Math.round(originalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { alpha: true });
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        let mime = 'image/webp';
+        let dataUrl = canvas.toDataURL(mime, quality);
+        if(!dataUrl.startsWith('data:image/webp')){
+          mime = 'image/jpeg';
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.restore();
+          dataUrl = canvas.toDataURL(mime, quality);
+        }
+        const sizeBytes = estimateDataUrlBytes(dataUrl);
+        best = { dataUrl, sizeBytes, width, height, mime, quality };
+        if(sizeBytes <= FIRESTORE_COVER_MAX_BYTES) break;
+        if(quality > 0.58){
+          quality -= 0.08;
+        } else {
+          scale *= 0.82;
+        }
+      }
+
+      if(!best || best.sizeBytes > FIRESTORE_COVER_MAX_BYTES){
+        throw new Error('La imagen sigue muy pesada para Firestore. Intenta con una imagen más liviana.');
+      }
+      return {
+        ...best,
+        originalName: file.name || 'portada',
+        originalType: file.type || '',
+        originalSizeBytes: file.size || 0
+      };
+    }
+
+    async function uploadCourseCoverToFirestore(file, context = {}){
+      const prepared = await prepareImageForFirestore(file);
+      const connected = firebaseDb || initFirebaseConnection();
+      if(!connected || !firebaseDb){
+        throw new Error('Firestore no está disponible. Revisa Firebase antes de subir miniaturas.');
+      }
+      const safeName = String(file?.name || 'portada').replace(/[^a-z0-9._-]/gi, '_').slice(0, 80) || 'portada';
+      const docId = `${FIRESTORE_COVER_DOC_PREFIX}${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      firestoreCoverCache[docId] = prepared.dataUrl;
+      const payload = {
+        kind: 'course-cover',
+        courseId: context.courseId || null,
+        courseTitle: context.courseTitle || '',
+        fileName: safeName,
+        originalName: prepared.originalName,
+        originalType: prepared.originalType,
+        originalSizeBytes: prepared.originalSizeBytes,
+        storedMime: prepared.mime,
+        storedSizeBytes: prepared.sizeBytes,
+        width: prepared.width,
+        height: prepared.height,
+        dataUrl: prepared.dataUrl,
+        createdAtText: new Date().toISOString(),
+        updatedAtText: new Date().toISOString()
+      };
+      if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).set(payload, { merge: true });
+      return { ref: buildFirestoreCoverRef(docId), docId, ...prepared };
+    }
+
+    async function resolveFirestoreCoverDataUrl(src){
+      const docId = getFirestoreCoverDocId(src);
+      if(!docId) return '';
+      if(firestoreCoverCache[docId]) return firestoreCoverCache[docId];
+      const connected = firebaseDb || initFirebaseConnection();
+      if(!connected || !firebaseDb) return '';
+      try{
+        const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).get();
+        if(doc.exists){
+          const dataUrl = doc.data()?.dataUrl || '';
+          if(dataUrl){
+            firestoreCoverCache[docId] = dataUrl;
+            return dataUrl;
+          }
+        }
+      }catch(error){
+        console.warn('No se pudo cargar la miniatura desde Firestore.', error);
+      }
+      return '';
+    }
+
+    function applyCoverSrcToElement(element, src){
+      if(!element) return;
+      const cover = String(src || '').trim();
+      delete element.dataset.firestoreCoverId;
+      if(!cover){
+        element.classList.remove('has-image', 'cover-has-image');
+        element.style.backgroundImage = '';
+        return;
+      }
+      element.classList.add(element.classList.contains('cover') ? 'cover-has-image' : 'has-image');
+      if(isFirestoreCoverRef(cover)){
+        const docId = getFirestoreCoverDocId(cover);
+        element.dataset.firestoreCoverId = docId;
+        element.style.backgroundImage = '';
+        resolveFirestoreCoverDataUrl(cover).then(dataUrl => {
+          if(dataUrl && element.dataset.firestoreCoverId === docId){
+            element.style.backgroundImage = `url('${escapeCssUrl(dataUrl)}')`;
+          }
+        });
+      }else{
+        element.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+      }
+    }
+
+    function queueHydrateFirestoreCovers(){
+      clearTimeout(firestoreCoverHydrateTimer);
+      firestoreCoverHydrateTimer = setTimeout(hydrateFirestoreCovers, 0);
+    }
+
+    function hydrateFirestoreCovers(root = document){
+      root.querySelectorAll('[data-firestore-cover-id]').forEach(element => {
+        const docId = element.dataset.firestoreCoverId || '';
+        if(docId){
+          applyCoverSrcToElement(element, buildFirestoreCoverRef(docId));
+        }
+      });
     }
 
     function updateCourseCoverPreview(src){
       const media = document.getElementById('courseCoverPreviewMedia');
       const text = document.getElementById('courseCoverPreviewText');
       if(!media || !text) return;
-      const cover = (src || '').trim();
+      const cover = String(src || '').trim();
       if(cover){
         media.classList.add('has-image');
-        media.style.backgroundImage = `url('${cover.replace(/'/g, "\'")}')`;
+        applyCoverSrcToElement(media, cover);
         media.innerHTML = '<span>Portada seleccionada</span>';
-        text.textContent = cover.startsWith('data:image')
-          ? 'Imagen cargada desde tu equipo y lista para guardarse en el curso.'
-          : 'Imagen tomada desde la URL que pegaste para la portada del curso.';
+        text.textContent = isFirestoreCoverRef(cover)
+          ? 'Imagen comprimida y guardada en Firestore. Al guardar el curso quedará vinculada a esta portada.'
+          : cover.startsWith('data:image')
+            ? 'Imagen convertida en datos locales. Guarda en Firestore para conservarla en la nube.'
+            : 'Imagen tomada desde la URL que pegaste para la portada del curso.';
       } else {
         media.classList.remove('has-image');
         media.style.backgroundImage = '';
+        delete media.dataset.firestoreCoverId;
         media.innerHTML = '<span>Vista previa de portada</span>';
-        text.textContent = 'Puedes usar una URL o subir una imagen desde tu equipo.';
+        text.textContent = 'Puedes usar una URL o subir una imagen; si subes archivo se guardará en Firestore.';
       }
     }
 
     function renderCourseCover(course){
-      const safeTitle = course?.title || 'Curso';
-      const cover = (course?.cover || '').trim();
+      const safeTitle = escapeHtml(course?.title || 'Curso');
+      const cover = String(course?.cover || '').trim();
       if(cover){
-        return `<div class="cover cover-has-image" style="background-image:url('${cover.replace(/'/g, "\'")}')"><span>${safeTitle}</span></div>`;
+        if(isFirestoreCoverRef(cover)){
+          const docId = escapeHtml(getFirestoreCoverDocId(cover));
+          queueHydrateFirestoreCovers();
+          return `<div class="cover cover-has-image" data-firestore-cover-id="${docId}"><span>${safeTitle}</span></div>`;
+        }
+        return `<div class="cover cover-has-image" style="background-image:url('${escapeCssUrl(cover)}')"><span>${safeTitle}</span></div>`;
       }
       return `<div class="cover"><span>${safeTitle}</span></div>`;
     }
@@ -10966,11 +11171,11 @@ function renderPlayer(courseId){
                 <label class="cover-upload-drop" for="editCourseCoverUploadField">
                   <input type="file" id="editCourseCoverUploadField" accept="image/*">
                   <span class="cover-upload-title">Subir nueva imagen de portada</span>
-                  <span class="cover-upload-meta">Opcional · PNG, JPG o WEBP</span>
+                  <span class="cover-upload-meta">Opcional · se comprime y se guarda en Firestore</span>
                 </label>
                 <div class="cover-upload-file-name" id="editCourseCoverUploadName">${cover ? 'Portada actual cargada.' : 'No has seleccionado ningún archivo.'}</div>
                 <div class="cover-preview-card">
-                  <div class="cover-preview-media${cover ? ' has-image' : ''}" id="editCourseCoverPreviewMedia" style="${cover ? `background-image:url('${escapeCssUrl(cover)}')` : ''}"><span>${cover ? 'Portada actual' : 'Vista previa de portada'}</span></div>
+                  <div class="cover-preview-media${cover ? ' has-image' : ''}" id="editCourseCoverPreviewMedia"><span>${cover ? 'Portada actual' : 'Vista previa de portada'}</span></div>
                   <div class="cover-preview-info">
                     <strong>Vista previa</strong>
                     <small id="editCourseCoverPreviewText">${cover ? 'Esta es la portada guardada actualmente en el curso.' : 'Puedes pegar una URL o subir una imagen desde tu equipo.'}</small>
@@ -11043,7 +11248,7 @@ function renderPlayer(courseId){
       const coverField = document.getElementById('editCourseCoverField');
       const uploadField = document.getElementById('editCourseCoverUploadField');
       coverField?.addEventListener('input', (event) => updateCourseEditCoverPreview(event.target.value));
-      uploadField?.addEventListener('change', (event) => {
+      uploadField?.addEventListener('change', async (event) => {
         const file = event.target.files?.[0];
         const nameNode = document.getElementById('editCourseCoverUploadName');
         if(!file){
@@ -11056,14 +11261,28 @@ function renderPlayer(courseId){
           event.target.value = '';
           return;
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-          const data = String(reader.result || '');
-          if(coverField) coverField.value = data;
-          if(nameNode) nameNode.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-          updateCourseEditCoverPreview(data);
-        };
-        reader.readAsDataURL(file);
+        try{
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'uploading';
+            nameNode.textContent = 'Subiendo miniatura a Firestore...';
+          }
+          const uploaded = await uploadCourseCoverToFirestore(file, { courseId, courseTitle: course.title || '' });
+          if(coverField) coverField.value = uploaded.ref;
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'done';
+            nameNode.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`;
+          }
+          updateCourseEditCoverPreview(uploaded.ref);
+          toast('Miniatura guardada en Firestore.');
+        }catch(error){
+          console.error('No se pudo subir la miniatura a Firestore.', error);
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'error';
+            nameNode.textContent = error.message || 'No se pudo subir a Firestore.';
+          }
+          event.target.value = '';
+          toast(error.message || 'No se pudo subir la miniatura a Firestore.');
+        }
       });
       bindVideoUploadInput('editNewLessonVideoUploadField', 'editNewLessonUrlField', 'editNewLessonVideoUploadStatus', () => ({ courseId, lessonIndex: 'nueva' }));
       bindCourseEditLessonVideoUploadInputs();
@@ -11076,14 +11295,19 @@ function renderPlayer(courseId){
       const cover = String(src || '').trim();
       if(cover){
         media.classList.add('has-image');
-        media.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+        applyCoverSrcToElement(media, cover);
         media.innerHTML = '<span>Portada seleccionada</span>';
-        text.textContent = cover.startsWith('data:image') ? 'Imagen cargada desde tu equipo y lista para guardarse.' : 'Imagen tomada desde la URL indicada.';
+        text.textContent = isFirestoreCoverRef(cover)
+          ? 'Imagen cargada desde Firestore y vinculada a este curso.'
+          : cover.startsWith('data:image')
+            ? 'Imagen convertida en datos locales. Sube a Firestore para conservarla en la nube.'
+            : 'Imagen tomada desde la URL indicada.';
       }else{
         media.classList.remove('has-image');
         media.style.backgroundImage = '';
+        delete media.dataset.firestoreCoverId;
         media.innerHTML = '<span>Vista previa de portada</span>';
-        text.textContent = 'Puedes pegar una URL o subir una imagen desde tu equipo.';
+        text.textContent = 'Puedes pegar una URL o subir una imagen desde tu equipo. Si subes archivo, se guardará en Firestore.';
       }
     }
 
@@ -12021,10 +12245,11 @@ function openPaymentHistoryModal(id){
         if(continueThumb){
           if(cover){
             continueThumb.classList.add('has-image');
-            continueThumb.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+            applyCoverSrcToElement(continueThumb, cover);
           } else {
             continueThumb.classList.remove('has-image');
             continueThumb.style.backgroundImage = '';
+            delete continueThumb.dataset.firestoreCoverId;
           }
         }
         if(continueThumbLabel) continueThumbLabel.textContent = cover ? 'Miniatura del curso' : 'Curso sin miniatura cargada';
@@ -12042,6 +12267,7 @@ function openPaymentHistoryModal(id){
         if(continueThumb){
           continueThumb.classList.remove('has-image');
           continueThumb.style.backgroundImage = '';
+          delete continueThumb.dataset.firestoreCoverId;
         }
         if(continueThumbLabel) continueThumbLabel.textContent = 'Sin miniatura disponible';
         if(continueTitle) continueTitle.textContent = 'Sin cursos asignados';
@@ -12328,12 +12554,16 @@ function bindButtons(){
         updateCourseCoverPreview(e.target.value);
       });
 
-      byId('courseCoverUploadField')?.addEventListener('change', (e) => {
+      byId('courseCoverUploadField')?.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         const nameNode = byId('courseCoverUploadName');
         if(!file){
-          if(nameNode) nameNode.textContent = 'No has seleccionado ningún archivo.';
+          if(nameNode){
+            delete nameNode.dataset.uploadKind;
+            nameNode.textContent = 'No has seleccionado ningún archivo.';
+          }
           delete e.target.dataset.fileData;
+          delete e.target.dataset.firestoreCoverRef;
           updateCourseCoverPreview(byId('courseCoverField')?.value || '');
           return;
         }
@@ -12342,14 +12572,34 @@ function bindButtons(){
           e.target.value = '';
           return;
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-          e.target.dataset.fileData = String(reader.result || '');
-          if(nameNode) nameNode.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        try{
           setCoverMode('file');
-          updateCourseCoverPreview(e.target.dataset.fileData || '');
-        };
-        reader.readAsDataURL(file);
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'uploading';
+            nameNode.textContent = 'Subiendo miniatura a Firestore...';
+          }
+          const uploaded = await uploadCourseCoverToFirestore(file, {
+            courseTitle: byId('courseTitleField')?.value?.trim() || 'Curso nuevo'
+          });
+          e.target.dataset.firestoreCoverRef = uploaded.ref;
+          e.target.dataset.fileData = uploaded.ref;
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'done';
+            nameNode.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`;
+          }
+          updateCourseCoverPreview(uploaded.ref);
+          toast('Miniatura guardada en Firestore.');
+        }catch(error){
+          console.error('No se pudo subir la miniatura a Firestore.', error);
+          delete e.target.dataset.fileData;
+          delete e.target.dataset.firestoreCoverRef;
+          e.target.value = '';
+          if(nameNode){
+            nameNode.dataset.uploadKind = 'error';
+            nameNode.textContent = error.message || 'No se pudo subir a Firestore.';
+          }
+          toast(error.message || 'No se pudo subir la miniatura a Firestore.');
+        }
       });
 
       bindCreateLessonVideoUpload();
@@ -12625,6 +12875,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       if(state.currentUser && state.currentUser.role){
         enterApp(state.currentUser);
       }
+      queueHydrateFirestoreCovers();
     }
 
     bindButtons();
@@ -12645,6 +12896,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     if(state.currentUser && state.currentUser.role){
       enterApp(state.currentUser);
     }
+    queueHydrateFirestoreCovers();
 
     window.showTab = showTab;
     window.editCourse = editCourse;
