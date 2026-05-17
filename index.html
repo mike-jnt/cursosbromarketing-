@@ -7413,17 +7413,48 @@
       };
     }
 
+    function stripInlineDataUrlValue(value){
+      const text = String(value || '').trim();
+      return text.startsWith('data:') ? '' : value;
+    }
+
+    function sanitizeLessonForSharedState(lesson){
+      const clean = clonePlain(lesson || {});
+      clean.url = normalizeVideoUrl(clean.url || '');
+      clean.thumbnail = stripInlineDataUrlValue(clean.thumbnail || clean.thumb || clean.thumbnailUrl || clean.cover || '');
+      delete clean.thumbnailData;
+      delete clean.thumbData;
+      delete clean.thumbnailInlineData;
+      delete clean.coverData;
+      delete clean.coverDataUrl;
+      delete clean.coverInlineData;
+      return clean;
+    }
+
+    function sanitizeCourseForSharedState(course){
+      const clean = clonePlain(course || {});
+      clean.cover = stripInlineDataUrlValue(clean.cover || '');
+      delete clean.coverData;
+      delete clean.coverDataUrl;
+      delete clean.coverInlineData;
+      clean.lessons = Array.isArray(clean.lessons) ? clean.lessons.map(sanitizeLessonForSharedState) : [];
+      return clean;
+    }
+
     function getSharedPersistableState(){
+      // Firestore permite documentos de máximo ~1 MiB. Las imágenes base64 no deben
+      // vivir dentro de campus/mainState; se guardan como coverAsset_* y aquí solo
+      // queda la referencia para que cursos y clases persistan sin borrar cambios.
       const shared = clonePlain({
         currentCourseId: state.currentCourseId,
         currentLessonIndex: state.currentLessonIndex,
-        pendingLessons: state.pendingLessons || [],
+        pendingLessons: [],
         favorites: state.favorites || [],
         admins: state.admins || [],
         resources: state.resources || [],
         certificates: state.certificates || [],
         activityLog: state.activityLog || [],
-        courses: state.courses || [],
+        courses: Array.isArray(state.courses) ? state.courses.map(sanitizeCourseForSharedState) : [],
         users: state.users || [],
         payments: state.payments || [],
         accessRequests: state.accessRequests || []
@@ -7506,7 +7537,6 @@
       const authEmail = getFirebaseSignedEmail();
       return Boolean(
         firebaseDb
-        && firebaseRemoteLoaded
         && state.currentUser
         && state.currentUser.role === 'admin'
         && authEmail
@@ -7626,11 +7656,22 @@
     }
 
     async function saveSharedStateToFirebaseNow(){
-      if(!canWriteSharedFirebaseState()) return false;
+      if(!initFirebaseConnection() || !firebaseDb){
+        console.warn('No se pudo guardar en Firestore: conexión no disponible.');
+        return false;
+      }
+      if(!canWriteSharedFirebaseState()){
+        console.warn('No se pudo guardar en Firestore: sesión de administrador no válida.', {
+          currentUserRole: state.currentUser?.role || '',
+          firebaseEmail: getFirebaseSignedEmail()
+        });
+        return false;
+      }
       try{
         const payload = getSharedPersistableState();
         payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+        firebaseRemoteLoaded = true;
         return true;
       }catch(error){
         console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la copia local.', error);
@@ -11125,7 +11166,7 @@ function renderPlayer(courseId){
       if(tabId === 'student-profile') renderStudentProfileSummary();
     }
 
-    function enterApp(user){
+    async function enterApp(user){
       authScreen.style.display = 'none';
       appShell.style.display = 'block';
       const cleanUser = {
@@ -11136,6 +11177,12 @@ function renderPlayer(courseId){
         courseId: Number(user.courseId) || 0
       };
       state.currentUser = cleanUser;
+
+      // Primero se carga la versión real de Firestore después de Auth.
+      // Antes se renderizaba con copia local y luego Firestore podía traer una versión vieja.
+      if(hasFirebaseAuthSession() && !firebaseRemoteLoaded){
+        await loadFirebaseState({ silent: true, requireAuth: true });
+      }
 
       if(cleanUser.role === 'student'){
         const studentRecord = getCurrentStudentRecord();
@@ -11148,8 +11195,13 @@ function renderPlayer(courseId){
           const firstCourse = getStudentCourses()[0];
           if(firstCourse) state.currentCourseId = firstCourse.id;
         }
+      }else{
+        state.currentUser = cleanUser;
       }
-      saveState();
+
+      // Guardamos solo la sesión local del navegador. Los cambios reales de cursos
+      // se suben con saveSharedStateToFirebaseNow() al crear/editar.
+      saveState({ localOnly: true });
 
       document.getElementById('sideUserName').textContent = cleanUser.name;
       document.getElementById('sideUserEmail').textContent = cleanUser.email;
@@ -11180,7 +11232,6 @@ function renderPlayer(courseId){
         renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
-        // Sincronización automática desactivada: evita intentos repetidos de signUp en Firebase Auth.
       }else{
         roleChip.textContent = 'ALUMNO';
         sideRoleBadge.textContent = 'Alumno';
@@ -11195,7 +11246,7 @@ function renderPlayer(courseId){
         renderStudentAssignedCourses();
         renderStudentDiscover();
         renderStudentProgress();
-          renderStudentCertificates();
+        renderStudentCertificates();
         const firstCourse = getStudentCourses()[0];
         if(firstCourse) renderPlayer(firstCourse.id);
         updateStudentDesire();
@@ -11435,7 +11486,7 @@ function renderPlayer(courseId){
 
       const firebaseLogin = await authenticateWithFirebaseAuth(email, password);
       if(firebaseLogin.ok){
-        enterApp(firebaseLogin.user);
+        await enterApp(firebaseLogin.user);
         return;
       }
 
@@ -11456,7 +11507,7 @@ function renderPlayer(courseId){
       }
 
       if(email === normalizeEmail(DEMO_USERS.admin.email) && password === DEMO_USERS.admin.password){
-        enterApp(DEMO_USERS.admin);
+        await enterApp(DEMO_USERS.admin);
         return;
       }
 
@@ -11472,7 +11523,7 @@ function renderPlayer(courseId){
             saveState();
           }
         }
-        enterApp(studentAuth.user);
+        await enterApp(studentAuth.user);
         return;
       }
 
@@ -11933,22 +11984,39 @@ function renderPlayer(courseId){
       if(newThumbStatus){ delete newThumbStatus.dataset.uploadKind; newThumbStatus.textContent = 'No has seleccionado ninguna miniatura.'; }
       applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {});
       renderCourseEditLessonsDraft();
+      let saveResult = { remoteSaved: true };
       if(courseEditDraft.courseId){
-        await saveEditedCourse(courseEditDraft.courseId, {
+        saveResult = await saveEditedCourse(courseEditDraft.courseId, {
           keepModalOpen: true,
           silent: true,
           skipActivity: true,
           successMessage: 'Clase agregada y guardada correctamente.'
-        });
+        }) || saveResult;
       }
-      toast('Clase agregada y guardada correctamente.');
+      if(saveResult.remoteSaved === false){
+        toast('Clase agregada en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
+      }else{
+        toast('Clase agregada y guardada en Firebase.');
+      }
     }
 
-    function deleteCourseEditLesson(index){
+    async function deleteCourseEditLesson(index){
       syncAllCourseEditLessonsFromDom();
       courseEditDraft.lessons.splice(index, 1);
       renderCourseEditLessonsDraft();
-      toast('Clase eliminada del editor.');
+      let saveResult = { remoteSaved: true };
+      if(courseEditDraft.courseId){
+        saveResult = await saveEditedCourse(courseEditDraft.courseId, {
+          keepModalOpen: true,
+          silent: true,
+          skipActivity: true
+        }) || saveResult;
+      }
+      if(saveResult.remoteSaved === false){
+        toast('Clase eliminada solo en este navegador. No se pudo subir a Firebase.');
+      }else{
+        toast('Clase eliminada y guardada en Firebase.');
+      }
     }
 
     function reconcileCourseProgressAfterEdit(courseId){
@@ -12022,9 +12090,13 @@ function renderPlayer(courseId){
       course.updatedAt = new Date().toISOString();
       reconcileCourseProgressAfterEdit(id);
 
-      saveState();
+      if(!options.skipActivity){
+        addActivity(`Se editó el curso ${previousTitle || title}.`);
+      }
+      saveState({ localOnly: true });
+      let remoteSaved = true;
       if(options.forceRemote !== false){
-        await saveSharedStateToFirebaseNow();
+        remoteSaved = await saveSharedStateToFirebaseNow();
       }
       renderAdminCourses();
       renderStudentDiscover();
@@ -12034,15 +12106,17 @@ function renderPlayer(courseId){
       renderUsersTable();
       fillCourseSelects();
       renderAdminDashboard();
-      if(!options.skipActivity){
-        addActivity(`Se editó el curso ${previousTitle || title}.`);
-      }
       if(!options.keepModalOpen){
         closeModal();
       }
       if(!options.silent){
-        toast(options.successMessage || 'Curso actualizado correctamente.');
+        if(remoteSaved){
+          toast(options.successMessage || 'Curso actualizado y guardado en Firebase.');
+        }else{
+          toast('El curso quedó guardado en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
+        }
       }
+      return { ok: true, remoteSaved };
     }
 
     function toggleCourseVisibility(id){
@@ -13213,7 +13287,7 @@ function bindButtons(){
         renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}${thumbnail ? ' · Miniatura' : ''}`);
       });
 
-      byId('btnSaveCourseInline')?.addEventListener('click', () => {
+      byId('btnSaveCourseInline')?.addEventListener('click', async () => {
         const title = byId('courseTitleField').value.trim();
         const category = byId('courseCategoryField').value;
         const status = byId('courseStatusField').value;
@@ -13228,12 +13302,15 @@ function bindButtons(){
         if(!title || !description){ toast('Completa título y descripción.'); return; }
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
         const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }];
+        const createdAt = new Date().toISOString();
         state.courses.unshift({
-          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt: new Date().toISOString(),
-          progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
+          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt,
+          updatedAt: createdAt, progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
         });
         state.pendingLessons = [];
-        if (typeof saveState === 'function') saveState();
+        addActivity('Se creó el curso ' + title + ' con precio definido.');
+        if (typeof saveState === 'function') saveState({ localOnly: true });
+        const remoteSaved = await saveSharedStateToFirebaseNow();
         byId('courseTitleField').value = '';
         byId('courseDescField').value = '';
         if(byId('coursePriceField')) byId('coursePriceField').value = '';
@@ -13245,8 +13322,11 @@ function bindButtons(){
         resetCreateLessonThumbnailInput();
         setCreateCourseStep('info');
         renderLessonsPreview(); renderAdminCourses(); renderStudentDiscover(); fillCourseSelects(); renderAdminDashboard();
-        addActivity('Se creó el curso ' + title + ' con precio definido.');
-        toast('Curso creado');
+        if(remoteSaved){
+          toast('Curso creado y guardado en Firebase.');
+        }else{
+          toast('Curso creado en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
+        }
         showTab('admin-courses');
       });
 
