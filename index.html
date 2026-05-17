@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
@@ -5211,100 +5213,13 @@
     .admin-video-preview.is-youtube-protected::before{
       content:"";
       position:absolute;
-      left:0;
       right:0;
       top:0;
-      width:auto;
-      height:70px;
+      width:170px;
+      height:58px;
       z-index:4;
       pointer-events:auto;
-      background:linear-gradient(180deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.28) 62%, rgba(0,0,0,0) 100%);
-    }
-    .video-frame.is-youtube-protected::after,
-    .admin-video-preview.is-youtube-protected::after{
-      height:106px;
-      background:linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.50) 58%, rgba(0,0,0,0) 100%);
-    }
-    .video-frame.is-youtube-custom-controls iframe{
-      pointer-events:none;
-    }
-    .youtube-custom-controls{
-      position:absolute;
-      left:18px;
-      right:18px;
-      bottom:16px;
-      z-index:9;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(5,5,7,.72);
-      box-shadow:0 18px 34px rgba(0,0,0,.34);
-      backdrop-filter:blur(14px);
-    }
-    .video-frame.is-youtube-custom-controls .youtube-custom-controls{
-      display:flex;
-    }
-    .youtube-control-btn{
-      width:42px;
-      height:42px;
-      min-width:42px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,255,255,.10);
-      color:#ffffff;
-      cursor:pointer;
-      display:inline-grid;
-      place-items:center;
-      font-size:16px;
-      font-weight:900;
-      line-height:1;
-      transition:transform .18s ease, background-color .18s ease, border-color .18s ease;
-    }
-    .youtube-control-btn:hover{
-      transform:translateY(-1px);
-      background:rgba(255,90,31,.24);
-      border-color:rgba(255,90,31,.42);
-    }
-    .youtube-control-btn.is-main{
-      width:50px;
-      height:50px;
-      min-width:50px;
-      background:linear-gradient(90deg,#ff5a1f 0%,#ff762e 100%);
-      border-color:rgba(255,90,31,.72);
-      box-shadow:0 12px 24px rgba(255,90,31,.24);
-      font-size:18px;
-    }
-    .youtube-control-spacer{
-      flex:1;
-      min-width:10px;
-    }
-    .youtube-control-label{
-      color:rgba(255,255,255,.82);
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.03em;
-      text-transform:uppercase;
-      white-space:nowrap;
-      margin-right:auto;
-    }
-    @media (max-width:760px){
-      .youtube-custom-controls{
-        left:10px;
-        right:10px;
-        bottom:10px;
-        gap:7px;
-        padding:9px;
-        border-radius:16px;
-      }
-      .youtube-control-label{display:none}
-      .youtube-control-btn{width:38px;height:38px;min-width:38px;font-size:14px}
-      .youtube-control-btn.is-main{width:44px;height:44px;min-width:44px}
-      .video-frame.is-youtube-protected::after,
-      .admin-video-preview.is-youtube-protected::after{height:92px}
+      background:transparent;
     }
 
 
@@ -6147,1875 +6062,233 @@
 
 
 
-    /* === YouTube privado: responsive + controles elegantes del campus === */
-    .player-video-wrap{
-      border-radius:22px !important;
-      overflow:hidden !important;
-      background:#050507 !important;
+    /* === Continuar clase: reproductor premium con más aire visual === */
+    #tab-student-player{
+      padding:28px !important;
+      border-radius:26px !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.16), transparent 32%),
+        radial-gradient(circle at bottom left, rgba(255,118,46,.08), transparent 28%),
+        linear-gradient(180deg,#15131b 0%,#0e0b12 100%) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      box-shadow:0 30px 70px rgba(0,0,0,.36) !important;
+      overflow:hidden;
     }
-    .player-video-wrap .video-frame{
-      width:100%;
-      padding-top:0 !important;
-      aspect-ratio:16 / 9;
-      min-height:clamp(210px, 42vw, 620px);
-      max-height:calc(100vh - 210px);
-      border-radius:22px !important;
-      background:#000 !important;
-      overflow:hidden !important;
-      isolation:isolate;
-      box-shadow:0 24px 60px rgba(0,0,0,.42) !important;
+    #tab-student-player > div:first-child{
+      margin-bottom:24px !important;
+      padding:18px 20px;
+      border-radius:22px;
+      background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+      border:1px solid rgba(255,255,255,.09);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
-    .player-video-wrap .video-frame iframe,
-    .player-video-wrap .video-frame video,
-    .player-video-wrap .video-frame .placeholder{
-      position:absolute !important;
-      inset:0 !important;
+    #tab-student-player > div:first-child h2{
+      margin-bottom:8px;
+      font-size:clamp(26px,3vw,36px) !important;
+      letter-spacing:-.04em;
+    }
+    #tab-student-player > div:first-child p{
+      max-width:720px;
+      color:rgba(255,255,255,.72) !important;
+    }
+    #tab-student-player .player-shell{
       width:100% !important;
-      height:100% !important;
+      max-width:none !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) minmax(340px,390px) !important;
+      gap:30px !important;
+      align-items:start !important;
     }
-    .video-frame.is-youtube-protected iframe,
-    .admin-video-preview.is-youtube-protected iframe{
-      pointer-events:none !important;
-      user-select:none !important;
-    }
-    .video-frame.is-youtube-protected::before,
-    .admin-video-preview.is-youtube-protected::before{
-      content:"";
-      position:absolute;
-      left:0;
-      right:0;
-      top:0;
-      height:clamp(72px, 10vw, 118px) !important;
-      z-index:8 !important;
-      pointer-events:auto;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.96) 0%, rgba(0,0,0,.74) 45%, rgba(0,0,0,.28) 76%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px);
-    }
-    .video-frame.is-youtube-protected::after,
-    .admin-video-preview.is-youtube-protected::after{
-      content:"";
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      height:clamp(124px, 14vw, 188px) !important;
-      z-index:8 !important;
-      pointer-events:auto;
-      background:
-        linear-gradient(0deg, rgba(0,0,0,.98) 0%, rgba(0,0,0,.82) 42%, rgba(0,0,0,.36) 76%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px);
-    }
-    .video-frame.is-youtube-custom-controls .youtube-custom-controls{
-      display:flex !important;
-    }
-    .youtube-custom-controls{
-      left:50% !important;
-      right:auto !important;
-      bottom:clamp(12px, 2.1vw, 24px) !important;
-      transform:translateX(-50%);
-      z-index:30 !important;
-      width:min(94%, 760px);
-      min-height:66px;
-      align-items:center;
-      justify-content:center;
-      gap:clamp(7px, 1.2vw, 14px) !important;
-      padding:10px clamp(10px, 1.4vw, 18px) !important;
-      border-radius:999px !important;
-      border:1px solid rgba(255,255,255,.16) !important;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255,90,31,.22), transparent 38%),
-        linear-gradient(180deg, rgba(26,24,32,.94) 0%, rgba(5,5,7,.92) 100%) !important;
-      box-shadow:0 22px 48px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.08) !important;
-      backdrop-filter:blur(18px) saturate(140%);
-      -webkit-backdrop-filter:blur(18px) saturate(140%);
-      transition:opacity .2s ease, transform .2s ease, width .2s ease;
-    }
-    .youtube-custom-controls::before{
-      content:"";
-      position:absolute;
-      inset:1px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.045);
-      pointer-events:none;
-    }
-    .youtube-control-btn{
-      width:clamp(42px, 4vw, 50px) !important;
-      height:clamp(42px, 4vw, 50px) !important;
-      min-width:clamp(42px, 4vw, 50px) !important;
-      border-radius:999px !important;
-      border:1px solid rgba(255,255,255,.14) !important;
-      background:linear-gradient(180deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.06) 100%) !important;
-      color:#ffffff !important;
-      display:inline-flex !important;
-      align-items:center;
-      justify-content:center;
-      gap:2px;
-      font-size:clamp(15px, 1.8vw, 18px) !important;
-      font-weight:900 !important;
-      line-height:1;
-      cursor:pointer;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.22) !important;
-      transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease !important;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .youtube-control-btn:hover{
-      transform:translateY(-2px) scale(1.03) !important;
-      background:linear-gradient(180deg, rgba(255,90,31,.34) 0%, rgba(255,90,31,.16) 100%) !important;
-      border-color:rgba(255,118,46,.58) !important;
-      box-shadow:0 16px 28px rgba(255,90,31,.20), inset 0 1px 0 rgba(255,255,255,.12) !important;
-    }
-    .youtube-control-btn:active{
-      transform:translateY(0) scale(.97) !important;
-    }
-    .youtube-control-btn:focus-visible{
-      outline:3px solid rgba(255,118,46,.55);
-      outline-offset:3px;
-    }
-    .youtube-control-btn.is-main{
-      width:clamp(54px, 5vw, 66px) !important;
-      height:clamp(54px, 5vw, 66px) !important;
-      min-width:clamp(54px, 5vw, 66px) !important;
-      background:linear-gradient(135deg, #ff5a1f 0%, #ff762e 52%, #d94411 100%) !important;
-      border-color:rgba(255,118,46,.78) !important;
-      color:#fff !important;
-      font-size:clamp(18px, 2vw, 22px) !important;
-      box-shadow:0 18px 34px rgba(255,90,31,.34), inset 0 1px 0 rgba(255,255,255,.18) !important;
-    }
-    .youtube-seek-btn{
-      width:clamp(54px, 5vw, 64px) !important;
-      min-width:clamp(54px, 5vw, 64px) !important;
-      padding:0 10px !important;
-    }
-    .youtube-seek-btn small{
-      color:rgba(255,255,255,.82);
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.02em;
-      margin-top:1px;
-    }
-    .youtube-control-label{
-      margin-left:4px !important;
-      margin-right:4px !important;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.76) !important;
-      font-size:clamp(10px, .9vw, 12px) !important;
-      font-weight:900 !important;
-      letter-spacing:.08em !important;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-    .youtube-control-spacer{
-      flex:1 1 auto !important;
-      min-width:8px !important;
-    }
-    @media (min-width:1200px){
-      .player-video-wrap .video-frame{
-        min-height:560px;
-      }
-      .youtube-custom-controls{
-        bottom:22px !important;
-      }
-    }
-    @media (max-width:900px){
-      .player-video-wrap .video-frame{
-        border-radius:18px !important;
-        min-height:auto;
-        max-height:none;
-      }
-      .video-frame.is-youtube-protected::before,
-      .admin-video-preview.is-youtube-protected::before{
-        height:clamp(62px, 13vw, 96px) !important;
-      }
-      .video-frame.is-youtube-protected::after,
-      .admin-video-preview.is-youtube-protected::after{
-        height:clamp(112px, 20vw, 160px) !important;
-      }
-      .youtube-custom-controls{
-        width:min(96%, 620px);
-        min-height:60px;
-        padding:9px 11px !important;
-      }
-      .youtube-control-label{display:none !important;}
-    }
-    @media (max-width:520px){
-      .player-video-wrap .video-frame{
-        border-radius:16px !important;
-      }
-      .youtube-custom-controls{
-        width:calc(100% - 16px);
-        bottom:8px !important;
-        min-height:54px;
-        gap:6px !important;
-        padding:7px 8px !important;
-        border-radius:18px !important;
-      }
-      .youtube-control-spacer{
-        flex:.6 1 auto !important;
-      }
-      .youtube-control-btn{
-        width:38px !important;
-        height:38px !important;
-        min-width:38px !important;
-        font-size:14px !important;
-      }
-      .youtube-control-btn.is-main{
-        width:46px !important;
-        height:46px !important;
-        min-width:46px !important;
-        font-size:17px !important;
-      }
-      .youtube-seek-btn{
-        width:46px !important;
-        min-width:46px !important;
-        padding:0 6px !important;
-      }
-      .youtube-seek-btn small{
-        font-size:9px;
-      }
-      .video-frame.is-youtube-protected::before,
-      .admin-video-preview.is-youtube-protected::before{
-        height:58px !important;
-      }
-      .video-frame.is-youtube-protected::after,
-      .admin-video-preview.is-youtube-protected::after{
-        height:118px !important;
-      }
-    }
-    .video-frame.is-youtube-protected:fullscreen,
-    .video-frame.is-youtube-protected:-webkit-full-screen{
-      width:100vw !important;
-      height:100vh !important;
-      max-height:none !important;
-      aspect-ratio:auto !important;
-      border-radius:0 !important;
-      background:#000 !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen iframe,
-    .video-frame.is-youtube-protected:-webkit-full-screen iframe{
-      width:100vw !important;
-      height:100vh !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen::before,
-    .video-frame.is-youtube-protected:-webkit-full-screen::before{
-      height:clamp(96px, 14vh, 160px) !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen::after,
-    .video-frame.is-youtube-protected:-webkit-full-screen::after{
-      height:clamp(150px, 20vh, 240px) !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-custom-controls,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-custom-controls{
-      width:min(92vw, 860px);
-      bottom:max(24px, env(safe-area-inset-bottom)) !important;
-      min-height:74px;
-      border-radius:999px !important;
-    }
-
-
-    /* === YouTube privado v2: tapa marca, botón nativo y reemplaza título por nombre de la clase === */
-    .video-frame.is-youtube-protected{
-      --yt-private-top-height:clamp(82px, 10vw, 128px);
-      --yt-private-bottom-height:clamp(132px, 15vw, 198px);
-    }
-    .video-frame.is-youtube-protected::before,
-    .admin-video-preview.is-youtube-protected::before{
-      height:var(--yt-private-top-height) !important;
-      z-index:18 !important;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.995) 0%, rgba(0,0,0,.94) 46%, rgba(0,0,0,.64) 78%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(5px) saturate(120%);
-      -webkit-backdrop-filter:blur(5px) saturate(120%);
-    }
-    .video-frame.is-youtube-protected::after,
-    .admin-video-preview.is-youtube-protected::after{
-      height:var(--yt-private-bottom-height) !important;
-      z-index:18 !important;
-      background:
-        linear-gradient(0deg, rgba(0,0,0,.995) 0%, rgba(0,0,0,.94) 48%, rgba(0,0,0,.58) 78%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(4px) saturate(120%);
-      -webkit-backdrop-filter:blur(4px) saturate(120%);
-    }
-    .youtube-private-titlebar{
-      position:absolute;
-      left:clamp(12px, 2.2vw, 26px);
-      top:clamp(10px, 1.8vw, 22px);
-      z-index:24;
-      display:none;
-      max-width:min(74%, 760px);
-      min-height:54px;
-      align-items:center;
-      gap:12px;
-      padding:12px 16px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.13);
-      background:
-        radial-gradient(circle at left center, rgba(255,90,31,.24), transparent 42%),
-        linear-gradient(135deg, rgba(26,24,32,.94), rgba(5,5,7,.90));
-      box-shadow:0 18px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
-      backdrop-filter:blur(16px) saturate(130%);
-      -webkit-backdrop-filter:blur(16px) saturate(130%);
-      pointer-events:none;
-    }
-    .video-frame.is-youtube-custom-controls .youtube-private-titlebar{
-      display:flex;
-    }
-    .youtube-private-titlecopy{
+    #tab-student-player .player-main-card{
       min-width:0;
       display:flex;
       flex-direction:column;
-      gap:4px;
-    }
-    .youtube-private-titlecopy strong{
-      display:block;
-      color:#ffffff !important;
-      font-size:clamp(14px, 1.7vw, 20px);
-      line-height:1.15;
-      font-weight:900;
-      letter-spacing:-.02em;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .youtube-private-titlecopy small{
-      display:block;
-      color:rgba(255,255,255,.68) !important;
-      font-size:clamp(10px, .95vw, 12px);
-      line-height:1.2;
-      font-weight:800;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .youtube-center-play{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%, -50%);
-      z-index:26;
-      display:none;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      width:clamp(104px, 14vw, 146px);
-      height:clamp(104px, 14vw, 146px);
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.18);
-      background:
-        radial-gradient(circle at 50% 36%, rgba(255,118,46,.48), transparent 48%),
-        linear-gradient(135deg, rgba(255,90,31,.94), rgba(217,68,17,.94));
-      color:#ffffff;
-      cursor:pointer;
-      box-shadow:0 24px 64px rgba(0,0,0,.62), 0 18px 38px rgba(255,90,31,.22), inset 0 1px 0 rgba(255,255,255,.20);
-      -webkit-tap-highlight-color:transparent;
-      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-center-play{
-      display:flex;
-    }
-    .youtube-center-play:hover{
-      transform:translate(-50%, -50%) scale(1.045);
-      box-shadow:0 30px 76px rgba(0,0,0,.68), 0 22px 44px rgba(255,90,31,.30), inset 0 1px 0 rgba(255,255,255,.22);
-    }
-    .youtube-center-play:active{
-      transform:translate(-50%, -50%) scale(.98);
-    }
-    .youtube-center-play-icon{
-      width:clamp(48px, 6vw, 64px);
-      height:clamp(48px, 6vw, 64px);
-      display:grid;
-      place-items:center;
-      border-radius:999px;
-      background:rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.18);
-      font-size:clamp(25px, 3vw, 34px);
-      line-height:1;
-      padding-left:.15em;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-    }
-    .youtube-center-play small{
-      color:rgba(255,255,255,.86) !important;
-      font-size:clamp(10px, 1.1vw, 12px);
-      line-height:1;
-      font-weight:900;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-    .video-frame.is-youtube-playing .youtube-center-play{
-      opacity:0;
-      pointer-events:none;
-    }
-    .video-frame.is-youtube-protected iframe{
-      filter:saturate(.98) contrast(1.02);
-    }
-    @media (max-width:760px){
-      .video-frame.is-youtube-protected{
-        --yt-private-top-height:72px;
-        --yt-private-bottom-height:128px;
-      }
-      .youtube-private-titlebar{
-        left:10px;
-        top:9px;
-        max-width:calc(100% - 20px);
-        min-height:48px;
-        padding:10px 12px;
-        border-radius:14px;
-      }
-      .youtube-private-titlecopy strong{
-        font-size:14px;
-      }
-      .youtube-private-titlecopy small{
-        font-size:9px;
-      }
-      .youtube-center-play{
-        width:92px;
-        height:92px;
-        gap:6px;
-      }
-      .youtube-center-play-icon{
-        width:42px;
-        height:42px;
-        font-size:23px;
-      }
-      .youtube-center-play small{
-        font-size:9px;
-      }
-    }
-    @media (max-width:430px){
-      .youtube-private-titlecopy small{
-        display:none;
-      }
-      .youtube-private-titlebar{
-        min-height:44px;
-      }
-      .youtube-center-play{
-        width:80px;
-        height:80px;
-      }
-      .youtube-center-play-icon{
-        width:38px;
-        height:38px;
-        font-size:20px;
-      }
-      .youtube-center-play small{
-        display:none;
-      }
-    }
-    .video-frame.is-youtube-protected:fullscreen,
-    .video-frame.is-youtube-protected:-webkit-full-screen{
-      --yt-private-top-height:clamp(96px, 14vh, 164px);
-      --yt-private-bottom-height:clamp(158px, 20vh, 250px);
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-private-titlebar,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-private-titlebar{
-      top:max(22px, env(safe-area-inset-top));
-      left:max(22px, env(safe-area-inset-left));
-      max-width:min(70vw, 880px);
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-center-play,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-center-play{
-      width:150px;
-      height:150px;
-    }
-
-
-    /* === Auto ocultar interfaz privada de YouTube === */
-    .video-frame.is-youtube-custom-controls .youtube-private-titlebar,
-    .video-frame.is-youtube-custom-controls .youtube-custom-controls,
-    .video-frame.is-youtube-custom-controls::before,
-    .video-frame.is-youtube-custom-controls::after{
-      transition:opacity .38s ease, transform .38s ease, backdrop-filter .38s ease, -webkit-backdrop-filter .38s ease;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden .youtube-private-titlebar{
-      opacity:0;
-      transform:translateY(-12px);
-      pointer-events:none;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden .youtube-custom-controls{
-      opacity:0;
-      transform:translateY(20px) scale(.985);
-      pointer-events:none;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden{
-      cursor:none;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden::before{
-      opacity:.22;
-      backdrop-filter:blur(1px) saturate(105%);
-      -webkit-backdrop-filter:blur(1px) saturate(105%);
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden::after{
-      opacity:.34;
-      backdrop-filter:blur(1px) saturate(105%);
-      -webkit-backdrop-filter:blur(1px) saturate(105%);
-    }
-    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-custom-controls{
-      opacity:1;
-      transform:none;
-      pointer-events:auto;
-    }
-    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing){
-      cursor:auto;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing) .youtube-custom-controls{
-      opacity:0;
-      transform:translateY(20px) scale(.985);
-      pointer-events:none;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden:not(.is-youtube-playing)::before{
-      opacity:.18;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing)::after{
-      opacity:.20;
-    }
-    .video-frame.is-youtube-custom-controls .youtube-center-play{
-      transition:opacity .28s ease, transform .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden .youtube-center-play{
-      cursor:pointer;
-    }
-    @media (hover:none){
-      .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden{
-        cursor:auto;
-      }
-    }
-
-
-
-    /* === Ajuste final: barras más delgadas y play central premium === */
-    .video-frame.is-youtube-protected{
-      --yt-private-top-height:clamp(58px, 7vw, 84px) !important;
-      --yt-private-bottom-height:clamp(92px, 10vw, 138px) !important;
-    }
-    .video-frame.is-youtube-protected::before,
-    .admin-video-preview.is-youtube-protected::before{
-      height:var(--yt-private-top-height) !important;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.96) 0%, rgba(0,0,0,.74) 54%, rgba(0,0,0,.24) 84%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(3px) saturate(115%) !important;
-      -webkit-backdrop-filter:blur(3px) saturate(115%) !important;
-    }
-    .video-frame.is-youtube-protected::after,
-    .admin-video-preview.is-youtube-protected::after{
-      height:var(--yt-private-bottom-height) !important;
-      background:
-        linear-gradient(0deg, rgba(0,0,0,.96) 0%, rgba(0,0,0,.76) 52%, rgba(0,0,0,.26) 84%, rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(3px) saturate(115%) !important;
-      -webkit-backdrop-filter:blur(3px) saturate(115%) !important;
-    }
-    .youtube-private-titlebar{
-      top:clamp(8px, 1.1vw, 14px) !important;
-      left:clamp(10px, 1.5vw, 18px) !important;
-      min-height:42px !important;
-      max-width:min(68%, 650px) !important;
-      gap:10px !important;
-      padding:8px 12px !important;
-      border-radius:14px !important;
-      background:
-        linear-gradient(135deg, rgba(22,20,28,.78), rgba(5,5,7,.68)) !important;
-      border-color:rgba(255,255,255,.105) !important;
-      box-shadow:0 12px 24px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.07) !important;
-      backdrop-filter:blur(12px) saturate(120%) !important;
-      -webkit-backdrop-filter:blur(12px) saturate(120%) !important;
-    }
-    .youtube-private-titlebar::before{
-      content:"";
-      width:7px;
-      height:24px;
-      border-radius:999px;
-      background:linear-gradient(180deg,#ff762e 0%,#ff5a1f 100%);
-      flex:0 0 auto;
-      box-shadow:0 0 18px rgba(255,90,31,.28);
-    }
-    .youtube-private-titlecopy{
-      gap:2px !important;
-    }
-    .youtube-private-titlecopy strong{
-      font-size:clamp(12px, 1.25vw, 16px) !important;
-      line-height:1.15 !important;
-      letter-spacing:-.015em !important;
-    }
-    .youtube-private-titlecopy small{
-      font-size:clamp(8px, .72vw, 10px) !important;
-      letter-spacing:.07em !important;
-      color:rgba(255,255,255,.56) !important;
-    }
-    .youtube-custom-controls{
-      width:min(90%, 560px) !important;
-      min-height:48px !important;
-      bottom:clamp(8px, 1.3vw, 16px) !important;
-      gap:clamp(5px, .8vw, 9px) !important;
-      padding:6px 9px !important;
-      border-radius:999px !important;
-      background:
-        linear-gradient(180deg, rgba(25,24,32,.76) 0%, rgba(9,7,13,.72) 100%) !important;
-      border-color:rgba(255,255,255,.13) !important;
-      box-shadow:0 14px 34px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.08) !important;
-      backdrop-filter:blur(16px) saturate(135%) !important;
-      -webkit-backdrop-filter:blur(16px) saturate(135%) !important;
-    }
-    .youtube-custom-controls::before{
-      inset:2px !important;
-      border-color:rgba(255,255,255,.035) !important;
-    }
-    .youtube-control-btn{
-      width:38px !important;
-      height:38px !important;
-      min-width:38px !important;
-      font-size:14px !important;
-      background:linear-gradient(180deg, rgba(255,255,255,.115) 0%, rgba(255,255,255,.045) 100%) !important;
-      border-color:rgba(255,255,255,.12) !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 7px 16px rgba(0,0,0,.20) !important;
-    }
-    .youtube-control-btn:hover{
-      transform:translateY(-1px) scale(1.025) !important;
-      background:linear-gradient(180deg, rgba(255,118,46,.28) 0%, rgba(255,90,31,.13) 100%) !important;
-      box-shadow:0 10px 20px rgba(255,90,31,.16), inset 0 1px 0 rgba(255,255,255,.11) !important;
-    }
-    .youtube-control-btn.is-main{
-      position:relative !important;
-      width:48px !important;
-      height:48px !important;
-      min-width:48px !important;
-      font-size:17px !important;
-      background:
-        radial-gradient(circle at 35% 26%, rgba(255,255,255,.32), transparent 28%),
-        linear-gradient(135deg, #ff762e 0%, #ff5a1f 52%, #c93c0e 100%) !important;
-      box-shadow:0 12px 28px rgba(255,90,31,.28), inset 0 1px 0 rgba(255,255,255,.22) !important;
-    }
-    .youtube-control-btn.is-main::after{
-      content:"";
-      position:absolute;
-      inset:5px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      pointer-events:none;
-    }
-    .youtube-seek-btn{
-      width:48px !important;
-      min-width:48px !important;
-      padding:0 6px !important;
-    }
-    .youtube-seek-btn small{
-      font-size:8px !important;
-      opacity:.82;
-    }
-    .youtube-control-label{
-      padding:6px 9px !important;
-      font-size:9px !important;
-      background:rgba(255,255,255,.045) !important;
-      border-color:rgba(255,255,255,.06) !important;
-    }
-    .youtube-center-play{
-      width:clamp(78px, 9vw, 106px) !important;
-      height:clamp(78px, 9vw, 106px) !important;
-      gap:0 !important;
-      background:
-        radial-gradient(circle at 35% 25%, rgba(255,255,255,.28), transparent 24%),
-        radial-gradient(circle at 50% 56%, rgba(255,90,31,.55), transparent 54%),
-        linear-gradient(145deg, rgba(255,118,46,.96), rgba(194,57,12,.92)) !important;
-      border:1px solid rgba(255,255,255,.20) !important;
-      box-shadow:
-        0 26px 64px rgba(0,0,0,.58),
-        0 16px 34px rgba(255,90,31,.26),
-        inset 0 1px 0 rgba(255,255,255,.24) !important;
-      backdrop-filter:blur(10px) saturate(125%);
-      -webkit-backdrop-filter:blur(10px) saturate(125%);
-    }
-    .youtube-center-play::before{
-      content:"";
-      position:absolute;
-      inset:-9px;
-      border-radius:999px;
-      border:1px solid rgba(255,118,46,.20);
-      background:radial-gradient(circle, rgba(255,90,31,.14), transparent 64%);
-      pointer-events:none;
-    }
-    .youtube-center-play::after{
-      content:"";
-      position:absolute;
-      inset:8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.13);
-      pointer-events:none;
-    }
-    .youtube-center-play-icon{
-      width:clamp(42px, 5vw, 56px) !important;
-      height:clamp(42px, 5vw, 56px) !important;
-      font-size:clamp(22px, 2.6vw, 30px) !important;
-      background:rgba(255,255,255,.15) !important;
-      border-color:rgba(255,255,255,.18) !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 8px 22px rgba(0,0,0,.18) !important;
-      z-index:1;
-    }
-    .youtube-center-play small{
-      display:none !important;
-    }
-    .youtube-center-play:hover{
-      transform:translate(-50%, -50%) scale(1.04) !important;
-      box-shadow:
-        0 30px 72px rgba(0,0,0,.64),
-        0 20px 42px rgba(255,90,31,.34),
-        inset 0 1px 0 rgba(255,255,255,.26) !important;
-    }
-    @media (max-width:900px){
-      .video-frame.is-youtube-protected{
-        --yt-private-top-height:58px !important;
-        --yt-private-bottom-height:104px !important;
-      }
-      .youtube-custom-controls{
-        width:min(94%, 520px) !important;
-        min-height:46px !important;
-        padding:6px 8px !important;
-      }
-      .youtube-private-titlebar{
-        min-height:38px !important;
-        padding:7px 10px !important;
-        border-radius:12px !important;
-      }
-      .youtube-private-titlebar::before{
-        height:20px;
-        width:6px;
-      }
-    }
-    @media (max-width:520px){
-      .video-frame.is-youtube-protected{
-        --yt-private-top-height:50px !important;
-        --yt-private-bottom-height:92px !important;
-      }
-      .youtube-private-titlebar{
-        top:7px !important;
-        left:8px !important;
-        max-width:calc(100% - 16px) !important;
-        min-height:36px !important;
-        padding:6px 9px !important;
-      }
-      .youtube-private-titlecopy strong{font-size:12px !important;}
-      .youtube-custom-controls{
-        width:calc(100% - 18px) !important;
-        min-height:46px !important;
-        bottom:7px !important;
-        padding:6px 7px !important;
-        gap:5px !important;
-        border-radius:16px !important;
-      }
-      .youtube-control-btn{
-        width:34px !important;
-        height:34px !important;
-        min-width:34px !important;
-        font-size:13px !important;
-      }
-      .youtube-control-btn.is-main{
-        width:42px !important;
-        height:42px !important;
-        min-width:42px !important;
-        font-size:16px !important;
-      }
-      .youtube-seek-btn{
-        width:42px !important;
-        min-width:42px !important;
-      }
-      .youtube-center-play{
-        width:74px !important;
-        height:74px !important;
-      }
-      .youtube-center-play-icon{
-        width:38px !important;
-        height:38px !important;
-        font-size:20px !important;
-      }
-    }
-    .video-frame.is-youtube-protected:fullscreen,
-    .video-frame.is-youtube-protected:-webkit-full-screen{
-      --yt-private-top-height:clamp(66px, 9vh, 110px) !important;
-      --yt-private-bottom-height:clamp(104px, 14vh, 168px) !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-custom-controls,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-custom-controls{
-      width:min(86vw, 620px) !important;
-      min-height:54px !important;
-      bottom:max(16px, env(safe-area-inset-bottom)) !important;
-      padding:7px 10px !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-private-titlebar,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-private-titlebar{
-      top:max(14px, env(safe-area-inset-top)) !important;
-      left:max(14px, env(safe-area-inset-left)) !important;
-      min-height:44px !important;
-    }
-
-
-
-    /* === Play central cuadrado premium: estilo plataforma privada === */
-    .youtube-center-play{
-      width:clamp(86px, 9.6vw, 118px) !important;
-      height:clamp(86px, 9.6vw, 118px) !important;
-      border-radius:24px !important;
-      gap:0 !important;
-      background:
-        linear-gradient(145deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 36%, rgba(255,90,31,.18) 100%),
-        radial-gradient(circle at 26% 18%, rgba(255,255,255,.26), transparent 28%),
-        linear-gradient(135deg, rgba(28,24,33,.94) 0%, rgba(12,10,15,.96) 52%, rgba(255,90,31,.86) 100%) !important;
-      border:1px solid rgba(255,255,255,.20) !important;
-      box-shadow:
-        0 30px 72px rgba(0,0,0,.64),
-        0 18px 40px rgba(255,90,31,.22),
-        inset 0 1px 0 rgba(255,255,255,.25),
-        inset 0 -22px 42px rgba(0,0,0,.24) !important;
-      backdrop-filter:blur(18px) saturate(145%) !important;
-      -webkit-backdrop-filter:blur(18px) saturate(145%) !important;
-      overflow:hidden !important;
-    }
-    .youtube-center-play::before{
-      content:"" !important;
-      position:absolute !important;
-      inset:7px !important;
-      border-radius:18px !important;
-      border:1px solid rgba(255,255,255,.105) !important;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,0) 44%),
-        radial-gradient(circle at 74% 76%, rgba(255,90,31,.30), transparent 42%) !important;
-      pointer-events:none !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.11) !important;
-    }
-    .youtube-center-play::after{
-      content:"" !important;
-      position:absolute !important;
-      left:-38% !important;
-      top:-80% !important;
-      width:48% !important;
-      height:220% !important;
-      border-radius:999px !important;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent) !important;
-      transform:rotate(24deg) translateX(-120%) !important;
-      opacity:.75 !important;
-      pointer-events:none !important;
-      transition:transform .55s ease !important;
-    }
-    .youtube-center-play:hover::after{
-      transform:rotate(24deg) translateX(360%) !important;
-    }
-    .youtube-center-play:hover{
-      transform:translate(-50%, -50%) scale(1.035) !important;
-      background:
-        linear-gradient(145deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.055) 34%, rgba(255,118,46,.25) 100%),
-        radial-gradient(circle at 26% 18%, rgba(255,255,255,.30), transparent 28%),
-        linear-gradient(135deg, rgba(32,28,38,.96) 0%, rgba(12,10,15,.98) 50%, rgba(255,90,31,.95) 100%) !important;
-      box-shadow:
-        0 36px 82px rgba(0,0,0,.70),
-        0 22px 48px rgba(255,90,31,.32),
-        inset 0 1px 0 rgba(255,255,255,.27),
-        inset 0 -22px 42px rgba(0,0,0,.20) !important;
-    }
-    .youtube-center-play:active{
-      transform:translate(-50%, -50%) scale(.985) !important;
-    }
-    .youtube-center-play-icon{
-      position:relative !important;
-      z-index:2 !important;
-      width:clamp(44px, 4.8vw, 58px) !important;
-      height:clamp(44px, 4.8vw, 58px) !important;
-      border-radius:16px !important;
-      display:grid !important;
-      place-items:center !important;
-      padding-left:.16em !important;
-      background:
-        linear-gradient(135deg, #ff762e 0%, #ff5a1f 58%, #d94411 100%) !important;
-      color:#ffffff !important;
-      border:1px solid rgba(255,255,255,.22) !important;
-      box-shadow:
-        0 14px 28px rgba(255,90,31,.36),
-        inset 0 1px 0 rgba(255,255,255,.25),
-        inset 0 -10px 18px rgba(0,0,0,.13) !important;
-      font-size:clamp(22px, 2.4vw, 30px) !important;
-      line-height:1 !important;
-    }
-    .youtube-center-play small{
-      display:none !important;
-    }
-    @media (max-width:520px){
-      .youtube-center-play{
-        width:76px !important;
-        height:76px !important;
-        border-radius:20px !important;
-      }
-      .youtube-center-play::before{
-        inset:6px !important;
-        border-radius:15px !important;
-      }
-      .youtube-center-play-icon{
-        width:40px !important;
-        height:40px !important;
-        border-radius:13px !important;
-        font-size:20px !important;
-      }
-    }
-    .video-frame.is-youtube-protected:fullscreen .youtube-center-play,
-    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-center-play{
-      width:clamp(96px, 10vh, 128px) !important;
-      height:clamp(96px, 10vh, 128px) !important;
-      border-radius:26px !important;
-    }
-
-
-    /* === Máscaras más oscuras para ocultar completamente capas de YouTube === */
-    .video-frame.is-youtube-protected::before,
-    .admin-video-preview.is-youtube-protected::before{
-      background:
-        linear-gradient(180deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 52%,
-          rgba(0,0,0,.985) 72%,
-          rgba(0,0,0,.94) 86%,
-          rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px) saturate(100%) !important;
-      -webkit-backdrop-filter:blur(2px) saturate(100%) !important;
-    }
-    .video-frame.is-youtube-protected::after,
-    .admin-video-preview.is-youtube-protected::after{
-      background:
-        linear-gradient(0deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 54%,
-          rgba(0,0,0,.985) 74%,
-          rgba(0,0,0,.94) 88%,
-          rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px) saturate(100%) !important;
-      -webkit-backdrop-filter:blur(2px) saturate(100%) !important;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden::before{
-      opacity:.96 !important;
-      background:
-        linear-gradient(180deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 50%,
-          rgba(0,0,0,.99) 72%,
-          rgba(0,0,0,.95) 86%,
-          rgba(0,0,0,0) 100%) !important;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden::after{
-      opacity:.96 !important;
-      background:
-        linear-gradient(0deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 54%,
-          rgba(0,0,0,.99) 74%,
-          rgba(0,0,0,.95) 88%,
-          rgba(0,0,0,0) 100%) !important;
-    }
-    .youtube-private-titlebar,
-    .youtube-custom-controls{
-      background:
-        linear-gradient(135deg, rgba(8,7,10,.98), rgba(3,3,5,.98)) !important;
-      border-color:rgba(255,255,255,.14) !important;
-      box-shadow:0 18px 42px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.08) !important;
-    }
-    .youtube-custom-controls::before{
-      background:linear-gradient(90deg, transparent, rgba(255,90,31,.34), transparent) !important;
-      opacity:.9 !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen::before,
-    .video-frame.is-youtube-protected:-webkit-full-screen::before{
-      background:
-        linear-gradient(180deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 54%,
-          rgba(0,0,0,.985) 76%,
-          rgba(0,0,0,.94) 90%,
-          rgba(0,0,0,0) 100%) !important;
-    }
-    .video-frame.is-youtube-protected:fullscreen::after,
-    .video-frame.is-youtube-protected:-webkit-full-screen::after{
-      background:
-        linear-gradient(0deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,1) 56%,
-          rgba(0,0,0,.985) 78%,
-          rgba(0,0,0,.94) 92%,
-          rgba(0,0,0,0) 100%) !important;
-    }
-
-
-    /* === Limpieza final: quitar sombreado después de la primera auto-ocultación === */
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared::before,
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared::after{
-      opacity:0 !important;
-      background:transparent !important;
-      backdrop-filter:none !important;
-      -webkit-backdrop-filter:none !important;
-      pointer-events:none !important;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared.is-youtube-title-hidden::before,
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared.is-youtube-ui-hidden::after{
-      opacity:0 !important;
-      background:transparent !important;
-      backdrop-filter:none !important;
-      -webkit-backdrop-filter:none !important;
-      pointer-events:none !important;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared .youtube-private-titlebar{
-      box-shadow:0 10px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08) !important;
-    }
-
-
-
-    /* === Máscaras dinámicas delgadas: aparecen solo cuando aparece la interfaz === */
-    .video-frame.is-youtube-protected{
-      --yt-private-top-height:clamp(46px, 5.2vw, 64px) !important;
-      --yt-private-bottom-height:clamp(64px, 7vw, 94px) !important;
-    }
-    .video-frame.is-youtube-custom-controls:not(.is-youtube-title-hidden)::before,
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared:not(.is-youtube-title-hidden)::before{
-      opacity:1 !important;
-      height:var(--yt-private-top-height) !important;
-      pointer-events:auto !important;
-      background:
-        linear-gradient(180deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,.995) 48%,
-          rgba(0,0,0,.86) 76%,
-          rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px) saturate(105%) !important;
-      -webkit-backdrop-filter:blur(2px) saturate(105%) !important;
-    }
-    .video-frame.is-youtube-custom-controls:not(.is-youtube-ui-hidden)::after,
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared:not(.is-youtube-ui-hidden)::after{
-      opacity:1 !important;
-      height:var(--yt-private-bottom-height) !important;
-      pointer-events:auto !important;
-      background:
-        linear-gradient(0deg,
-          rgba(0,0,0,1) 0%,
-          rgba(0,0,0,.995) 46%,
-          rgba(0,0,0,.86) 74%,
-          rgba(0,0,0,0) 100%) !important;
-      backdrop-filter:blur(2px) saturate(105%) !important;
-      -webkit-backdrop-filter:blur(2px) saturate(105%) !important;
-    }
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared.is-youtube-title-hidden::before,
-    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared.is-youtube-ui-hidden::after{
-      opacity:0 !important;
-      background:transparent !important;
-      backdrop-filter:none !important;
-      -webkit-backdrop-filter:none !important;
-      pointer-events:none !important;
-    }
-    .youtube-private-titlebar{
-      min-height:38px !important;
-      padding:7px 11px !important;
-      border-radius:12px !important;
-      background:linear-gradient(135deg, rgba(5,5,7,.985), rgba(0,0,0,.97)) !important;
-      box-shadow:0 12px 28px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.08) !important;
-    }
-    .youtube-custom-controls{
-      min-height:44px !important;
-      padding:5px 8px !important;
-      bottom:clamp(7px, 1vw, 13px) !important;
-      background:linear-gradient(180deg, rgba(5,5,7,.985), rgba(0,0,0,.975)) !important;
-      box-shadow:0 14px 34px rgba(0,0,0,.56), inset 0 1px 0 rgba(255,255,255,.08) !important;
-    }
-    @media (max-width:760px){
-      .video-frame.is-youtube-protected{
-        --yt-private-top-height:44px !important;
-        --yt-private-bottom-height:74px !important;
-      }
-      .youtube-private-titlebar{
-        min-height:34px !important;
-        padding:6px 9px !important;
-      }
-      .youtube-custom-controls{
-        min-height:42px !important;
-        padding:5px 7px !important;
-      }
-    }
-    .video-frame.is-youtube-protected:fullscreen,
-    .video-frame.is-youtube-protected:-webkit-full-screen{
-      --yt-private-top-height:clamp(52px, 7vh, 82px) !important;
-      --yt-private-bottom-height:clamp(76px, 10vh, 118px) !important;
-    }
-
-
-
-    /* =========================================================
-       VISUAL TIPO PLATAFORMA PREMIUM - REPRODUCTOR + CURSOS
-       Inspirado en la referencia enviada. No altera la lógica del player,
-       Firebase ni los controles personalizados de YouTube.
-    ========================================================= */
-    #appShell .topbar{
-      background:#05040a !important;
-      border-bottom:1px solid rgba(255,255,255,.12) !important;
-      box-shadow:none !important;
-    }
-    #appShell .topbar-inner{
-      width:min(1480px,96%) !important;
-      padding:22px 0 20px !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:space-between !important;
-      gap:18px !important;
-    }
-    #appShell .top-left,
-    #appShell .top-right{
-      background:transparent !important;
-      border:0 !important;
-      box-shadow:none !important;
-      padding:0 !important;
-      border-radius:0 !important;
-    }
-    #appShell .top-left .brand-badge{display:none !important;}
-    #appShell .top-title{
-      display:flex !important;
-      flex-direction:row !important;
-      align-items:baseline !important;
-      gap:6px !important;
-      min-width:0 !important;
-    }
-    #appShell .top-title strong,
-    #appShell .top-title small{
-      max-width:none !important;
-      overflow:visible !important;
-      text-overflow:clip !important;
-      white-space:nowrap !important;
-      color:#ffffff !important;
-      letter-spacing:-.02em !important;
-    }
-    #appShell .top-title strong{
-      font-size:0 !important;
-      font-weight:950 !important;
-      line-height:1 !important;
-    }
-    #appShell .top-title strong::before{
-      content:'BRO';
-      font-size:22px;
-      font-weight:950;
-      letter-spacing:-.04em;
-    }
-    #appShell .top-title small{
-      font-size:0 !important;
-      line-height:1 !important;
-      opacity:1 !important;
-    }
-    #appShell .top-title small::before{
-      content:'MARKETING';
-      font-size:16px;
-      font-weight:400;
-      color:#ffffff;
-      letter-spacing:-.02em;
-    }
-    #appShell .topbar #sideRoleBadge,
-    #appShell .header-user-meta{display:none !important;}
-    #appShell .avatar{
-      width:38px !important;
-      height:38px !important;
-      border-radius:50% !important;
-      background:linear-gradient(135deg,#424047 0%,#1e1c22 100%) !important;
-      border:1px solid rgba(255,255,255,.10) !important;
-      box-shadow:inset 0 0 0 8px rgba(255,255,255,.10) !important;
-      color:transparent !important;
-    }
-    #appShell .top-right .btn-soft{
-      background:transparent !important;
-      border:0 !important;
-      box-shadow:none !important;
-      color:#ffffff !important;
-      padding:0 !important;
-      min-height:auto !important;
-      font-size:17px !important;
-      font-weight:700 !important;
-    }
-    #appShell .top-right .btn-soft::before{
-      content:'Contacto';
-      margin-right:24px;
-    }
-    #appShell .top-right .btn-soft{
-      font-size:0 !important;
-    }
-    #appShell .top-right .btn-soft::after{
-      content:'Buscar';
-      font-size:17px;
-    }
-    #appShell .top-nav-wrap{
-      display:none !important;
-    }
-
-    #tab-student-player{
-      --bro-player-page:#06040b;
-      --bro-player-panel:#0d0b12;
-      --bro-player-panel-2:#16141b;
-      --bro-player-row:#17151d;
-      --bro-player-row-active:#343138;
-      --bro-player-line:rgba(255,255,255,.08);
-      --bro-player-text:#ffffff;
-      --bro-player-muted:#d4d0d9;
-      --bro-player-orange:#ff5a1f;
-      --bro-player-orange-2:#ff762e;
-      background:
-        radial-gradient(circle at top left, rgba(255,90,31,.10), transparent 28%),
-        linear-gradient(135deg,#18070c 0%,#090612 38%,#06040b 100%) !important;
-      border:1px solid rgba(255,255,255,.08) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
-      padding:30px 28px 56px !important;
-      min-height:calc(100vh - 84px);
-      overflow:hidden;
-    }
-    .bro-learning-breadcrumb{
-      display:flex;
-      align-items:center;
-      flex-wrap:wrap;
-      gap:6px;
-      margin:0 0 32px;
-      color:#ffffff;
-      font-size:13px;
-      font-weight:900;
-      line-height:1.3;
-      text-transform:none;
-    }
-    .bro-learning-breadcrumb span{
-      color:var(--bro-player-orange) !important;
-      font-weight:900;
-    }
-    .bro-learning-breadcrumb b{
-      color:#ffffff;
-      opacity:.95;
-      font-weight:900;
-    }
-    .bro-learning-breadcrumb strong{
-      color:#ffffff !important;
-      font-weight:950;
-      text-transform:uppercase;
-      letter-spacing:-.02em;
-    }
-
-    #tab-student-player .player-shell,
-    #tab-student-player .player-shell.bro-player-visual{
-      width:100% !important;
-      max-width:1440px !important;
-      margin:0 auto !important;
-      display:grid !important;
-      grid-template-columns:minmax(0,1fr) 328px !important;
-      gap:0 !important;
-      align-items:start !important;
-      --player-accent:var(--bro-player-orange) !important;
-      --player-accent-strong:var(--bro-player-orange) !important;
-      --player-accent-soft:rgba(255,90,31,.15) !important;
-      --player-accent-border:rgba(255,90,31,.34) !important;
-      --player-text:#ffffff !important;
-      --player-muted:var(--bro-player-muted) !important;
-    }
-    #tab-student-player .player-main-card{
-      min-width:0 !important;
-      grid-column:1 !important;
+      gap:0;
     }
     #tab-student-player .player-video-wrap{
-      display:block !important;
-      width:100% !important;
-      background:#0d0f18 !important;
-      border:0 !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
-      overflow:hidden !important;
+      padding:10px;
+      border-radius:26px 26px 0 0 !important;
+      background:
+        linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)) !important;
+      border:1px solid rgba(255,255,255,.12) !important;
+      border-bottom:0 !important;
+      box-shadow:0 24px 54px rgba(0,0,0,.34) !important;
     }
     #tab-student-player .video-frame{
-      width:100% !important;
-      aspect-ratio:16 / 9 !important;
       padding-top:56.25% !important;
-      border:0 !important;
-      border-radius:0 !important;
-      background:#10121b !important;
-      box-shadow:none !important;
-    }
-    #tab-student-player .video-frame iframe,
-    #tab-student-player .video-frame video{
-      background:#000 !important;
-    }
-    #tab-student-player .player-side-card{
-      grid-column:2 !important;
-      width:328px !important;
-      min-width:328px !important;
-      max-width:328px !important;
-      position:relative !important;
-      top:auto !important;
-      align-self:start !important;
-      height:auto !important;
-      max-height:calc(100vh - 170px) !important;
-      min-height:0 !important;
-      overflow:hidden !important;
-      background:#16141b !important;
-      border:0 !important;
-      border-left:1px solid rgba(255,255,255,.05) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
-      padding:0 !important;
-    }
-    #tab-student-player .player-side-header{
-      display:none !important;
-    }
-    #tab-student-player .player-lessons-scroll{
-      height:100% !important;
-      max-height:calc(100vh - 170px) !important;
-      overflow-y:auto !important;
-      overflow-x:hidden !important;
-      padding:0 !important;
-      background:#15131a !important;
-      scrollbar-width:thin;
-      scrollbar-color:var(--bro-player-orange) #15131a;
-    }
-    #tab-student-player .player-lessons-scroll::-webkit-scrollbar{width:13px;}
-    #tab-student-player .player-lessons-scroll::-webkit-scrollbar-track{background:#111017;}
-    #tab-student-player .player-lessons-scroll::-webkit-scrollbar-thumb{
-      background:linear-gradient(180deg,var(--bro-player-orange),var(--bro-player-orange-2));
-      border-radius:999px;
-      border:3px solid #111017;
-    }
-    #tab-student-player #playerLessonList{
-      display:flex !important;
-      flex-direction:column !important;
-      gap:0 !important;
-    }
-    #tab-student-player .player-lesson-row{
-      position:relative !important;
-      display:grid !important;
-      grid-template-columns:30px 64px minmax(0,1fr) 24px !important;
-      align-items:center !important;
-      gap:10px !important;
-      min-height:72px !important;
-      padding:12px 14px 12px 10px !important;
-      border:0 !important;
-      border-radius:0 !important;
-      border-bottom:1px solid rgba(255,255,255,.045) !important;
-      background:#17151d !important;
-      box-shadow:none !important;
-      overflow:visible !important;
-      cursor:pointer;
-    }
-    #tab-student-player .player-lesson-row:hover{
-      transform:none !important;
-      background:#242129 !important;
-      border-color:rgba(255,255,255,.05) !important;
-      box-shadow:none !important;
-    }
-    #tab-student-player .player-lesson-row.active{
-      transform:none !important;
-      background:#343138 !important;
-      border-color:rgba(255,255,255,.05) !important;
-      box-shadow:none !important;
-    }
-    #tab-student-player .player-lesson-row.active::after{
-      content:'';
-      position:absolute;
-      left:-1px;
-      top:50%;
-      transform:translateY(-50%);
-      width:0;
-      height:0;
-      border-top:9px solid transparent;
-      border-bottom:9px solid transparent;
-      border-left:12px solid var(--bro-player-orange);
-      z-index:5;
-    }
-    #tab-student-player .player-lesson-row::before{display:none !important;}
-    #tab-student-player .player-lesson-index{
-      width:auto !important;
-      height:auto !important;
-      display:block !important;
-      border:0 !important;
-      border-radius:0 !important;
-      background:transparent !important;
-      color:#ffffff !important;
-      font-size:15px !important;
-      font-weight:900 !important;
-      text-align:left !important;
-      line-height:1 !important;
-    }
-    #tab-student-player .player-lesson-thumb{
-      width:64px !important;
-      height:40px !important;
-      min-height:40px !important;
-      border-radius:0 !important;
+      border-radius:20px !important;
       border:1px solid rgba(255,255,255,.10) !important;
-      background-color:#0b0a10 !important;
-      object-fit:cover !important;
-      box-shadow:none !important;
-      color:#98ff12 !important;
-    }
-    #tab-student-player .player-lesson-text strong{
-      color:#ffffff !important;
-      font-size:13px !important;
-      line-height:1.25 !important;
-      font-weight:950 !important;
-      letter-spacing:-.02em !important;
-      text-transform:uppercase !important;
-      display:-webkit-box !important;
-      -webkit-line-clamp:2 !important;
-      -webkit-box-orient:vertical !important;
-      overflow:hidden !important;
-    }
-    #tab-student-player .player-lesson-text small{
-      display:none !important;
-    }
-    #tab-student-player .player-lesson-check{
-      width:24px !important;
-      height:24px !important;
-      border:0 !important;
-      background:transparent !important;
-      color:var(--bro-player-orange) !important;
-      font-size:27px !important;
-      font-weight:950 !important;
-      line-height:1 !important;
+      background:#050507 !important;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
     }
     #tab-student-player .player-video-info{
-      width:100% !important;
-      margin-top:36px !important;
-      padding:24px 26px !important;
-      background:#0d0b12 !important;
-      border:1px solid rgba(255,255,255,.06) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
+      padding:22px 24px 24px !important;
+      border-radius:0 0 26px 26px !important;
+      border:1px solid rgba(255,255,255,.12) !important;
+      border-top:0 !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.10), transparent 30%),
+        linear-gradient(180deg,#191820 0%,#111018 100%) !important;
+      box-shadow:0 24px 54px rgba(0,0,0,.30) !important;
     }
     #tab-student-player .player-class-header{
-      margin:0 !important;
-      gap:8px !important;
+      margin-bottom:18px !important;
     }
     #tab-student-player .player-course-line{
-      display:none !important;
+      width:max-content;
+      max-width:100%;
+      border-radius:999px !important;
+      padding:8px 12px !important;
+      background:rgba(255,90,31,.14) !important;
+      border:1px solid rgba(255,90,31,.34) !important;
+      color:#ff8a46 !important;
     }
     #tab-student-player .player-class-title{
-      color:#ffffff !important;
-      font-size:25px !important;
-      line-height:1.15 !important;
-      font-weight:950 !important;
-      text-transform:uppercase !important;
-      letter-spacing:-.04em !important;
-      margin:0 !important;
-    }
-    #tab-student-player .player-class-subtitle{
-      color:#ffffff !important;
-      opacity:.98 !important;
-      font-size:14px !important;
-      line-height:1.55 !important;
-      max-width:760px !important;
+      font-size:clamp(24px,2.5vw,34px) !important;
+      letter-spacing:-.04em;
     }
     #tab-student-player .player-buttons-under-video{
-      margin-top:18px !important;
-      padding:10px 0 0 !important;
-      background:transparent !important;
-      border:0 !important;
-      border-radius:0 !important;
+      padding:14px !important;
+      border-radius:18px !important;
+      background:rgba(255,255,255,.045) !important;
+      border:1px solid rgba(255,255,255,.09) !important;
       box-shadow:none !important;
     }
     #tab-student-player .player-bottom-card{
-      margin-top:18px !important;
+      gap:16px !important;
     }
     #tab-student-player .player-progress-card,
     #tab-student-player .player-class-resources-card{
-      background:#0d0b12 !important;
-      border:1px solid rgba(255,255,255,.06) !important;
-      border-radius:0 !important;
+      border-radius:22px !important;
+      background:
+        linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025)) !important;
+      border:1px solid rgba(255,255,255,.09) !important;
       box-shadow:none !important;
     }
-    #tab-student-player .player-progress-highlight,
-    #tab-student-player .player-progress-detail,
-    #tab-student-player .player-class-resource-item{
-      background:#15131a !important;
-      border-color:rgba(255,255,255,.07) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
+    #tab-student-player .player-progress-main{
+      grid-template-columns:minmax(150px,190px) minmax(0,1fr) !important;
+      gap:14px !important;
     }
-
-    /* Cursos del alumno con estética de catálogo oscuro */
-    #tab-student-courses,
-    #tab-student-discover,
-    #tab-student-progress{
-      background:#06040b !important;
-      border:1px solid rgba(255,255,255,.08) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
+    #tab-student-player .player-side-card{
+      grid-column:2 !important;
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      border-radius:26px !important;
+      padding:0 !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.14), transparent 32%),
+        linear-gradient(180deg,#1a1821 0%,#100e16 100%) !important;
+      border:1px solid rgba(255,255,255,.12) !important;
+      box-shadow:0 24px 54px rgba(0,0,0,.34) !important;
+      overflow:hidden auto !important;
+      max-height:calc(100vh - 190px) !important;
+      top:170px !important;
     }
-    #tab-student-courses .course-grid,
-    #tab-student-discover .course-grid,
-    #tab-student-progress .course-grid{
-      gap:22px !important;
+    #tab-student-player .player-side-header{
+      padding:22px 22px 16px !important;
+      background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025)) !important;
+      border-bottom:1px solid rgba(255,255,255,.10) !important;
+      backdrop-filter:blur(14px);
     }
-    #tab-student-courses .course-card,
-    #tab-student-discover .course-card,
-    #tab-student-progress .course-card{
-      background:#0d0b12 !important;
-      border:1px solid rgba(255,255,255,.07) !important;
-      border-radius:0 !important;
-      box-shadow:none !important;
-      padding:16px !important;
-      overflow:hidden !important;
-    }
-    #tab-student-courses .course-card::before,
-    #tab-student-discover .course-card::before,
-    #tab-student-progress .course-card::before{
-      height:2px !important;
-      background:var(--bro-player-orange) !important;
-      opacity:1 !important;
-    }
-    #tab-student-courses .cover,
-    #tab-student-discover .cover,
-    #tab-student-progress .cover{
-      height:178px !important;
-      min-height:178px !important;
-      border:0 !important;
-      border-radius:0 !important;
-      background-color:#12131b !important;
-      color:#ffffff !important;
-      align-items:flex-end !important;
-      padding:18px !important;
+    #tab-student-player .player-side-header h3{
       font-size:18px !important;
-      line-height:1.15 !important;
-      text-transform:uppercase !important;
+      letter-spacing:-.02em;
     }
-    #tab-student-courses .tag,
-    #tab-student-discover .tag,
-    #tab-student-progress .tag,
-    #tab-student-courses .course-price-pill,
-    #tab-student-discover .course-price-pill{
-      border-radius:999px !important;
-      background:rgba(255,90,31,.13) !important;
-      border:1px solid rgba(255,90,31,.32) !important;
-      color:#ff8a46 !important;
-      font-size:11px !important;
-      font-weight:950 !important;
+    #tab-student-player .player-lessons-scroll{
+      padding:16px !important;
+      gap:12px !important;
     }
-    #tab-student-courses .student-bar,
-    #tab-student-progress .student-bar{
-      height:6px !important;
-      background:rgba(255,255,255,.10) !important;
-      border-radius:999px !important;
+    #tab-student-player .player-lesson-row{
+      grid-template-columns:36px 86px minmax(0,1fr) 26px !important;
+      gap:12px !important;
+      padding:12px !important;
+      border-radius:18px !important;
+      background:rgba(255,255,255,.045) !important;
+      border:1px solid rgba(255,255,255,.09) !important;
+      box-shadow:none !important;
     }
-    #tab-student-courses .student-bar span,
-    #tab-student-progress .student-bar span{
-      background:linear-gradient(90deg,#ff5a1f,#ff762e) !important;
+    #tab-student-player .player-lesson-row:hover{
+      transform:translateY(-2px);
+      background:rgba(255,90,31,.10) !important;
+      border-color:rgba(255,90,31,.25) !important;
+      box-shadow:0 16px 26px rgba(0,0,0,.22) !important;
     }
-
-    @media (max-width:1100px){
-      #tab-student-player .player-shell,
-      #tab-student-player .player-shell.bro-player-visual{
+    #tab-student-player .player-lesson-row.active{
+      background:linear-gradient(135deg,rgba(255,90,31,.22),rgba(255,118,46,.10)) !important;
+      border-color:rgba(255,90,31,.42) !important;
+      box-shadow:0 16px 30px rgba(255,90,31,.10) !important;
+    }
+    #tab-student-player .player-lesson-row.active::before{
+      width:4px !important;
+      background:linear-gradient(180deg,#ff5a1f,#ff8a46) !important;
+    }
+    #tab-student-player .player-lesson-index,
+    #tab-student-player .player-lesson-check{
+      background:rgba(255,255,255,.06) !important;
+      border-color:rgba(255,255,255,.10) !important;
+      color:rgba(255,255,255,.78) !important;
+    }
+    #tab-student-player .player-lesson-thumb{
+      width:86px !important;
+      height:52px !important;
+      border-radius:14px !important;
+      border-color:rgba(255,255,255,.11) !important;
+      background:#08070b !important;
+    }
+    #tab-student-player .player-lesson-text strong{
+      color:#ffffff !important;
+      font-size:13.5px !important;
+    }
+    #tab-student-player .player-lesson-text small{
+      color:rgba(255,255,255,.62) !important;
+    }
+    @media (max-width:1180px){
+      #tab-student-player .player-shell{
         grid-template-columns:1fr !important;
-        gap:18px !important;
+        gap:22px !important;
       }
       #tab-student-player .player-side-card{
         grid-column:1 !important;
-        width:100% !important;
-        min-width:0 !important;
-        max-width:none !important;
-        max-height:360px !important;
-        border-left:0 !important;
-        border-top:1px solid rgba(255,255,255,.06) !important;
+        position:relative !important;
+        top:auto !important;
+        max-height:none !important;
       }
-      #tab-student-player .player-lessons-scroll{max-height:360px !important;}
     }
     @media (max-width:760px){
-      #appShell .topbar-inner{
-        padding:16px 0 14px !important;
-        display:grid !important;
-        grid-template-columns:1fr auto !important;
-      }
-      #appShell .top-right{
-        justify-content:flex-end !important;
-      }
-      #appShell .top-right .btn-soft::before{display:none;}
-      #appShell .top-right .btn-soft::after{font-size:14px;}
       #tab-student-player{
-        padding:20px 14px 38px !important;
-      }
-      .bro-learning-breadcrumb{
-        margin-bottom:18px;
-        font-size:11px;
-      }
-      #tab-student-player .player-side-card,
-      #tab-student-player .player-lessons-scroll{
-        max-height:310px !important;
-      }
-      #tab-student-player .player-lesson-row{
-        grid-template-columns:26px 56px minmax(0,1fr) 22px !important;
-        min-height:64px !important;
-        padding:10px 12px 10px 8px !important;
-      }
-      #tab-student-player .player-lesson-thumb{
-        width:56px !important;
-        height:34px !important;
-        min-height:34px !important;
-      }
-      #tab-student-player .player-lesson-text strong{
-        font-size:12px !important;
-      }
-      #tab-student-player .player-video-info{
-        margin-top:22px !important;
         padding:18px !important;
+        border-radius:22px !important;
       }
-      #tab-student-player .player-class-title{
-        font-size:21px !important;
+      #tab-student-player > div:first-child{
+        padding:16px !important;
+        border-radius:18px !important;
       }
-    }
-
-
-
-    /* =========================================================
-       HEADER PREMIUM CON SECCIONES DEL CAMPUS
-       Devuelve las secciones originales al header nuevo sin romper navegación.
-    ========================================================= */
-    #appShell .topbar{
-      background:
-        linear-gradient(180deg, rgba(5,4,10,.98) 0%, rgba(5,4,10,.94) 100%) !important;
-      border-bottom:1px solid rgba(255,255,255,.10) !important;
-      box-shadow:0 18px 44px rgba(0,0,0,.32) !important;
-      backdrop-filter:blur(18px) saturate(130%) !important;
-      -webkit-backdrop-filter:blur(18px) saturate(130%) !important;
-    }
-    #appShell .topbar-inner{
-      width:min(1480px,96%) !important;
-      padding:18px 0 12px !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:space-between !important;
-      gap:18px !important;
-    }
-    #appShell .top-left{
-      flex:0 0 auto !important;
-    }
-    #appShell .top-title strong::before{
-      font-size:23px !important;
-      letter-spacing:-.045em !important;
-    }
-    #appShell .top-title small::before{
-      font-size:16px !important;
-      letter-spacing:-.02em !important;
-      opacity:.96 !important;
-    }
-    #appShell .top-right{
-      display:flex !important;
-      align-items:center !important;
-      gap:12px !important;
-      flex:0 0 auto !important;
-    }
-    #appShell .top-right .btn-soft::before,
-    #appShell .top-right .btn-soft::after{
-      content:none !important;
-      display:none !important;
-    }
-    #appShell .top-right .btn-soft{
-      font-size:13px !important;
-      font-weight:850 !important;
-      letter-spacing:.01em !important;
-      padding:10px 14px !important;
-      min-height:38px !important;
-      border-radius:999px !important;
-      background:rgba(255,255,255,.075) !important;
-      border:1px solid rgba(255,255,255,.13) !important;
-      color:#ffffff !important;
-      box-shadow:none !important;
-    }
-    #appShell .top-right .btn-soft:hover{
-      background:rgba(255,90,31,.18) !important;
-      border-color:rgba(255,90,31,.38) !important;
-      transform:translateY(-1px) !important;
-    }
-    #appShell .avatar{
-      width:38px !important;
-      height:38px !important;
-      border-radius:50% !important;
-      background:
-        radial-gradient(circle at 33% 28%, rgba(255,255,255,.28), transparent 30%),
-        linear-gradient(135deg,#454249 0%,#1d1b22 100%) !important;
-      border:1px solid rgba(255,255,255,.12) !important;
-      box-shadow:inset 0 0 0 8px rgba(255,255,255,.08), 0 10px 22px rgba(0,0,0,.32) !important;
-      color:transparent !important;
-    }
-    #appShell .top-nav-wrap{
-      display:block !important;
-      width:min(1480px,96%) !important;
-      margin:0 auto !important;
-      padding:0 0 15px !important;
-    }
-    #appShell .top-nav-scroll{
-      width:100% !important;
-      padding:7px !important;
-      border-radius:18px !important;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.060) 0%, rgba(255,255,255,.032) 100%) !important;
-      border:1px solid rgba(255,255,255,.085) !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.20) !important;
-      overflow-x:auto !important;
-      overflow-y:hidden !important;
-      scrollbar-width:thin !important;
-      scrollbar-color:rgba(255,90,31,.65) rgba(255,255,255,.08) !important;
-    }
-    #appShell .top-nav-scroll::-webkit-scrollbar{
-      height:6px;
-    }
-    #appShell .top-nav-scroll::-webkit-scrollbar-track{
-      background:rgba(255,255,255,.06);
-      border-radius:999px;
-    }
-    #appShell .top-nav-scroll::-webkit-scrollbar-thumb{
-      background:linear-gradient(90deg,#ff5a1f,#ff762e);
-      border-radius:999px;
-    }
-    #appShell .topbar .menu.top-nav-menu:not(.hidden),
-    #appShell .topbar #menuAdmin:not(.hidden),
-    #appShell .topbar #menuStudent:not(.hidden){
-      display:flex !important;
-      flex-direction:row !important;
-      align-items:center !important;
-      gap:7px !important;
-      width:max-content !important;
-      min-width:100% !important;
-      margin:0 !important;
-      padding:0 !important;
-      background:transparent !important;
-      border:0 !important;
-      box-shadow:none !important;
-    }
-    #appShell .topbar .menu.top-nav-menu.hidden,
-    #appShell .topbar #menuAdmin.hidden,
-    #appShell .topbar #menuStudent.hidden{
-      display:none !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button,
-    #appShell .topbar #menuAdmin button,
-    #appShell .topbar #menuStudent button{
-      position:relative !important;
-      min-height:38px !important;
-      padding:9px 14px !important;
-      border-radius:13px !important;
-      border:1px solid transparent !important;
-      background:transparent !important;
-      color:rgba(255,255,255,.74) !important;
-      font-size:12px !important;
-      font-weight:900 !important;
-      letter-spacing:.01em !important;
-      white-space:nowrap !important;
-      box-shadow:none !important;
-      transform:none !important;
-      overflow:hidden !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button::before,
-    #appShell .topbar #menuAdmin button::before,
-    #appShell .topbar #menuStudent button::before{
-      content:'' !important;
-      position:absolute !important;
-      inset:auto 14px 5px 14px !important;
-      width:auto !important;
-      height:2px !important;
-      border-radius:999px !important;
-      background:linear-gradient(90deg,#ff5a1f,#ff762e) !important;
-      opacity:0 !important;
-      transform:scaleX(.35) !important;
-      transition:opacity .22s ease, transform .22s ease !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button:hover,
-    #appShell .topbar #menuAdmin button:hover,
-    #appShell .topbar #menuStudent button:hover{
-      background:rgba(255,255,255,.075) !important;
-      border-color:rgba(255,255,255,.10) !important;
-      color:#ffffff !important;
-      transform:translateY(-1px) !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button:hover::before,
-    #appShell .topbar #menuAdmin button:hover::before,
-    #appShell .topbar #menuStudent button:hover::before{
-      opacity:.65 !important;
-      transform:scaleX(.78) !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button.active,
-    #appShell .topbar #menuAdmin button.active,
-    #appShell .topbar #menuStudent button.active{
-      background:linear-gradient(135deg,#ff5a1f 0%,#ff762e 100%) !important;
-      color:#ffffff !important;
-      border-color:rgba(255,118,46,.55) !important;
-      box-shadow:0 11px 24px rgba(255,90,31,.24), inset 0 1px 0 rgba(255,255,255,.18) !important;
-    }
-    #appShell .topbar .menu.top-nav-menu button.active::before,
-    #appShell .topbar #menuAdmin button.active::before,
-    #appShell .topbar #menuStudent button.active::before{
-      opacity:0 !important;
-    }
-    #appShell .topbar #sideRoleBadge,
-    #appShell .header-user-meta,
-    #appShell #roleChip{
-      display:none !important;
-    }
-    #appShell .layout.layout-full,
-    #appShell .layout{
-      margin-top:20px !important;
-    }
-    #tab-student-player{
-      min-height:calc(100vh - 150px) !important;
-    }
-    @media (min-width:1180px){
-      #appShell .topbar-inner{
-        padding-bottom:10px !important;
+      #tab-student-player .player-video-wrap{
+        padding:7px !important;
+        border-radius:20px 20px 0 0 !important;
       }
-      #appShell .top-nav-scroll{
-        display:flex !important;
-        justify-content:center !important;
-      }
-      #appShell .topbar .menu.top-nav-menu:not(.hidden),
-      #appShell .topbar #menuAdmin:not(.hidden),
-      #appShell .topbar #menuStudent:not(.hidden){
-        justify-content:center !important;
-      }
-    }
-    @media (max-width:900px){
-      #appShell .topbar-inner{
-        width:min(100%,94%) !important;
-        padding:14px 0 10px !important;
-        gap:12px !important;
-      }
-      #appShell .top-nav-wrap{
-        width:min(100%,94%) !important;
-        padding-bottom:12px !important;
-      }
-      #appShell .top-title strong::before{
-        font-size:21px !important;
-      }
-      #appShell .top-title small::before{
-        font-size:14px !important;
-      }
-    }
-    @media (max-width:640px){
-      #appShell .topbar-inner{
-        align-items:flex-start !important;
-        flex-direction:column !important;
-      }
-      #appShell .top-right{
-        width:100% !important;
-        justify-content:space-between !important;
-      }
-      #appShell .top-right .btn-soft{
-        order:2 !important;
-        margin-left:auto !important;
-      }
-      #appShell .topbar .menu.top-nav-menu button,
-      #appShell .topbar #menuAdmin button,
-      #appShell .topbar #menuStudent button{
-        min-height:36px !important;
-        padding:8px 12px !important;
-        font-size:11px !important;
-        border-radius:12px !important;
-      }
-      #appShell .top-nav-scroll{
-        padding:6px !important;
+      #tab-student-player .video-frame{
         border-radius:16px !important;
       }
-      #tab-student-player{
-        min-height:calc(100vh - 165px) !important;
+      #tab-student-player .player-video-info{
+        padding:18px !important;
+        border-radius:0 0 20px 20px !important;
+      }
+      #tab-student-player .player-progress-main,
+      #tab-student-player .player-progress-details{
+        grid-template-columns:1fr !important;
+      }
+      #tab-student-player .player-lesson-row{
+        grid-template-columns:34px 76px minmax(0,1fr) 24px !important;
+      }
+      #tab-student-player .player-lesson-thumb{
+        width:76px !important;
+        height:46px !important;
       }
     }
 
-</style>
+  </style>
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -8803,11 +7076,6 @@
 <small class="cover-upload-meta">El enlace quedará oculto en la vista del curso y el reproductor usará modo protegido cuando sea YouTube.</small>
 </div>
 <div class="field">
-<label>Código iframe del video</label>
-<textarea id="lessonIframeField" placeholder="Pega aquí el iframe completo del video, por ejemplo: &lt;iframe src=&quot;https://...&quot;&gt;&lt;/iframe&gt;"></textarea>
-<small class="cover-upload-meta">Opcional. Si pegas un iframe, el sistema tomará automáticamente el src y guardará solo el enlace protegido.</small>
-</div>
-<div class="field">
 <label>Subir video desde admin</label>
 <label class="cover-upload-drop" for="lessonVideoUploadField">
 <input accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" id="lessonVideoUploadField" type="file"/>
@@ -8973,39 +7241,18 @@
 <div class="list-box" id="studentCertificatesList" style="margin-top:18px"></div>
 </section>
 <section class="panel section-card tab-section hidden" id="tab-student-player">
-<div class="bro-learning-breadcrumb" aria-label="Ruta del curso">
-  <span>BROMARKETING</span>
-  <b>/</b>
-  <span>Módulos</span>
-  <b>/</b>
-  <span id="playerBreadcrumbModule">01. VIDEO MARKETING</span>
-  <b>/</b>
-  <strong id="playerBreadcrumbLesson">LEC 01: BIENVENIDA</strong>
+<div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+<div>
+<h2>Continuar clase</h2>
+<p>Vista de aprendizaje optimizada para avanzar con claridad y menos distracción.</p>
 </div>
-<div class="player-shell bro-player-visual">
+</div>
+<div class="player-shell" style="max-width:1180px;">
 <div class="player-main-card">
 <div class="player-video-wrap" style="display:block;width:100%;">
 <div class="video-frame">
-<iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
+<iframe allow="autoplay; encrypted-media; picture-in-picture" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
 <video controls="" id="playerVideo" playsinline="" preload="none" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
-<div class="youtube-private-titlebar" id="youtubePrivateTitlebar" aria-hidden="true">
-  <div class="youtube-private-titlecopy">
-    <strong id="youtubePrivateLessonTitle">Clase del curso</strong>
-    <small id="youtubePrivateCourseTitle">Campus privado</small>
-  </div>
-</div>
-<button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir clase">
-  <span class="youtube-center-play-icon">▶</span>
-  <small>Reproducir clase</small>
-</button>
-<div class="youtube-custom-controls" id="youtubeCustomControls" aria-label="Controles personalizados de YouTube">
-<button aria-label="Retroceder 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeBack" type="button"><span>↺</span><small>10</small></button>
-<button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
-<button aria-label="Adelantar 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeForward" type="button"><small>10</small><span>↻</span></button>
-<span class="youtube-control-spacer"></span>
-<span class="youtube-control-label">Clase privada</span>
-<button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
-</div>
 <div class="placeholder" id="playerPlaceholder">
 <div>
 <strong id="playerTitleMain">Video de la clase</strong>
@@ -9389,48 +7636,17 @@
       };
     }
 
-    function stripInlineDataUrlValue(value){
-      const text = String(value || '').trim();
-      return text.startsWith('data:') ? '' : value;
-    }
-
-    function sanitizeLessonForSharedState(lesson){
-      const clean = clonePlain(lesson || {});
-      clean.url = normalizeVideoUrl(clean.url || '');
-      clean.thumbnail = stripInlineDataUrlValue(clean.thumbnail || clean.thumb || clean.thumbnailUrl || clean.cover || '');
-      delete clean.thumbnailData;
-      delete clean.thumbData;
-      delete clean.thumbnailInlineData;
-      delete clean.coverData;
-      delete clean.coverDataUrl;
-      delete clean.coverInlineData;
-      return clean;
-    }
-
-    function sanitizeCourseForSharedState(course){
-      const clean = clonePlain(course || {});
-      clean.cover = stripInlineDataUrlValue(clean.cover || '');
-      delete clean.coverData;
-      delete clean.coverDataUrl;
-      delete clean.coverInlineData;
-      clean.lessons = Array.isArray(clean.lessons) ? clean.lessons.map(sanitizeLessonForSharedState) : [];
-      return clean;
-    }
-
     function getSharedPersistableState(){
-      // Firestore permite documentos de máximo ~1 MiB. Las imágenes base64 no deben
-      // vivir dentro de campus/mainState; se guardan como coverAsset_* y aquí solo
-      // queda la referencia para que cursos y clases persistan sin borrar cambios.
       const shared = clonePlain({
         currentCourseId: state.currentCourseId,
         currentLessonIndex: state.currentLessonIndex,
-        pendingLessons: [],
+        pendingLessons: state.pendingLessons || [],
         favorites: state.favorites || [],
         admins: state.admins || [],
         resources: state.resources || [],
         certificates: state.certificates || [],
         activityLog: state.activityLog || [],
-        courses: Array.isArray(state.courses) ? state.courses.map(sanitizeCourseForSharedState) : [],
+        courses: state.courses || [],
         users: state.users || [],
         payments: state.payments || [],
         accessRequests: state.accessRequests || []
@@ -9466,32 +7682,11 @@
           console.warn('Firebase SDK no cargó. El sistema queda usando localStorage.');
           return false;
         }
-
-        // Esta función se llama desde varios puntos del sistema.
-        // Si Firestore ya está iniciado, NO se deben volver a aplicar settings(),
-        // porque Firebase lanza: "settings can no longer be changed".
-        if(firebaseDb && firebaseApp){
-          return true;
-        }
-
         firebaseApp = firebase.apps && firebase.apps.length
           ? firebase.app()
           : firebase.initializeApp(firebaseConfig);
-
         firebaseDb = firebase.firestore();
-
-        // settings() solo puede ejecutarse antes de cualquier lectura/escritura.
-        // Si el SDK ya fue usado por otra función, se omite sin romper la conexión.
-        try{
-          if(!window.__campusFirestoreSettingsApplied){
-            firebaseDb.settings({ ignoreUndefinedProperties: true });
-            window.__campusFirestoreSettingsApplied = true;
-          }
-        }catch(settingsError){
-          window.__campusFirestoreSettingsApplied = true;
-          console.warn('Firestore ya estaba iniciado; se continúa sin cambiar settings.', settingsError);
-        }
-
+        firebaseDb.settings({ ignoreUndefinedProperties: true, merge: true });
         if(firebase.auth){
           firebaseAuth = firebase.auth(firebaseApp);
           firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error => {
@@ -9508,7 +7703,7 @@
         }catch(analyticsError){
           console.warn('Analytics no se pudo iniciar, la base de datos sigue funcionando.', analyticsError);
         }
-        return Boolean(firebaseDb);
+        return true;
       }catch(error){
         console.warn('No se pudo iniciar Firebase. El sistema queda usando localStorage.', error);
         firebaseDb = null;
@@ -9534,6 +7729,7 @@
       const authEmail = getFirebaseSignedEmail();
       return Boolean(
         firebaseDb
+        && firebaseRemoteLoaded
         && state.currentUser
         && state.currentUser.role === 'admin'
         && authEmail
@@ -9549,21 +7745,9 @@
       clearTimeout(firebaseSaveTimer);
       firebaseSaveTimer = setTimeout(async () => {
         try{
-          if(!firebaseDb && !initFirebaseConnection()){
-            console.warn('No se pudo guardar en Firestore: conexión no disponible.');
-            return;
-          }
-          if(!canWriteSharedFirebaseState()){
-            console.warn('No se pudo guardar en Firestore: sesión de administrador no válida.', {
-              currentUserRole: state.currentUser?.role || '',
-              firebaseEmail: getFirebaseSignedEmail()
-            });
-            return;
-          }
           const payload = getSharedPersistableState();
           payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
           await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
-          firebaseRemoteLoaded = true;
         }catch(error){
           console.warn('No se pudo guardar en Firestore. Se conserva la copia local.', error);
           if(state.currentUser && state.currentUser.role === 'admin'){
@@ -9665,22 +7849,11 @@
     }
 
     async function saveSharedStateToFirebaseNow(){
-      if(!initFirebaseConnection() || !firebaseDb){
-        console.warn('No se pudo guardar en Firestore: conexión no disponible.');
-        return false;
-      }
-      if(!canWriteSharedFirebaseState()){
-        console.warn('No se pudo guardar en Firestore: sesión de administrador no válida.', {
-          currentUserRole: state.currentUser?.role || '',
-          firebaseEmail: getFirebaseSignedEmail()
-        });
-        return false;
-      }
+      if(!canWriteSharedFirebaseState()) return false;
       try{
         const payload = getSharedPersistableState();
         payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
-        firebaseRemoteLoaded = true;
         return true;
       }catch(error){
         console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la copia local.', error);
@@ -11754,19 +9927,6 @@ function toggleUserCard(userId, event){
 
     
     let activeHlsPlayer = null;
-    const youtubeCustomState = {
-      iframe: null,
-      playing: false,
-      currentTime: 0,
-      lastTick: 0,
-      timer: null,
-      uiTimer: null,
-      titleTimer: null,
-      shadingCleared: false,
-      activeUrl: '',
-      lessonTitle: '',
-      courseTitle: ''
-    };
 
     function isLocalFileMode(){
       return window.location.protocol === 'file:';
@@ -11820,8 +9980,6 @@ function toggleUserCard(userId, event){
       params.set('controls', '0');
       params.set('disablekb', '1');
       params.set('fs', '0');
-      params.set('enablejsapi', '1');
-      params.set('cc_load_policy', '0');
       params.set('vq', 'hd1080');
       const origin = window.location && window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
       if(origin) params.set('origin', origin);
@@ -11834,18 +9992,16 @@ function toggleUserCard(userId, event){
       const host = iframe.closest('.video-frame, .admin-video-preview');
       if(host) host.classList.toggle('is-youtube-protected', isYoutube);
       if(isYoutube){
-        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
-        iframe.removeAttribute('sandbox');
+        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
         iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         iframe.removeAttribute('allowfullscreen');
         iframe.removeAttribute('allowFullScreen');
-        iframe.style.pointerEvents = 'none';
       } else {
         iframe.setAttribute('allow', 'accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen');
         iframe.removeAttribute('sandbox');
         iframe.removeAttribute('referrerpolicy');
         iframe.setAttribute('allowfullscreen', '');
-        iframe.style.pointerEvents = '';
       }
     }
 
@@ -11975,12 +10131,6 @@ function toggleUserCard(userId, event){
       } catch(err){
         return raw;
       }
-    }
-
-    function getVideoInputValue(urlInputId, iframeInputId){
-      const iframeValue = iframeInputId ? (document.getElementById(iframeInputId)?.value || '').trim() : '';
-      const urlValue = urlInputId ? (document.getElementById(urlInputId)?.value || '').trim() : '';
-      return iframeValue || urlValue;
     }
 
     function isDirectVideoUrl(url){
@@ -12417,238 +10567,16 @@ function toggleUserCard(userId, event){
       });
     }
 
-    function getYoutubeActiveFrame(){
-      return (youtubeCustomState.iframe && youtubeCustomState.iframe.closest('.video-frame')) || document.querySelector('.video-frame.is-youtube-custom-controls') || document.querySelector('.video-frame');
-    }
-
-    function clearYoutubeUiTimers(){
-      if(youtubeCustomState.uiTimer){
-        window.clearTimeout(youtubeCustomState.uiTimer);
-        youtubeCustomState.uiTimer = null;
-      }
-      if(youtubeCustomState.titleTimer){
-        window.clearTimeout(youtubeCustomState.titleTimer);
-        youtubeCustomState.titleTimer = null;
-      }
-    }
-
-    function setYoutubeOverlayVisibility({ titleHidden = false, controlsHidden = false } = {}){
-      const frame = getYoutubeActiveFrame();
-      if(!frame) return;
-      frame.classList.toggle('is-youtube-title-hidden', !!titleHidden);
-      frame.classList.toggle('is-youtube-ui-hidden', !!controlsHidden);
-    }
-
-    function scheduleYoutubeAutoHide(options = {}){
-      const frame = getYoutubeActiveFrame();
-      if(!frame || !frame.classList.contains('is-youtube-custom-controls')) return;
-      clearYoutubeUiTimers();
-      const titleDelay = Number(options.titleDelay || 4000);
-      const controlsDelay = Number(options.controlsDelay || 5200);
-      youtubeCustomState.titleTimer = window.setTimeout(() => {
-        const activeFrame = getYoutubeActiveFrame();
-        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
-          activeFrame.classList.add('is-youtube-title-hidden');
-        }
-      }, titleDelay);
-      youtubeCustomState.uiTimer = window.setTimeout(() => {
-        const activeFrame = getYoutubeActiveFrame();
-        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
-          activeFrame.classList.add('is-youtube-ui-hidden');
-          // Después de la primera ocultación real de controles, retiramos las máscaras oscuras
-          // para que el video quede limpio y sin sombras permanentes.
-          if(!youtubeCustomState.shadingCleared){
-            youtubeCustomState.shadingCleared = true;
-            activeFrame.classList.add('is-youtube-shading-cleared');
-          }
-        }
-      }, controlsDelay);
-    }
-
-    function showYoutubeUiTemporarily(options = {}){
-      const frame = getYoutubeActiveFrame();
-      if(!frame || !frame.classList.contains('is-youtube-custom-controls')) return;
-      frame.classList.remove('is-youtube-ui-hidden');
-      if(options.showTitle !== false){
-        frame.classList.remove('is-youtube-title-hidden');
-      }
-      scheduleYoutubeAutoHide({
-        titleDelay: options.titleDelay || 4000,
-        controlsDelay: options.controlsDelay || (youtubeCustomState.playing ? 4400 : 5200)
-      });
-    }
-
-    function bindYoutubeActivityListeners(frame){
-      if(!frame || frame.dataset.youtubeAutoHideBound === 'true') return;
-      frame.dataset.youtubeAutoHideBound = 'true';
-      const showUi = () => showYoutubeUiTemporarily({ showTitle: true });
-      ['mousemove','pointermove','touchstart','click'].forEach(eventName => {
-        frame.addEventListener(eventName, showUi, { passive: true });
-      });
-    }
-
-    function getYoutubeCustomControlsNode(){
-      return document.getElementById('youtubeCustomControls');
-    }
-
-    function setYoutubePlayButtonState(isPlaying){
-      const btn = document.getElementById('btnYoutubePlayPause');
-      if(btn){
-        btn.textContent = isPlaying ? 'Ⅱ' : '▶';
-        btn.setAttribute('aria-label', isPlaying ? 'Pausar video' : 'Reproducir video');
-        btn.title = isPlaying ? 'Pausar video' : 'Reproducir video';
-      }
-      const centerBtn = document.getElementById('btnYoutubeCenterPlay');
-      if(centerBtn){
-        centerBtn.setAttribute('aria-label', isPlaying ? 'Video en reproducción' : 'Reproducir clase');
-        centerBtn.title = isPlaying ? 'Video en reproducción' : 'Reproducir clase';
-      }
-      const frame = getYoutubeActiveFrame();
-      if(frame){
-        frame.classList.toggle('is-youtube-playing', !!isPlaying);
-        if(isPlaying){
-          showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 4400 });
-        }else{
-          clearYoutubeUiTimers();
-          frame.classList.remove('is-youtube-ui-hidden');
-          frame.classList.remove('is-youtube-title-hidden');
-        }
-      }
-    }
-
-    function updateYoutubePrivateOverlay(course, lesson){
-      const lessonTitle = (lesson && lesson.title) ? lesson.title : 'Clase del curso';
-      const courseTitle = (course && course.title) ? course.title : 'Campus privado';
-      youtubeCustomState.lessonTitle = lessonTitle;
-      youtubeCustomState.courseTitle = courseTitle;
-      const titleNode = document.getElementById('youtubePrivateLessonTitle');
-      const courseNode = document.getElementById('youtubePrivateCourseTitle');
-      if(titleNode) titleNode.textContent = lessonTitle;
-      if(courseNode) courseNode.textContent = courseTitle;
-    }
-
-    function syncYoutubeApproximateTime(){
-      if(!youtubeCustomState.playing || !youtubeCustomState.lastTick) return;
-      const now = Date.now();
-      const diff = Math.max(0, (now - youtubeCustomState.lastTick) / 1000);
-      youtubeCustomState.currentTime += diff;
-      youtubeCustomState.lastTick = now;
-    }
-
-    function sendYoutubePlayerCommand(func, args = []){
-      const iframe = youtubeCustomState.iframe || document.getElementById('playerIframe');
-      if(!iframe || !iframe.contentWindow) return;
-      const payload = JSON.stringify({ event: 'command', func, args });
-      iframe.contentWindow.postMessage(payload, '*');
-    }
-
-    function startYoutubeClock(){
-      stopYoutubeClock();
-      youtubeCustomState.lastTick = Date.now();
-      youtubeCustomState.timer = window.setInterval(() => {
-        syncYoutubeApproximateTime();
-      }, 1000);
-    }
-
-    function stopYoutubeClock(){
-      if(youtubeCustomState.timer){
-        window.clearInterval(youtubeCustomState.timer);
-        youtubeCustomState.timer = null;
-      }
-    }
-
-    function resetYoutubeCustomControls(){
-      stopYoutubeClock();
-      clearYoutubeUiTimers();
-      youtubeCustomState.iframe = null;
-      youtubeCustomState.playing = false;
-      youtubeCustomState.currentTime = 0;
-      youtubeCustomState.lastTick = 0;
-      youtubeCustomState.activeUrl = '';
-      setYoutubePlayButtonState(false);
-      const controls = getYoutubeCustomControlsNode();
-      if(controls) controls.style.display = 'none';
-      const frame = document.querySelector('.video-frame');
-      if(frame) frame.classList.remove('is-youtube-custom-controls', 'is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden', 'is-youtube-shading-cleared');
-    }
-
-    function prepareYoutubeCustomControls(iframe, url){
-      stopYoutubeClock();
-      youtubeCustomState.iframe = iframe || document.getElementById('playerIframe');
-      youtubeCustomState.playing = false;
-      youtubeCustomState.currentTime = 0;
-      youtubeCustomState.lastTick = 0;
-      youtubeCustomState.shadingCleared = false;
-      youtubeCustomState.activeUrl = url || '';
-      setYoutubePlayButtonState(false);
-      const controls = getYoutubeCustomControlsNode();
-      if(controls) controls.style.display = 'flex';
-      const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('.video-frame');
-      if(frame){
-        frame.classList.add('is-youtube-custom-controls');
-        frame.classList.remove('is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden', 'is-youtube-shading-cleared');
-        bindYoutubeActivityListeners(frame);
-        showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 5200 });
-      }
-      window.setTimeout(() => {
-        sendYoutubePlayerCommand('pauseVideo');
-      }, 450);
-    }
-
-    function toggleYoutubePlayPause(){
-      if(!youtubeCustomState.iframe) return;
-      syncYoutubeApproximateTime();
-      if(youtubeCustomState.playing){
-        sendYoutubePlayerCommand('pauseVideo');
-        youtubeCustomState.playing = false;
-        stopYoutubeClock();
-        setYoutubePlayButtonState(false);
-      }else{
-        sendYoutubePlayerCommand('playVideo');
-        youtubeCustomState.playing = true;
-        startYoutubeClock();
-        setYoutubePlayButtonState(true);
-      }
-    }
-
-    function seekYoutubeBy(seconds){
-      if(!youtubeCustomState.iframe) return;
-      showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 4400 });
-      syncYoutubeApproximateTime();
-      youtubeCustomState.currentTime = Math.max(0, youtubeCustomState.currentTime + seconds);
-      youtubeCustomState.lastTick = Date.now();
-      sendYoutubePlayerCommand('seekTo', [youtubeCustomState.currentTime, true]);
-      if(youtubeCustomState.playing){
-        window.setTimeout(() => sendYoutubePlayerCommand('playVideo'), 120);
-      }
-    }
-
-    function toggleYoutubeFullscreen(){
-      showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 5200 });
-      const frame = document.querySelector('.video-frame') || document.querySelector('.player-video-wrap');
-      if(!frame) return;
-      const doc = document;
-      if(doc.fullscreenElement){
-        doc.exitFullscreen?.();
-        return;
-      }
-      if(frame.requestFullscreen) frame.requestFullscreen();
-      else if(frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-      else if(frame.msRequestFullscreen) frame.msRequestFullscreen();
-    }
-
     function resetPlayerMedia(iframe, video){
       if(activeHlsPlayer){
         try{ activeHlsPlayer.destroy(); } catch(err){}
         activeHlsPlayer = null;
       }
-      resetYoutubeCustomControls();
       if(iframe){
         const host = iframe.closest('.video-frame, .admin-video-preview');
-        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls', 'is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden');
+        if(host) host.classList.remove('is-youtube-protected');
         iframe.removeAttribute('src');
         iframe.style.display = 'none';
-        iframe.style.pointerEvents = '';
       }
       if(video){
         try{ video.pause(); } catch(err){}
@@ -12707,13 +10635,10 @@ function toggleUserCard(userId, event){
       }
 
       if(iframe){
-        const isYoutube = isYouTubeVideoUrl(finalUrl);
         configureEmbeddedVideoFrame(iframe, finalUrl);
         iframe.src = finalUrl;
         iframe.style.display = 'block';
         if(placeholder) placeholder.style.display = 'none';
-        if(isYoutube) prepareYoutubeCustomControls(iframe, finalUrl);
-        else resetYoutubeCustomControls();
       } else {
         showPlayerPlaceholder(placeholder, 'No se encontró el reproductor para mostrar esta clase.');
       }
@@ -12758,8 +10683,6 @@ function renderPlayer(courseId){
       const favoriteBtn = document.getElementById('btnFavoriteCurrentCourse');
       const currentLessonLabel = document.getElementById('playerCurrentLessonLabel');
       const courseStatusLabel = document.getElementById('playerCourseStatusLabel');
-      const breadcrumbModule = document.getElementById('playerBreadcrumbModule');
-      const breadcrumbLesson = document.getElementById('playerBreadcrumbLesson');
 
       if(!iframe || !placeholder || !titleMain || !list || !progressPercent || !completedCount || !remainingCount || !motivationBox){
         console.warn('El reproductor no encontró todos sus elementos internos. Se evita romper la navegación.');
@@ -12767,7 +10690,6 @@ function renderPlayer(courseId){
         return;
       }
 
-      updateYoutubePrivateOverlay(course, lesson);
       safeSetPlayerSrc(iframe, placeholder, lesson && lesson.url ? lesson.url : '');
 
       const completedLessons = course.completedLessons || [];
@@ -12793,8 +10715,6 @@ function renderPlayer(courseId){
       remainingCount.textContent = remaining;
       if(sideHeaderTitle) sideHeaderTitle.textContent = '01. ' + (lesson ? lesson.module : course.title);
       if(sideHeaderMeta) sideHeaderMeta.innerHTML = '<span class="player-side-dot"></span>' + total + ' lecciones';
-      if(breadcrumbModule) breadcrumbModule.textContent = lesson ? lesson.module : course.title;
-      if(breadcrumbLesson) breadcrumbLesson.textContent = lesson ? lesson.title : course.title;
       if(courseLine) courseLine.textContent = course.title;
       if(classTitle) classTitle.textContent = lesson ? lesson.title : course.title;
       if(classSubtitle) classSubtitle.textContent = course.description;
@@ -13422,7 +11342,7 @@ function renderPlayer(courseId){
       if(tabId === 'student-profile') renderStudentProfileSummary();
     }
 
-    async function enterApp(user){
+    function enterApp(user){
       authScreen.style.display = 'none';
       appShell.style.display = 'block';
       const cleanUser = {
@@ -13433,12 +11353,6 @@ function renderPlayer(courseId){
         courseId: Number(user.courseId) || 0
       };
       state.currentUser = cleanUser;
-
-      // Primero se carga la versión real de Firestore después de Auth.
-      // Antes se renderizaba con copia local y luego Firestore podía traer una versión vieja.
-      if(hasFirebaseAuthSession() && !firebaseRemoteLoaded){
-        await loadFirebaseState({ silent: true, requireAuth: true });
-      }
 
       if(cleanUser.role === 'student'){
         const studentRecord = getCurrentStudentRecord();
@@ -13451,13 +11365,8 @@ function renderPlayer(courseId){
           const firstCourse = getStudentCourses()[0];
           if(firstCourse) state.currentCourseId = firstCourse.id;
         }
-      }else{
-        state.currentUser = cleanUser;
       }
-
-      // Guardamos solo la sesión local del navegador. Los cambios reales de cursos
-      // se suben con saveSharedStateToFirebaseNow() al crear/editar.
-      saveState({ localOnly: true });
+      saveState();
 
       document.getElementById('sideUserName').textContent = cleanUser.name;
       document.getElementById('sideUserEmail').textContent = cleanUser.email;
@@ -13488,6 +11397,7 @@ function renderPlayer(courseId){
         renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
+        // Sincronización automática desactivada: evita intentos repetidos de signUp en Firebase Auth.
       }else{
         roleChip.textContent = 'ALUMNO';
         sideRoleBadge.textContent = 'Alumno';
@@ -13502,7 +11412,7 @@ function renderPlayer(courseId){
         renderStudentAssignedCourses();
         renderStudentDiscover();
         renderStudentProgress();
-        renderStudentCertificates();
+          renderStudentCertificates();
         const firstCourse = getStudentCourses()[0];
         if(firstCourse) renderPlayer(firstCourse.id);
         updateStudentDesire();
@@ -13742,7 +11652,7 @@ function renderPlayer(courseId){
 
       const firebaseLogin = await authenticateWithFirebaseAuth(email, password);
       if(firebaseLogin.ok){
-        await enterApp(firebaseLogin.user);
+        enterApp(firebaseLogin.user);
         return;
       }
 
@@ -13763,7 +11673,7 @@ function renderPlayer(courseId){
       }
 
       if(email === normalizeEmail(DEMO_USERS.admin.email) && password === DEMO_USERS.admin.password){
-        await enterApp(DEMO_USERS.admin);
+        enterApp(DEMO_USERS.admin);
         return;
       }
 
@@ -13779,7 +11689,7 @@ function renderPlayer(courseId){
             saveState();
           }
         }
-        await enterApp(studentAuth.user);
+        enterApp(studentAuth.user);
         return;
       }
 
@@ -13918,11 +11828,6 @@ function renderPlayer(courseId){
                   <input type="password" class="secure-video-url" id="editNewLessonUrlField" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
                 </div>
                 <div class="field course-edit-full">
-                  <label>Código iframe del video</label>
-                  <textarea id="editNewLessonIframeField" placeholder="Pega aquí el iframe completo del video. El sistema guardará solo el src protegido."></textarea>
-                  <small class="cover-upload-meta">Opcional. Úsalo cuando la plataforma te entregue un código iframe en vez de un enlace directo.</small>
-                </div>
-                <div class="field course-edit-full">
                   <label>Subir video desde admin</label>
                   <label class="cover-upload-drop" for="editNewLessonVideoUploadField">
                     <input type="file" id="editNewLessonVideoUploadField" accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" data-video-upload-target="editNewLessonUrlField" data-video-upload-status="editNewLessonVideoUploadStatus" data-lesson-index="nueva">
@@ -14039,14 +11944,12 @@ function renderPlayer(courseId){
         const moduleField = document.getElementById(`editLessonModule_${idx}`);
         const titleField = document.getElementById(`editLessonTitle_${idx}`);
         const urlField = document.getElementById(`editLessonUrl_${idx}`);
-        const iframeField = document.getElementById(`editLessonIframe_${idx}`);
         const thumbField = document.getElementById(`editLessonThumb_${idx}`);
         const currentLesson = courseEditDraft.lessons?.[idx] || lesson || {};
-        const rawVideoValue = (iframeField && iframeField.value.trim()) || (urlField && urlField.value.trim()) || lesson.url || '';
         return {
           module: moduleField ? moduleField.value.trim() : (lesson.module || ''),
           title: titleField ? titleField.value.trim() : (lesson.title || ''),
-          url: normalizeVideoUrl(rawVideoValue),
+          url: urlField ? normalizeVideoUrl(urlField.value.trim()) : normalizeVideoUrl(lesson.url || ''),
           thumbnail: thumbField ? thumbField.value.trim() : getLessonThumbnailRef(currentLesson),
           thumbnailData: getLessonThumbnailInlineData(currentLesson)
         };
@@ -14084,11 +11987,6 @@ function renderPlayer(courseId){
               <div class="field course-edit-full">
                 <label>Enlace privado del video</label>
                 <input type="password" class="secure-video-url" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
-                <small class="cover-upload-meta">También puedes pegar un iframe completo en el campo de abajo para reemplazar este enlace.</small>
-              </div>
-              <div class="field course-edit-full">
-                <label>Código iframe del video</label>
-                <textarea id="editLessonIframe_${idx}" placeholder="Pega aquí el iframe completo del video. El sistema guardará solo el src protegido."></textarea>
               </div>
               <div class="field course-edit-full">
                 <label>Miniatura de esta clase</label>
@@ -14220,7 +12118,7 @@ function renderPlayer(courseId){
       syncAllCourseEditLessonsFromDom();
       const module = document.getElementById('editNewLessonModuleField')?.value.trim() || '';
       const title = document.getElementById('editNewLessonTitleField')?.value.trim() || '';
-      const url = getVideoInputValue('editNewLessonUrlField', 'editNewLessonIframeField');
+      const url = document.getElementById('editNewLessonUrlField')?.value.trim() || '';
       const thumbInput = document.getElementById('editNewLessonThumbUploadField');
       const thumbnail = thumbInput?.dataset?.thumbnail || '';
       const thumbnailData = thumbInput?.dataset?.thumbnailData || '';
@@ -14229,8 +12127,6 @@ function renderPlayer(courseId){
       document.getElementById('editNewLessonModuleField').value = '';
       document.getElementById('editNewLessonTitleField').value = '';
       document.getElementById('editNewLessonUrlField').value = '';
-      const editNewIframeField = document.getElementById('editNewLessonIframeField');
-      if(editNewIframeField) editNewIframeField.value = '';
       const newUploadField = document.getElementById('editNewLessonVideoUploadField');
       if(newUploadField) newUploadField.value = '';
       setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
@@ -14240,39 +12136,22 @@ function renderPlayer(courseId){
       if(newThumbStatus){ delete newThumbStatus.dataset.uploadKind; newThumbStatus.textContent = 'No has seleccionado ninguna miniatura.'; }
       applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {});
       renderCourseEditLessonsDraft();
-      let saveResult = { remoteSaved: true };
       if(courseEditDraft.courseId){
-        saveResult = await saveEditedCourse(courseEditDraft.courseId, {
+        await saveEditedCourse(courseEditDraft.courseId, {
           keepModalOpen: true,
           silent: true,
           skipActivity: true,
           successMessage: 'Clase agregada y guardada correctamente.'
-        }) || saveResult;
+        });
       }
-      if(saveResult.remoteSaved === false){
-        toast('Clase agregada en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
-      }else{
-        toast('Clase agregada y guardada en Firebase.');
-      }
+      toast('Clase agregada y guardada correctamente.');
     }
 
-    async function deleteCourseEditLesson(index){
+    function deleteCourseEditLesson(index){
       syncAllCourseEditLessonsFromDom();
       courseEditDraft.lessons.splice(index, 1);
       renderCourseEditLessonsDraft();
-      let saveResult = { remoteSaved: true };
-      if(courseEditDraft.courseId){
-        saveResult = await saveEditedCourse(courseEditDraft.courseId, {
-          keepModalOpen: true,
-          silent: true,
-          skipActivity: true
-        }) || saveResult;
-      }
-      if(saveResult.remoteSaved === false){
-        toast('Clase eliminada solo en este navegador. No se pudo subir a Firebase.');
-      }else{
-        toast('Clase eliminada y guardada en Firebase.');
-      }
+      toast('Clase eliminada del editor.');
     }
 
     function reconcileCourseProgressAfterEdit(courseId){
@@ -14346,13 +12225,9 @@ function renderPlayer(courseId){
       course.updatedAt = new Date().toISOString();
       reconcileCourseProgressAfterEdit(id);
 
-      if(!options.skipActivity){
-        addActivity(`Se editó el curso ${previousTitle || title}.`);
-      }
-      saveState({ localOnly: true });
-      let remoteSaved = true;
+      saveState();
       if(options.forceRemote !== false){
-        remoteSaved = await saveSharedStateToFirebaseNow();
+        await saveSharedStateToFirebaseNow();
       }
       renderAdminCourses();
       renderStudentDiscover();
@@ -14362,17 +12237,15 @@ function renderPlayer(courseId){
       renderUsersTable();
       fillCourseSelects();
       renderAdminDashboard();
+      if(!options.skipActivity){
+        addActivity(`Se editó el curso ${previousTitle || title}.`);
+      }
       if(!options.keepModalOpen){
         closeModal();
       }
       if(!options.silent){
-        if(remoteSaved){
-          toast(options.successMessage || 'Curso actualizado y guardado en Firebase.');
-        }else{
-          toast('El curso quedó guardado en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
-        }
+        toast(options.successMessage || 'Curso actualizado correctamente.');
       }
-      return { ok: true, remoteSaved };
     }
 
     function toggleCourseVisibility(id){
@@ -15525,7 +13398,7 @@ function bindButtons(){
       byId('btnAddLessonInline')?.addEventListener('click', () => {
         const module = byId('lessonModuleField').value.trim();
         const title = byId('lessonTitleField').value.trim();
-        const url = getVideoInputValue('lessonUrlField', 'lessonIframeField');
+        const url = byId('lessonUrlField').value.trim();
         const normalizedUrl = normalizeVideoUrl(url);
         const thumbInput = byId('lessonThumbUploadField');
         const thumbnail = thumbInput?.dataset?.thumbnail || '';
@@ -15534,8 +13407,6 @@ function bindButtons(){
         state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), thumbnail, thumbnailData });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
-        const lessonIframeField = byId('lessonIframeField');
-        if(lessonIframeField) lessonIframeField.value = '';
         const lessonUploadField = byId('lessonVideoUploadField');
         if(lessonUploadField) lessonUploadField.value = '';
         setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
@@ -15543,7 +13414,7 @@ function bindButtons(){
         renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}${thumbnail ? ' · Miniatura' : ''}`);
       });
 
-      byId('btnSaveCourseInline')?.addEventListener('click', async () => {
+      byId('btnSaveCourseInline')?.addEventListener('click', () => {
         const title = byId('courseTitleField').value.trim();
         const category = byId('courseCategoryField').value;
         const status = byId('courseStatusField').value;
@@ -15558,15 +13429,12 @@ function bindButtons(){
         if(!title || !description){ toast('Completa título y descripción.'); return; }
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
         const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }];
-        const createdAt = new Date().toISOString();
         state.courses.unshift({
-          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt,
-          updatedAt: createdAt, progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
+          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt: new Date().toISOString(),
+          progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
         });
         state.pendingLessons = [];
-        addActivity('Se creó el curso ' + title + ' con precio definido.');
-        if (typeof saveState === 'function') saveState({ localOnly: true });
-        const remoteSaved = await saveSharedStateToFirebaseNow();
+        if (typeof saveState === 'function') saveState();
         byId('courseTitleField').value = '';
         byId('courseDescField').value = '';
         if(byId('coursePriceField')) byId('coursePriceField').value = '';
@@ -15578,11 +13446,8 @@ function bindButtons(){
         resetCreateLessonThumbnailInput();
         setCreateCourseStep('info');
         renderLessonsPreview(); renderAdminCourses(); renderStudentDiscover(); fillCourseSelects(); renderAdminDashboard();
-        if(remoteSaved){
-          toast('Curso creado y guardado en Firebase.');
-        }else{
-          toast('Curso creado en este navegador, pero no se pudo subir a Firebase. Revisa reglas o sesión admin.');
-        }
+        addActivity('Se creó el curso ' + title + ' con precio definido.');
+        toast('Curso creado');
         showTab('admin-courses');
       });
 
@@ -15758,12 +13623,6 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
           btn.classList.toggle('is-favorite', isFavorite);
         }
       });
-
-      byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
-      byId('btnYoutubeCenterPlay')?.addEventListener('click', toggleYoutubePlayPause);
-      byId('btnYoutubeBack')?.addEventListener('click', () => seekYoutubeBy(-10));
-      byId('btnYoutubeForward')?.addEventListener('click', () => seekYoutubeBy(10));
-      byId('btnYoutubeFullscreen')?.addEventListener('click', toggleYoutubeFullscreen);
 
       byId('btnDownloadCurrentResource')?.addEventListener('click', () => {
         const c = courseById(state.currentCourseId);
