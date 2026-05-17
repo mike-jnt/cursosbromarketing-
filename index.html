@@ -7235,6 +7235,7 @@
     const FIRESTORE_COVER_MAX_BYTES = 850 * 1024;
     const firestoreCoverCache = {};
     let firestoreCoverHydrateTimer = null;
+    let firestoreCoverFallbackHydrationRunning = false;
 
     const DEMO_USERS = {
       admin: {
@@ -10461,6 +10462,7 @@ function renderPlayer(courseId){
         uploadField.value = '';
         delete uploadField.dataset.fileData;
         delete uploadField.dataset.firestoreCoverRef;
+        delete uploadField.dataset.coverInlineData;
       }
       if(uploadName){
         delete uploadName.dataset.uploadKind;
@@ -10476,6 +10478,17 @@ function renderPlayer(courseId){
       const uploadCover = uploadField?.dataset?.firestoreCoverRef || uploadField?.dataset?.fileData || '';
       const urlCover = urlField?.value?.trim() || '';
       return uploadCover || urlCover || '';
+    }
+
+    function getSelectedCourseCoverInlineData(){
+      const uploadField = document.getElementById('courseCoverUploadField');
+      const cover = getSelectedCourseCover();
+      const inlineData = uploadField?.dataset?.coverInlineData || '';
+      return isFirestoreCoverRef(cover) ? inlineData : '';
+    }
+
+    function getCourseCoverInlineData(course){
+      return String(course?.coverData || course?.coverDataUrl || course?.coverInlineData || '').trim();
     }
 
     function isFirestoreCoverRef(src){
@@ -10572,8 +10585,56 @@ function renderPlayer(courseId){
       };
     }
 
+    async function prepareInlineCourseCoverData(file){
+      if(!file || !file.type || !file.type.startsWith('image/')){
+        throw new Error('Selecciona una imagen válida.');
+      }
+      const img = await loadImageFromFile(file);
+      const originalWidth = img.naturalWidth || img.width || 1;
+      const originalHeight = img.naturalHeight || img.height || 1;
+      let scale = Math.min(1, 640 / originalWidth, 360 / originalHeight);
+      let quality = 0.72;
+      let best = null;
+
+      for(let attempt = 0; attempt < 10; attempt++){
+        const width = Math.max(280, Math.round(originalWidth * scale));
+        const height = Math.max(158, Math.round(originalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { alpha: true });
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        let mime = 'image/webp';
+        let dataUrl = canvas.toDataURL(mime, quality);
+        if(!dataUrl.startsWith('data:image/webp')){
+          mime = 'image/jpeg';
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.restore();
+          dataUrl = canvas.toDataURL(mime, quality);
+        }
+        const sizeBytes = estimateDataUrlBytes(dataUrl);
+        best = { dataUrl, sizeBytes, width, height, mime, quality };
+        if(sizeBytes <= 120 * 1024) break;
+        if(quality > 0.52){
+          quality -= 0.07;
+        } else {
+          scale *= 0.82;
+        }
+      }
+
+      if(!best || !best.dataUrl){
+        throw new Error('No se pudo crear la vista previa de la miniatura.');
+      }
+      return best;
+    }
+
     async function uploadCourseCoverToFirestore(file, context = {}){
       const prepared = await prepareImageForFirestore(file);
+      const inlinePreview = await prepareInlineCourseCoverData(file).catch(() => ({ dataUrl: prepared.dataUrl, sizeBytes: prepared.sizeBytes, width: prepared.width, height: prepared.height, mime: prepared.mime }));
       const connected = firebaseDb || initFirebaseConnection();
       if(!connected || !firebaseDb){
         throw new Error('Firestore no está disponible. Revisa Firebase antes de subir miniaturas.');
@@ -10594,6 +10655,10 @@ function renderPlayer(courseId){
         width: prepared.width,
         height: prepared.height,
         dataUrl: prepared.dataUrl,
+        inlineDataUrl: inlinePreview.dataUrl || prepared.dataUrl,
+        inlineSizeBytes: inlinePreview.sizeBytes || prepared.sizeBytes,
+        inlineWidth: inlinePreview.width || prepared.width,
+        inlineHeight: inlinePreview.height || prepared.height,
         createdAtText: new Date().toISOString(),
         updatedAtText: new Date().toISOString()
       };
@@ -10602,19 +10667,28 @@ function renderPlayer(courseId){
         payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       }
       await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).set(payload, { merge: true });
-      return { ref: buildFirestoreCoverRef(docId), docId, ...prepared };
+      return { ref: buildFirestoreCoverRef(docId), docId, ...prepared, inlineDataUrl: inlinePreview.dataUrl || prepared.dataUrl, inlineSizeBytes: inlinePreview.sizeBytes || prepared.sizeBytes }; 
     }
 
     async function resolveFirestoreCoverDataUrl(src){
       const docId = getFirestoreCoverDocId(src);
       if(!docId) return '';
       if(firestoreCoverCache[docId]) return firestoreCoverCache[docId];
+
+      const localCourseFallback = (state.courses || []).find(course => String(course?.cover || '').trim() === String(src || '').trim() && getCourseCoverInlineData(course));
+      if(localCourseFallback){
+        const fallback = getCourseCoverInlineData(localCourseFallback);
+        firestoreCoverCache[docId] = fallback;
+        return fallback;
+      }
+
       const connected = firebaseDb || initFirebaseConnection();
       if(!connected || !firebaseDb) return '';
       try{
         const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).get();
         if(doc.exists){
-          const dataUrl = doc.data()?.dataUrl || '';
+          const data = doc.data() || {};
+          const dataUrl = data.dataUrl || data.inlineDataUrl || '';
           if(dataUrl){
             firestoreCoverCache[docId] = dataUrl;
             return dataUrl;
@@ -10626,27 +10700,67 @@ function renderPlayer(courseId){
       return '';
     }
 
-    function applyCoverSrcToElement(element, src){
+    function applyCoverSrcToElement(element, src, fallbackDataUrl = ''){
       if(!element) return;
       const cover = String(src || '').trim();
+      const fallback = String(fallbackDataUrl || '').trim();
       delete element.dataset.firestoreCoverId;
-      if(!cover){
+      if(!cover && !fallback){
         element.classList.remove('has-image', 'cover-has-image');
         element.style.backgroundImage = '';
         return;
       }
       element.classList.add(element.classList.contains('cover') ? 'cover-has-image' : 'has-image');
+
       if(isFirestoreCoverRef(cover)){
         const docId = getFirestoreCoverDocId(cover);
         element.dataset.firestoreCoverId = docId;
-        element.style.backgroundImage = '';
+        if(fallback){
+          element.style.backgroundImage = `url('${escapeCssUrl(fallback)}')`;
+        }
         resolveFirestoreCoverDataUrl(cover).then(dataUrl => {
           if(dataUrl && element.dataset.firestoreCoverId === docId){
             element.style.backgroundImage = `url('${escapeCssUrl(dataUrl)}')`;
           }
         });
       }else{
-        element.style.backgroundImage = `url('${escapeCssUrl(cover)}')`;
+        const finalCover = cover || fallback;
+        element.style.backgroundImage = `url('${escapeCssUrl(finalCover)}')`;
+      }
+    }
+
+    function applyCourseCoverToElement(element, course){
+      if(!element) return;
+      const cover = String(course?.cover || '').trim();
+      const inlineData = getCourseCoverInlineData(course);
+      applyCoverSrcToElement(element, cover || inlineData, inlineData);
+    }
+
+    async function hydrateCourseCoverFallbacks(){
+      if(firestoreCoverFallbackHydrationRunning) return;
+      firestoreCoverFallbackHydrationRunning = true;
+      try{
+        let changed = false;
+        for(const course of (state.courses || [])){
+          if(isFirestoreCoverRef(course?.cover) && !getCourseCoverInlineData(course)){
+            const dataUrl = await resolveFirestoreCoverDataUrl(course.cover);
+            if(dataUrl){
+              course.coverData = dataUrl;
+              changed = true;
+            }
+          }
+        }
+        if(changed){
+          saveState();
+          renderAdminCourses();
+          renderStudentAssignedCourses();
+          renderStudentDiscover();
+          renderStudentProgress();
+          updateStudentDesire();
+          queueHydrateFirestoreCovers();
+        }
+      }finally{
+        firestoreCoverFallbackHydrationRunning = false;
       }
     }
 
@@ -10664,14 +10778,14 @@ function renderPlayer(courseId){
       });
     }
 
-    function updateCourseCoverPreview(src){
+    function updateCourseCoverPreview(src, fallbackDataUrl = ''){
       const media = document.getElementById('courseCoverPreviewMedia');
       const text = document.getElementById('courseCoverPreviewText');
       if(!media || !text) return;
       const cover = String(src || '').trim();
       if(cover){
         media.classList.add('has-image');
-        applyCoverSrcToElement(media, cover);
+        applyCoverSrcToElement(media, cover, fallbackDataUrl);
         media.innerHTML = '<span>Portada seleccionada</span>';
         text.textContent = isFirestoreCoverRef(cover)
           ? 'Imagen comprimida y guardada en Firestore. Al guardar el curso quedará vinculada a esta portada.'
@@ -10690,13 +10804,17 @@ function renderPlayer(courseId){
     function renderCourseCover(course){
       const safeTitle = escapeHtml(course?.title || 'Curso');
       const cover = String(course?.cover || '').trim();
-      if(cover){
+      const inlineData = getCourseCoverInlineData(course);
+      const hasCover = Boolean(cover || inlineData);
+      if(hasCover){
         if(isFirestoreCoverRef(cover)){
           const docId = escapeHtml(getFirestoreCoverDocId(cover));
+          const style = inlineData ? ` style="background-image:url('${escapeCssUrl(inlineData)}')"` : '';
           queueHydrateFirestoreCovers();
-          return `<div class="cover cover-has-image" data-firestore-cover-id="${docId}"><span>${safeTitle}</span></div>`;
+          return `<div class="cover cover-has-image" data-firestore-cover-id="${docId}"${style}><span>${safeTitle}</span></div>`;
         }
-        return `<div class="cover cover-has-image" style="background-image:url('${escapeCssUrl(cover)}')"><span>${safeTitle}</span></div>`;
+        const finalCover = cover || inlineData;
+        return `<div class="cover cover-has-image" style="background-image:url('${escapeCssUrl(finalCover)}')"><span>${safeTitle}</span></div>`;
       }
       return `<div class="cover"><span>${safeTitle}</span></div>`;
     }
@@ -11111,6 +11229,7 @@ function renderPlayer(courseId){
       const paymentTypes = ['Único','Mensual','Por cuotas'];
       const statuses = ['Activo','Borrador','Oculto'];
       const cover = (course.cover || '').trim();
+      const coverInlineData = getCourseCoverInlineData(course);
       return `
         <div class="stack course-edit-modal">
           <div class="mini-note">
@@ -11175,10 +11294,10 @@ function renderPlayer(courseId){
                 </label>
                 <div class="cover-upload-file-name" id="editCourseCoverUploadName">${cover ? 'Portada actual cargada.' : 'No has seleccionado ningún archivo.'}</div>
                 <div class="cover-preview-card">
-                  <div class="cover-preview-media${cover ? ' has-image' : ''}" id="editCourseCoverPreviewMedia"><span>${cover ? 'Portada actual' : 'Vista previa de portada'}</span></div>
+                  <div class="cover-preview-media${(cover || coverInlineData) ? ' has-image' : ''}" id="editCourseCoverPreviewMedia"><span>${(cover || coverInlineData) ? 'Portada actual' : 'Vista previa de portada'}</span></div>
                   <div class="cover-preview-info">
                     <strong>Vista previa</strong>
-                    <small id="editCourseCoverPreviewText">${cover ? 'Esta es la portada guardada actualmente en el curso.' : 'Puedes pegar una URL o subir una imagen desde tu equipo.'}</small>
+                    <small id="editCourseCoverPreviewText">${(cover || coverInlineData) ? 'Esta es la portada guardada actualmente en el curso.' : 'Puedes pegar una URL o subir una imagen desde tu equipo.'}</small>
                   </div>
                 </div>
               </div>
@@ -11241,18 +11360,20 @@ function renderPlayer(courseId){
     function bindCourseEditModal(courseId){
       const course = courseById(courseId);
       if(!course) return;
-      courseEditDraft = { courseId: Number(courseId), lessons: clonePlain(course.lessons || []) };
+      courseEditDraft = { courseId: Number(courseId), lessons: clonePlain(course.lessons || []), coverData: getCourseCoverInlineData(course) };
       renderCourseEditLessonsDraft();
-      updateCourseEditCoverPreview(course.cover || '');
+      updateCourseEditCoverPreview(course.cover || getCourseCoverInlineData(course) || '', getCourseCoverInlineData(course));
 
       const coverField = document.getElementById('editCourseCoverField');
       const uploadField = document.getElementById('editCourseCoverUploadField');
-      coverField?.addEventListener('input', (event) => updateCourseEditCoverPreview(event.target.value));
+      coverField?.addEventListener('input', (event) => { courseEditDraft.coverData = ''; updateCourseEditCoverPreview(event.target.value); });
       uploadField?.addEventListener('change', async (event) => {
         const file = event.target.files?.[0];
         const nameNode = document.getElementById('editCourseCoverUploadName');
         if(!file){
           if(nameNode) nameNode.textContent = 'No has seleccionado ningún archivo.';
+          delete event.target.dataset.coverInlineData;
+          courseEditDraft.coverData = '';
           updateCourseEditCoverPreview(coverField?.value || '');
           return;
         }
@@ -11268,11 +11389,13 @@ function renderPlayer(courseId){
           }
           const uploaded = await uploadCourseCoverToFirestore(file, { courseId, courseTitle: course.title || '' });
           if(coverField) coverField.value = uploaded.ref;
+          event.target.dataset.coverInlineData = uploaded.inlineDataUrl || uploaded.dataUrl || '';
+          courseEditDraft.coverData = event.target.dataset.coverInlineData;
           if(nameNode){
             nameNode.dataset.uploadKind = 'done';
             nameNode.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`;
           }
-          updateCourseEditCoverPreview(uploaded.ref);
+          updateCourseEditCoverPreview(uploaded.ref, event.target.dataset.coverInlineData);
           toast('Miniatura guardada en Firestore.');
         }catch(error){
           console.error('No se pudo subir la miniatura a Firestore.', error);
@@ -11288,14 +11411,14 @@ function renderPlayer(courseId){
       bindCourseEditLessonVideoUploadInputs();
     }
 
-    function updateCourseEditCoverPreview(src){
+    function updateCourseEditCoverPreview(src, fallbackDataUrl = ''){
       const media = document.getElementById('editCourseCoverPreviewMedia');
       const text = document.getElementById('editCourseCoverPreviewText');
       if(!media || !text) return;
       const cover = String(src || '').trim();
       if(cover){
         media.classList.add('has-image');
-        applyCoverSrcToElement(media, cover);
+        applyCoverSrcToElement(media, cover, fallbackDataUrl);
         media.innerHTML = '<span>Portada seleccionada</span>';
         text.textContent = isFirestoreCoverRef(cover)
           ? 'Imagen cargada desde Firestore y vinculada a este curso.'
@@ -11428,6 +11551,8 @@ function renderPlayer(courseId){
       const visibleForStudents = (document.getElementById('editCourseVisibleField')?.value || 'true') === 'true' && status !== 'Oculto';
       const description = document.getElementById('editCourseDescField')?.value.trim() || '';
       const cover = document.getElementById('editCourseCoverField')?.value.trim() || '';
+      const uploadedCoverInlineData = document.getElementById('editCourseCoverUploadField')?.dataset?.coverInlineData || '';
+      const coverData = isFirestoreCoverRef(cover) ? (uploadedCoverInlineData || courseEditDraft.coverData || (cover === String(course.cover || '').trim() ? getCourseCoverInlineData(course) : '')) : '';
       const price = Math.max(0, Number(document.getElementById('editCoursePriceField')?.value || 0));
       const paymentType = document.getElementById('editCoursePaymentTypeField')?.value || 'Único';
       const allowPartial = (document.getElementById('editCourseAllowPartialField')?.value || 'true') === 'true';
@@ -11451,6 +11576,7 @@ function renderPlayer(courseId){
       course.visible = visibleForStudents;
       course.description = description;
       course.cover = cover;
+      course.coverData = coverData;
       course.price = price;
       course.paymentType = paymentType;
       course.allowPartial = allowPartial;
@@ -12242,17 +12368,18 @@ function openPaymentHistoryModal(id){
       if(next){
         const completedLessons = (next.completedLessons || []).length;
         const cover = String(next.cover || '').trim();
+        const inlineCover = getCourseCoverInlineData(next);
         if(continueThumb){
-          if(cover){
+          if(cover || inlineCover){
             continueThumb.classList.add('has-image');
-            applyCoverSrcToElement(continueThumb, cover);
+            applyCourseCoverToElement(continueThumb, next);
           } else {
             continueThumb.classList.remove('has-image');
             continueThumb.style.backgroundImage = '';
             delete continueThumb.dataset.firestoreCoverId;
           }
         }
-        if(continueThumbLabel) continueThumbLabel.textContent = cover ? 'Miniatura del curso' : 'Curso sin miniatura cargada';
+        if(continueThumbLabel) continueThumbLabel.textContent = (cover || inlineCover) ? 'Miniatura del curso' : 'Curso sin miniatura cargada';
         if(continueTitle) continueTitle.textContent = next.title;
         if(continueDesc) continueDesc.textContent = next.benefit || next.description;
         if(continueBar) continueBar.style.width = (next.progress || 0) + '%';
@@ -12564,6 +12691,7 @@ function bindButtons(){
           }
           delete e.target.dataset.fileData;
           delete e.target.dataset.firestoreCoverRef;
+          delete e.target.dataset.coverInlineData;
           updateCourseCoverPreview(byId('courseCoverField')?.value || '');
           return;
         }
@@ -12583,16 +12711,18 @@ function bindButtons(){
           });
           e.target.dataset.firestoreCoverRef = uploaded.ref;
           e.target.dataset.fileData = uploaded.ref;
+          e.target.dataset.coverInlineData = uploaded.inlineDataUrl || uploaded.dataUrl || '';
           if(nameNode){
             nameNode.dataset.uploadKind = 'done';
             nameNode.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`;
           }
-          updateCourseCoverPreview(uploaded.ref);
+          updateCourseCoverPreview(uploaded.ref, e.target.dataset.coverInlineData);
           toast('Miniatura guardada en Firestore.');
         }catch(error){
           console.error('No se pudo subir la miniatura a Firestore.', error);
           delete e.target.dataset.fileData;
           delete e.target.dataset.firestoreCoverRef;
+          delete e.target.dataset.coverInlineData;
           e.target.value = '';
           if(nameNode){
             nameNode.dataset.uploadKind = 'error';
@@ -12636,6 +12766,7 @@ function bindButtons(){
         const visible = (byId('courseVisibleField')?.value || 'true') === 'true' && status !== 'Oculto';
         const description = byId('courseDescField').value.trim();
         const cover = getSelectedCourseCover();
+        const coverData = getSelectedCourseCoverInlineData();
         const price = Number(byId('coursePriceField')?.value || 0);
         const paymentType = byId('coursePaymentTypeField')?.value || 'Único';
         const allowPartial = (byId('courseAllowPartialField')?.value || 'true') === 'true';
@@ -12644,7 +12775,7 @@ function bindButtons(){
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
         const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }];
         state.courses.unshift({
-          id: Date.now(), title, category, status, visible, description, cover, createdAt: new Date().toISOString(),
+          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt: new Date().toISOString(),
           progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
         });
         state.pendingLessons = [];
@@ -12876,6 +13007,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
         enterApp(state.currentUser);
       }
       queueHydrateFirestoreCovers();
+      hydrateCourseCoverFallbacks();
     }
 
     bindButtons();
