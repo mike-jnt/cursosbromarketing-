@@ -7504,6 +7504,69 @@
       }
     }
 
+    function getCourseLocalTimestamp(course){
+      const raw = course && (course.updatedAt || course.updatedAtClient || course.createdAt);
+      const time = raw ? Date.parse(raw) : 0;
+      return Number.isFinite(time) ? time : 0;
+    }
+
+    function mergeRemoteStateWithLocalDraft(remotePayload, localPayload){
+      const merged = clonePlain(remotePayload || {});
+      let changed = false;
+      const localCourses = Array.isArray(localPayload && localPayload.courses) ? localPayload.courses : [];
+      const remoteCourses = Array.isArray(merged.courses) ? merged.courses : [];
+      if(localCourses.length){
+        const remoteById = new Map(remoteCourses.map(course => [Number(course.id), course]));
+        localCourses.forEach(localCourse => {
+          const id = Number(localCourse && localCourse.id);
+          if(!id) return;
+          const remoteCourse = remoteById.get(id);
+          const localLessonCount = Array.isArray(localCourse.lessons) ? localCourse.lessons.length : 0;
+          const remoteLessonCount = Array.isArray(remoteCourse && remoteCourse.lessons) ? remoteCourse.lessons.length : 0;
+          const localTime = getCourseLocalTimestamp(localCourse);
+          const remoteTime = getCourseLocalTimestamp(remoteCourse);
+          const localLooksNewer = !remoteCourse
+            || localTime > remoteTime
+            || (localLessonCount > remoteLessonCount && localTime >= remoteTime);
+          if(localLooksNewer){
+            remoteById.set(id, clonePlain(localCourse));
+            changed = true;
+          }
+        });
+        const orderedIds = new Set();
+        const mergedCourses = [];
+        remoteCourses.forEach(course => {
+          const id = Number(course && course.id);
+          if(id && remoteById.has(id)){
+            mergedCourses.push(remoteById.get(id));
+            orderedIds.add(id);
+          }
+        });
+        localCourses.forEach(course => {
+          const id = Number(course && course.id);
+          if(id && remoteById.has(id) && !orderedIds.has(id)){
+            mergedCourses.push(remoteById.get(id));
+            orderedIds.add(id);
+          }
+        });
+        merged.courses = mergedCourses;
+      }
+      return { payload: merged, changed };
+    }
+
+    async function saveSharedStateToFirebaseNow(){
+      if(!canWriteSharedFirebaseState()) return false;
+      try{
+        const payload = getSharedPersistableState();
+        payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+        return true;
+      }catch(error){
+        console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la copia local.', error);
+        return false;
+      }
+    }
+
     async function loadFirebaseState(options = {}){
       const silent = Boolean(options.silent);
       const requireAuth = Boolean(options.requireAuth);
@@ -7517,12 +7580,28 @@
         const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).get();
         if(doc.exists){
           const currentLocalUser = state.currentUser ? clonePlain(state.currentUser) : null;
-          applyStatePayload(doc.data(), { includeCurrentUser: false });
+          const remotePayload = doc.data();
+          let payloadToApply = remotePayload;
+          let recoveredLocalChanges = false;
+          try{
+            const localRaw = localStorage.getItem(STORAGE_KEY);
+            const localPayload = localRaw ? JSON.parse(localRaw) : null;
+            const mergedResult = mergeRemoteStateWithLocalDraft(remotePayload, localPayload);
+            payloadToApply = mergedResult.payload;
+            recoveredLocalChanges = mergedResult.changed;
+          }catch(mergeError){
+            console.warn('No se pudo comparar la copia local con Firebase.', mergeError);
+          }
+          applyStatePayload(payloadToApply, { includeCurrentUser: false });
           state.currentUser = currentLocalUser;
-          saveState({ localOnly: true });
           firebaseRemoteLoaded = true;
+          saveState({ localOnly: true });
+          if(recoveredLocalChanges && hasFirebaseAuthSession() && isAdminEmail(getFirebaseSignedEmail())){
+            await saveSharedStateToFirebaseNow();
+            if(!silent) toast('Se recuperaron cambios locales y se actualizaron en Firebase.');
+          }
           if(typeof refreshAllViews === 'function') refreshAllViews();
-          if(!silent) toast('Base de datos Firebase sincronizada.');
+          if(!silent && !recoveredLocalChanges) toast('Base de datos Firebase sincronizada.');
           return true;
         }
         firebaseRemoteLoaded = true;
@@ -11334,7 +11413,7 @@ function renderPlayer(courseId){
                 </div>
               </div>
               <div class="admin-inline-actions">
-                <button class="btn btn-dark" type="button" onclick="addCourseEditLesson()">+ Agregar clase al curso</button>
+                <button class="btn btn-dark" type="button" onclick="addCourseEditLesson()">+ Agregar y guardar clase</button>
               </div>
             </div>
           </div>
@@ -11495,7 +11574,7 @@ function renderPlayer(courseId){
       bindCourseEditLessonVideoUploadInputs();
     }
 
-    function addCourseEditLesson(){
+    async function addCourseEditLesson(){
       syncAllCourseEditLessonsFromDom();
       const module = document.getElementById('editNewLessonModuleField')?.value.trim() || '';
       const title = document.getElementById('editNewLessonTitleField')?.value.trim() || '';
@@ -11509,7 +11588,15 @@ function renderPlayer(courseId){
       if(newUploadField) newUploadField.value = '';
       setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
       renderCourseEditLessonsDraft();
-      toast('Clase agregada al editor.');
+      if(courseEditDraft.courseId){
+        await saveEditedCourse(courseEditDraft.courseId, {
+          keepModalOpen: true,
+          silent: true,
+          skipActivity: true,
+          successMessage: 'Clase agregada y guardada correctamente.'
+        });
+      }
+      toast('Clase agregada y guardada correctamente.');
     }
 
     function deleteCourseEditLesson(index){
@@ -11539,7 +11626,7 @@ function renderPlayer(courseId){
       });
     }
 
-    function saveEditedCourse(id){
+    async function saveEditedCourse(id, options = {}){
       const course = courseById(id);
       if(!course){ toast('No se encontró el curso.'); return; }
       syncAllCourseEditLessonsFromDom();
@@ -11585,6 +11672,9 @@ function renderPlayer(courseId){
       reconcileCourseProgressAfterEdit(id);
 
       saveState();
+      if(options.forceRemote !== false){
+        await saveSharedStateToFirebaseNow();
+      }
       renderAdminCourses();
       renderStudentDiscover();
       renderStudentAssignedCourses();
@@ -11593,9 +11683,15 @@ function renderPlayer(courseId){
       renderUsersTable();
       fillCourseSelects();
       renderAdminDashboard();
-      addActivity(`Se editó el curso ${previousTitle || title}.`);
-      closeModal();
-      toast('Curso actualizado correctamente.');
+      if(!options.skipActivity){
+        addActivity(`Se editó el curso ${previousTitle || title}.`);
+      }
+      if(!options.keepModalOpen){
+        closeModal();
+      }
+      if(!options.silent){
+        toast(options.successMessage || 'Curso actualizado correctamente.');
+      }
     }
 
     function toggleCourseVisibility(id){
@@ -11658,7 +11754,7 @@ function renderPlayer(courseId){
       }
       const isYoutube = isYouTubeVideoUrl(finalUrl);
       const frameAttrs = isYoutube
-        ? 'allow="autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-presentation" referrerpolicy="strict-origin-when-cross-origin"'
+        ? 'allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"'
         : 'allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen';
       return `
         <div class="admin-video-preview${isYoutube ? ' is-youtube-protected' : ''}">
