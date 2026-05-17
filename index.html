@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
@@ -7490,11 +7488,32 @@
           console.warn('Firebase SDK no cargó. El sistema queda usando localStorage.');
           return false;
         }
+
+        // Esta función se llama desde varios puntos del sistema.
+        // Si Firestore ya está iniciado, NO se deben volver a aplicar settings(),
+        // porque Firebase lanza: "settings can no longer be changed".
+        if(firebaseDb && firebaseApp){
+          return true;
+        }
+
         firebaseApp = firebase.apps && firebase.apps.length
           ? firebase.app()
           : firebase.initializeApp(firebaseConfig);
+
         firebaseDb = firebase.firestore();
-        firebaseDb.settings({ ignoreUndefinedProperties: true, merge: true });
+
+        // settings() solo puede ejecutarse antes de cualquier lectura/escritura.
+        // Si el SDK ya fue usado por otra función, se omite sin romper la conexión.
+        try{
+          if(!window.__campusFirestoreSettingsApplied){
+            firebaseDb.settings({ ignoreUndefinedProperties: true });
+            window.__campusFirestoreSettingsApplied = true;
+          }
+        }catch(settingsError){
+          window.__campusFirestoreSettingsApplied = true;
+          console.warn('Firestore ya estaba iniciado; se continúa sin cambiar settings.', settingsError);
+        }
+
         if(firebase.auth){
           firebaseAuth = firebase.auth(firebaseApp);
           firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error => {
@@ -7511,7 +7530,7 @@
         }catch(analyticsError){
           console.warn('Analytics no se pudo iniciar, la base de datos sigue funcionando.', analyticsError);
         }
-        return true;
+        return Boolean(firebaseDb);
       }catch(error){
         console.warn('No se pudo iniciar Firebase. El sistema queda usando localStorage.', error);
         firebaseDb = null;
@@ -7552,9 +7571,21 @@
       clearTimeout(firebaseSaveTimer);
       firebaseSaveTimer = setTimeout(async () => {
         try{
+          if(!firebaseDb && !initFirebaseConnection()){
+            console.warn('No se pudo guardar en Firestore: conexión no disponible.');
+            return;
+          }
+          if(!canWriteSharedFirebaseState()){
+            console.warn('No se pudo guardar en Firestore: sesión de administrador no válida.', {
+              currentUserRole: state.currentUser?.role || '',
+              firebaseEmail: getFirebaseSignedEmail()
+            });
+            return;
+          }
           const payload = getSharedPersistableState();
           payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
           await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+          firebaseRemoteLoaded = true;
         }catch(error){
           console.warn('No se pudo guardar en Firestore. Se conserva la copia local.', error);
           if(state.currentUser && state.currentUser.role === 'admin'){
