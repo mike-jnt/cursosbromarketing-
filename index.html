@@ -5684,6 +5684,18 @@
       border-color:var(--bro-line) !important;
     }
 
+    .cover.cover-has-image,
+    #tab-admin-courses .cover.cover-has-image,
+    #tab-student-courses .cover.cover-has-image,
+    #tab-student-discover .cover.cover-has-image,
+    #tab-student-progress .cover.cover-has-image,
+    #tab-student-home .continue-course-thumb.has-image,
+    .cover-preview-media.has-image{
+      background-size:cover !important;
+      background-position:center !important;
+      background-repeat:no-repeat !important;
+    }
+
     .course-progress,
     .student-bar,
     #tab-student-home .student-bar,
@@ -10700,6 +10712,31 @@ function renderPlayer(courseId){
       return '';
     }
 
+    function setCoverBackgroundImage(element, src){
+      if(!element || !src) return;
+      const safeSrc = escapeCssUrl(String(src || '').trim());
+      // La capa de colores Bro Marketing usa background con !important.
+      // Por eso la miniatura debe aplicarse también con prioridad para que sea visible.
+      element.style.setProperty('background-image', `url('${safeSrc}')`, 'important');
+      element.style.setProperty('background-size', 'cover', 'important');
+      element.style.setProperty('background-position', 'center', 'important');
+      element.style.setProperty('background-repeat', 'no-repeat', 'important');
+    }
+
+    function clearCoverBackgroundImage(element){
+      if(!element) return;
+      element.style.removeProperty('background-image');
+      element.style.removeProperty('background-size');
+      element.style.removeProperty('background-position');
+      element.style.removeProperty('background-repeat');
+    }
+
+    function buildCoverInlineStyle(src){
+      const cover = String(src || '').trim();
+      if(!cover) return '';
+      return ` style="background-image:url('${escapeCssUrl(cover)}') !important;background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important;"`;
+    }
+
     function applyCoverSrcToElement(element, src, fallbackDataUrl = ''){
       if(!element) return;
       const cover = String(src || '').trim();
@@ -10707,7 +10744,7 @@ function renderPlayer(courseId){
       delete element.dataset.firestoreCoverId;
       if(!cover && !fallback){
         element.classList.remove('has-image', 'cover-has-image');
-        element.style.backgroundImage = '';
+        clearCoverBackgroundImage(element);
         return;
       }
       element.classList.add(element.classList.contains('cover') ? 'cover-has-image' : 'has-image');
@@ -10716,16 +10753,16 @@ function renderPlayer(courseId){
         const docId = getFirestoreCoverDocId(cover);
         element.dataset.firestoreCoverId = docId;
         if(fallback){
-          element.style.backgroundImage = `url('${escapeCssUrl(fallback)}')`;
+          setCoverBackgroundImage(element, fallback);
         }
         resolveFirestoreCoverDataUrl(cover).then(dataUrl => {
           if(dataUrl && element.dataset.firestoreCoverId === docId){
-            element.style.backgroundImage = `url('${escapeCssUrl(dataUrl)}')`;
+            setCoverBackgroundImage(element, dataUrl);
           }
         });
       }else{
         const finalCover = cover || fallback;
-        element.style.backgroundImage = `url('${escapeCssUrl(finalCover)}')`;
+        setCoverBackgroundImage(element, finalCover);
       }
     }
 
@@ -10794,7 +10831,7 @@ function renderPlayer(courseId){
             : 'Imagen tomada desde la URL que pegaste para la portada del curso.';
       } else {
         media.classList.remove('has-image');
-        media.style.backgroundImage = '';
+        clearCoverBackgroundImage(media);
         delete media.dataset.firestoreCoverId;
         media.innerHTML = '<span>Vista previa de portada</span>';
         text.textContent = 'Puedes usar una URL o subir una imagen; si subes archivo se guardará en Firestore.';
@@ -10809,12 +10846,12 @@ function renderPlayer(courseId){
       if(hasCover){
         if(isFirestoreCoverRef(cover)){
           const docId = escapeHtml(getFirestoreCoverDocId(cover));
-          const style = inlineData ? ` style="background-image:url('${escapeCssUrl(inlineData)}')"` : '';
+          const style = inlineData ? buildCoverInlineStyle(inlineData) : '';
           queueHydrateFirestoreCovers();
           return `<div class="cover cover-has-image" data-firestore-cover-id="${docId}"${style}><span>${safeTitle}</span></div>`;
         }
         const finalCover = cover || inlineData;
-        return `<div class="cover cover-has-image" style="background-image:url('${escapeCssUrl(finalCover)}')"><span>${safeTitle}</span></div>`;
+        return `<div class="cover cover-has-image"${buildCoverInlineStyle(finalCover)}><span>${safeTitle}</span></div>`;
       }
       return `<div class="cover"><span>${safeTitle}</span></div>`;
     }
@@ -11427,7 +11464,7 @@ function renderPlayer(courseId){
             : 'Imagen tomada desde la URL indicada.';
       }else{
         media.classList.remove('has-image');
-        media.style.backgroundImage = '';
+        clearCoverBackgroundImage(media);
         delete media.dataset.firestoreCoverId;
         media.innerHTML = '<span>Vista previa de portada</span>';
         text.textContent = 'Puedes pegar una URL o subir una imagen desde tu equipo. Si subes archivo, se guardará en Firestore.';
@@ -12375,7 +12412,7 @@ function openPaymentHistoryModal(id){
             applyCourseCoverToElement(continueThumb, next);
           } else {
             continueThumb.classList.remove('has-image');
-            continueThumb.style.backgroundImage = '';
+            clearCoverBackgroundImage(continueThumb);
             delete continueThumb.dataset.firestoreCoverId;
           }
         }
@@ -12393,7 +12430,7 @@ function openPaymentHistoryModal(id){
       } else {
         if(continueThumb){
           continueThumb.classList.remove('has-image');
-          continueThumb.style.backgroundImage = '';
+          clearCoverBackgroundImage(continueThumb);
           delete continueThumb.dataset.firestoreCoverId;
         }
         if(continueThumbLabel) continueThumbLabel.textContent = 'Sin miniatura disponible';
