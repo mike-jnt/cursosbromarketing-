@@ -6625,6 +6625,68 @@
       height:150px;
     }
 
+
+    /* === Auto ocultar interfaz privada de YouTube === */
+    .video-frame.is-youtube-custom-controls .youtube-private-titlebar,
+    .video-frame.is-youtube-custom-controls .youtube-custom-controls,
+    .video-frame.is-youtube-custom-controls::before,
+    .video-frame.is-youtube-custom-controls::after{
+      transition:opacity .38s ease, transform .38s ease, backdrop-filter .38s ease, -webkit-backdrop-filter .38s ease;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden .youtube-private-titlebar{
+      opacity:0;
+      transform:translateY(-12px);
+      pointer-events:none;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden .youtube-custom-controls{
+      opacity:0;
+      transform:translateY(20px) scale(.985);
+      pointer-events:none;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden{
+      cursor:none;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden::before{
+      opacity:.22;
+      backdrop-filter:blur(1px) saturate(105%);
+      -webkit-backdrop-filter:blur(1px) saturate(105%);
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden::after{
+      opacity:.34;
+      backdrop-filter:blur(1px) saturate(105%);
+      -webkit-backdrop-filter:blur(1px) saturate(105%);
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-custom-controls{
+      opacity:1;
+      transform:none;
+      pointer-events:auto;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing){
+      cursor:auto;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing) .youtube-custom-controls{
+      opacity:0;
+      transform:translateY(20px) scale(.985);
+      pointer-events:none;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden:not(.is-youtube-playing)::before{
+      opacity:.18;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing)::after{
+      opacity:.20;
+    }
+    .video-frame.is-youtube-custom-controls .youtube-center-play{
+      transition:opacity .28s ease, transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden .youtube-center-play{
+      cursor:pointer;
+    }
+    @media (hover:none){
+      .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden{
+        cursor:auto;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -10367,6 +10429,8 @@ function toggleUserCard(userId, event){
       currentTime: 0,
       lastTick: 0,
       timer: null,
+      uiTimer: null,
+      titleTimer: null,
       activeUrl: '',
       lessonTitle: '',
       courseTitle: ''
@@ -11021,6 +11085,70 @@ function toggleUserCard(userId, event){
       });
     }
 
+    function getYoutubeActiveFrame(){
+      return (youtubeCustomState.iframe && youtubeCustomState.iframe.closest('.video-frame')) || document.querySelector('.video-frame.is-youtube-custom-controls') || document.querySelector('.video-frame');
+    }
+
+    function clearYoutubeUiTimers(){
+      if(youtubeCustomState.uiTimer){
+        window.clearTimeout(youtubeCustomState.uiTimer);
+        youtubeCustomState.uiTimer = null;
+      }
+      if(youtubeCustomState.titleTimer){
+        window.clearTimeout(youtubeCustomState.titleTimer);
+        youtubeCustomState.titleTimer = null;
+      }
+    }
+
+    function setYoutubeOverlayVisibility({ titleHidden = false, controlsHidden = false } = {}){
+      const frame = getYoutubeActiveFrame();
+      if(!frame) return;
+      frame.classList.toggle('is-youtube-title-hidden', !!titleHidden);
+      frame.classList.toggle('is-youtube-ui-hidden', !!controlsHidden);
+    }
+
+    function scheduleYoutubeAutoHide(options = {}){
+      const frame = getYoutubeActiveFrame();
+      if(!frame || !frame.classList.contains('is-youtube-custom-controls')) return;
+      clearYoutubeUiTimers();
+      const titleDelay = Number(options.titleDelay || 4000);
+      const controlsDelay = Number(options.controlsDelay || 5200);
+      youtubeCustomState.titleTimer = window.setTimeout(() => {
+        const activeFrame = getYoutubeActiveFrame();
+        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
+          activeFrame.classList.add('is-youtube-title-hidden');
+        }
+      }, titleDelay);
+      youtubeCustomState.uiTimer = window.setTimeout(() => {
+        const activeFrame = getYoutubeActiveFrame();
+        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
+          activeFrame.classList.add('is-youtube-ui-hidden');
+        }
+      }, controlsDelay);
+    }
+
+    function showYoutubeUiTemporarily(options = {}){
+      const frame = getYoutubeActiveFrame();
+      if(!frame || !frame.classList.contains('is-youtube-custom-controls')) return;
+      frame.classList.remove('is-youtube-ui-hidden');
+      if(options.showTitle !== false){
+        frame.classList.remove('is-youtube-title-hidden');
+      }
+      scheduleYoutubeAutoHide({
+        titleDelay: options.titleDelay || 4000,
+        controlsDelay: options.controlsDelay || (youtubeCustomState.playing ? 4400 : 5200)
+      });
+    }
+
+    function bindYoutubeActivityListeners(frame){
+      if(!frame || frame.dataset.youtubeAutoHideBound === 'true') return;
+      frame.dataset.youtubeAutoHideBound = 'true';
+      const showUi = () => showYoutubeUiTemporarily({ showTitle: true });
+      ['mousemove','pointermove','touchstart','click'].forEach(eventName => {
+        frame.addEventListener(eventName, showUi, { passive: true });
+      });
+    }
+
     function getYoutubeCustomControlsNode(){
       return document.getElementById('youtubeCustomControls');
     }
@@ -11037,8 +11165,17 @@ function toggleUserCard(userId, event){
         centerBtn.setAttribute('aria-label', isPlaying ? 'Video en reproducción' : 'Reproducir clase');
         centerBtn.title = isPlaying ? 'Video en reproducción' : 'Reproducir clase';
       }
-      const frame = (youtubeCustomState.iframe && youtubeCustomState.iframe.closest('.video-frame')) || document.querySelector('.video-frame');
-      if(frame) frame.classList.toggle('is-youtube-playing', !!isPlaying);
+      const frame = getYoutubeActiveFrame();
+      if(frame){
+        frame.classList.toggle('is-youtube-playing', !!isPlaying);
+        if(isPlaying){
+          showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 4400 });
+        }else{
+          clearYoutubeUiTimers();
+          frame.classList.remove('is-youtube-ui-hidden');
+          frame.classList.remove('is-youtube-title-hidden');
+        }
+      }
     }
 
     function updateYoutubePrivateOverlay(course, lesson){
@@ -11084,6 +11221,7 @@ function toggleUserCard(userId, event){
 
     function resetYoutubeCustomControls(){
       stopYoutubeClock();
+      clearYoutubeUiTimers();
       youtubeCustomState.iframe = null;
       youtubeCustomState.playing = false;
       youtubeCustomState.currentTime = 0;
@@ -11093,7 +11231,7 @@ function toggleUserCard(userId, event){
       const controls = getYoutubeCustomControlsNode();
       if(controls) controls.style.display = 'none';
       const frame = document.querySelector('.video-frame');
-      if(frame) frame.classList.remove('is-youtube-custom-controls', 'is-youtube-playing');
+      if(frame) frame.classList.remove('is-youtube-custom-controls', 'is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden');
     }
 
     function prepareYoutubeCustomControls(iframe, url){
@@ -11109,7 +11247,9 @@ function toggleUserCard(userId, event){
       const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('.video-frame');
       if(frame){
         frame.classList.add('is-youtube-custom-controls');
-        frame.classList.remove('is-youtube-playing');
+        frame.classList.remove('is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden');
+        bindYoutubeActivityListeners(frame);
+        showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 5200 });
       }
       window.setTimeout(() => {
         sendYoutubePlayerCommand('pauseVideo');
@@ -11134,6 +11274,7 @@ function toggleUserCard(userId, event){
 
     function seekYoutubeBy(seconds){
       if(!youtubeCustomState.iframe) return;
+      showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 4400 });
       syncYoutubeApproximateTime();
       youtubeCustomState.currentTime = Math.max(0, youtubeCustomState.currentTime + seconds);
       youtubeCustomState.lastTick = Date.now();
@@ -11144,6 +11285,7 @@ function toggleUserCard(userId, event){
     }
 
     function toggleYoutubeFullscreen(){
+      showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 5200 });
       const frame = document.querySelector('.video-frame') || document.querySelector('.player-video-wrap');
       if(!frame) return;
       const doc = document;
@@ -11164,7 +11306,7 @@ function toggleUserCard(userId, event){
       resetYoutubeCustomControls();
       if(iframe){
         const host = iframe.closest('.video-frame, .admin-video-preview');
-        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls', 'is-youtube-playing');
+        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls', 'is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden');
         iframe.removeAttribute('src');
         iframe.style.display = 'none';
         iframe.style.pointerEvents = '';
