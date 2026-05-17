@@ -6414,6 +6414,217 @@
       min-height:74px;
       border-radius:999px !important;
     }
+
+
+    /* === YouTube privado v2: tapa marca, botón nativo y reemplaza título por nombre de la clase === */
+    .video-frame.is-youtube-protected{
+      --yt-private-top-height:clamp(82px, 10vw, 128px);
+      --yt-private-bottom-height:clamp(132px, 15vw, 198px);
+    }
+    .video-frame.is-youtube-protected::before,
+    .admin-video-preview.is-youtube-protected::before{
+      height:var(--yt-private-top-height) !important;
+      z-index:18 !important;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.995) 0%, rgba(0,0,0,.94) 46%, rgba(0,0,0,.64) 78%, rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(5px) saturate(120%);
+      -webkit-backdrop-filter:blur(5px) saturate(120%);
+    }
+    .video-frame.is-youtube-protected::after,
+    .admin-video-preview.is-youtube-protected::after{
+      height:var(--yt-private-bottom-height) !important;
+      z-index:18 !important;
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.995) 0%, rgba(0,0,0,.94) 48%, rgba(0,0,0,.58) 78%, rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(4px) saturate(120%);
+      -webkit-backdrop-filter:blur(4px) saturate(120%);
+    }
+    .youtube-private-titlebar{
+      position:absolute;
+      left:clamp(12px, 2.2vw, 26px);
+      top:clamp(10px, 1.8vw, 22px);
+      z-index:24;
+      display:none;
+      max-width:min(74%, 760px);
+      min-height:54px;
+      align-items:center;
+      gap:12px;
+      padding:12px 16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.13);
+      background:
+        radial-gradient(circle at left center, rgba(255,90,31,.24), transparent 42%),
+        linear-gradient(135deg, rgba(26,24,32,.94), rgba(5,5,7,.90));
+      box-shadow:0 18px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+      backdrop-filter:blur(16px) saturate(130%);
+      -webkit-backdrop-filter:blur(16px) saturate(130%);
+      pointer-events:none;
+    }
+    .video-frame.is-youtube-custom-controls .youtube-private-titlebar{
+      display:flex;
+    }
+    .youtube-private-titlecopy{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .youtube-private-titlecopy strong{
+      display:block;
+      color:#ffffff !important;
+      font-size:clamp(14px, 1.7vw, 20px);
+      line-height:1.15;
+      font-weight:900;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .youtube-private-titlecopy small{
+      display:block;
+      color:rgba(255,255,255,.68) !important;
+      font-size:clamp(10px, .95vw, 12px);
+      line-height:1.2;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .youtube-center-play{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%, -50%);
+      z-index:26;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      width:clamp(104px, 14vw, 146px);
+      height:clamp(104px, 14vw, 146px);
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:
+        radial-gradient(circle at 50% 36%, rgba(255,118,46,.48), transparent 48%),
+        linear-gradient(135deg, rgba(255,90,31,.94), rgba(217,68,17,.94));
+      color:#ffffff;
+      cursor:pointer;
+      box-shadow:0 24px 64px rgba(0,0,0,.62), 0 18px 38px rgba(255,90,31,.22), inset 0 1px 0 rgba(255,255,255,.20);
+      -webkit-tap-highlight-color:transparent;
+      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-center-play{
+      display:flex;
+    }
+    .youtube-center-play:hover{
+      transform:translate(-50%, -50%) scale(1.045);
+      box-shadow:0 30px 76px rgba(0,0,0,.68), 0 22px 44px rgba(255,90,31,.30), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .youtube-center-play:active{
+      transform:translate(-50%, -50%) scale(.98);
+    }
+    .youtube-center-play-icon{
+      width:clamp(48px, 6vw, 64px);
+      height:clamp(48px, 6vw, 64px);
+      display:grid;
+      place-items:center;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:clamp(25px, 3vw, 34px);
+      line-height:1;
+      padding-left:.15em;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .youtube-center-play small{
+      color:rgba(255,255,255,.86) !important;
+      font-size:clamp(10px, 1.1vw, 12px);
+      line-height:1;
+      font-weight:900;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .video-frame.is-youtube-playing .youtube-center-play{
+      opacity:0;
+      pointer-events:none;
+    }
+    .video-frame.is-youtube-protected iframe{
+      filter:saturate(.98) contrast(1.02);
+    }
+    @media (max-width:760px){
+      .video-frame.is-youtube-protected{
+        --yt-private-top-height:72px;
+        --yt-private-bottom-height:128px;
+      }
+      .youtube-private-titlebar{
+        left:10px;
+        top:9px;
+        max-width:calc(100% - 20px);
+        min-height:48px;
+        padding:10px 12px;
+        border-radius:14px;
+      }
+      .youtube-private-titlecopy strong{
+        font-size:14px;
+      }
+      .youtube-private-titlecopy small{
+        font-size:9px;
+      }
+      .youtube-center-play{
+        width:92px;
+        height:92px;
+        gap:6px;
+      }
+      .youtube-center-play-icon{
+        width:42px;
+        height:42px;
+        font-size:23px;
+      }
+      .youtube-center-play small{
+        font-size:9px;
+      }
+    }
+    @media (max-width:430px){
+      .youtube-private-titlecopy small{
+        display:none;
+      }
+      .youtube-private-titlebar{
+        min-height:44px;
+      }
+      .youtube-center-play{
+        width:80px;
+        height:80px;
+      }
+      .youtube-center-play-icon{
+        width:38px;
+        height:38px;
+        font-size:20px;
+      }
+      .youtube-center-play small{
+        display:none;
+      }
+    }
+    .video-frame.is-youtube-protected:fullscreen,
+    .video-frame.is-youtube-protected:-webkit-full-screen{
+      --yt-private-top-height:clamp(96px, 14vh, 164px);
+      --yt-private-bottom-height:clamp(158px, 20vh, 250px);
+    }
+    .video-frame.is-youtube-protected:fullscreen .youtube-private-titlebar,
+    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-private-titlebar{
+      top:max(22px, env(safe-area-inset-top));
+      left:max(22px, env(safe-area-inset-left));
+      max-width:min(70vw, 880px);
+    }
+    .video-frame.is-youtube-protected:fullscreen .youtube-center-play,
+    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-center-play{
+      width:150px;
+      height:150px;
+    }
+
 </style>
 </head>
 <body>
@@ -7384,12 +7595,22 @@
 <div class="video-frame">
 <iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
 <video controls="" id="playerVideo" playsinline="" preload="none" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
+<div class="youtube-private-titlebar" id="youtubePrivateTitlebar" aria-hidden="true">
+  <div class="youtube-private-titlecopy">
+    <strong id="youtubePrivateLessonTitle">Clase del curso</strong>
+    <small id="youtubePrivateCourseTitle">Campus privado</small>
+  </div>
+</div>
+<button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir clase">
+  <span class="youtube-center-play-icon">▶</span>
+  <small>Reproducir clase</small>
+</button>
 <div class="youtube-custom-controls" id="youtubeCustomControls" aria-label="Controles personalizados de YouTube">
 <button aria-label="Retroceder 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeBack" type="button"><span>↺</span><small>10</small></button>
 <button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
 <button aria-label="Adelantar 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeForward" type="button"><small>10</small><span>↻</span></button>
 <span class="youtube-control-spacer"></span>
-<span class="youtube-control-label">Reproductor privado</span>
+<span class="youtube-control-label">Clase privada</span>
 <button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
 </div>
 <div class="placeholder" id="playerPlaceholder">
@@ -10146,7 +10367,9 @@ function toggleUserCard(userId, event){
       currentTime: 0,
       lastTick: 0,
       timer: null,
-      activeUrl: ''
+      activeUrl: '',
+      lessonTitle: '',
+      courseTitle: ''
     };
 
     function isLocalFileMode(){
@@ -10804,10 +11027,29 @@ function toggleUserCard(userId, event){
 
     function setYoutubePlayButtonState(isPlaying){
       const btn = document.getElementById('btnYoutubePlayPause');
-      if(!btn) return;
-      btn.textContent = isPlaying ? 'Ⅱ' : '▶';
-      btn.setAttribute('aria-label', isPlaying ? 'Pausar video' : 'Reproducir video');
-      btn.title = isPlaying ? 'Pausar video' : 'Reproducir video';
+      if(btn){
+        btn.textContent = isPlaying ? 'Ⅱ' : '▶';
+        btn.setAttribute('aria-label', isPlaying ? 'Pausar video' : 'Reproducir video');
+        btn.title = isPlaying ? 'Pausar video' : 'Reproducir video';
+      }
+      const centerBtn = document.getElementById('btnYoutubeCenterPlay');
+      if(centerBtn){
+        centerBtn.setAttribute('aria-label', isPlaying ? 'Video en reproducción' : 'Reproducir clase');
+        centerBtn.title = isPlaying ? 'Video en reproducción' : 'Reproducir clase';
+      }
+      const frame = (youtubeCustomState.iframe && youtubeCustomState.iframe.closest('.video-frame')) || document.querySelector('.video-frame');
+      if(frame) frame.classList.toggle('is-youtube-playing', !!isPlaying);
+    }
+
+    function updateYoutubePrivateOverlay(course, lesson){
+      const lessonTitle = (lesson && lesson.title) ? lesson.title : 'Clase del curso';
+      const courseTitle = (course && course.title) ? course.title : 'Campus privado';
+      youtubeCustomState.lessonTitle = lessonTitle;
+      youtubeCustomState.courseTitle = courseTitle;
+      const titleNode = document.getElementById('youtubePrivateLessonTitle');
+      const courseNode = document.getElementById('youtubePrivateCourseTitle');
+      if(titleNode) titleNode.textContent = lessonTitle;
+      if(courseNode) courseNode.textContent = courseTitle;
     }
 
     function syncYoutubeApproximateTime(){
@@ -10851,7 +11093,7 @@ function toggleUserCard(userId, event){
       const controls = getYoutubeCustomControlsNode();
       if(controls) controls.style.display = 'none';
       const frame = document.querySelector('.video-frame');
-      if(frame) frame.classList.remove('is-youtube-custom-controls');
+      if(frame) frame.classList.remove('is-youtube-custom-controls', 'is-youtube-playing');
     }
 
     function prepareYoutubeCustomControls(iframe, url){
@@ -10865,7 +11107,10 @@ function toggleUserCard(userId, event){
       const controls = getYoutubeCustomControlsNode();
       if(controls) controls.style.display = 'flex';
       const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('.video-frame');
-      if(frame) frame.classList.add('is-youtube-custom-controls');
+      if(frame){
+        frame.classList.add('is-youtube-custom-controls');
+        frame.classList.remove('is-youtube-playing');
+      }
       window.setTimeout(() => {
         sendYoutubePlayerCommand('pauseVideo');
       }, 450);
@@ -10919,7 +11164,7 @@ function toggleUserCard(userId, event){
       resetYoutubeCustomControls();
       if(iframe){
         const host = iframe.closest('.video-frame, .admin-video-preview');
-        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls');
+        if(host) host.classList.remove('is-youtube-protected', 'is-youtube-custom-controls', 'is-youtube-playing');
         iframe.removeAttribute('src');
         iframe.style.display = 'none';
         iframe.style.pointerEvents = '';
@@ -11039,6 +11284,7 @@ function renderPlayer(courseId){
         return;
       }
 
+      updateYoutubePrivateOverlay(course, lesson);
       safeSetPlayerSrc(iframe, placeholder, lesson && lesson.url ? lesson.url : '');
 
       const completedLessons = course.completedLessons || [];
@@ -14029,6 +14275,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       });
 
       byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
+      byId('btnYoutubeCenterPlay')?.addEventListener('click', toggleYoutubePlayPause);
       byId('btnYoutubeBack')?.addEventListener('click', () => seekYoutubeBy(-10));
       byId('btnYoutubeForward')?.addEventListener('click', () => seekYoutubeBy(10));
       byId('btnYoutubeFullscreen')?.addEventListener('click', toggleYoutubeFullscreen);
