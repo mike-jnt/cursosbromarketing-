@@ -4098,6 +4098,62 @@
     }
     .course-edit-modal .course-edit-lesson-head strong{color:#172033}
     .course-edit-modal .course-edit-lesson-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .lesson-thumb-preview{
+      min-height:96px;
+      border-radius:14px;
+      border:1px solid #d7e4ef;
+      background:linear-gradient(135deg,#edf5fb 0%, #dfeef8 100%);
+      background-size:cover;
+      background-position:center;
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-start;
+      padding:12px;
+      color:#567086;
+      font-size:12px;
+      font-weight:800;
+      overflow:hidden;
+      position:relative;
+      isolation:isolate;
+    }
+    .lesson-thumb-preview.has-image::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(10,18,28,.08) 0%, rgba(10,18,28,.62) 100%);
+      z-index:0;
+    }
+    .lesson-thumb-preview > span{position:relative;z-index:1}
+    .player-lesson-thumb.lesson-thumb-has-image,
+    .admin-lesson-thumb.lesson-thumb-has-image{
+      background-size:cover !important;
+      background-position:center !important;
+      background-repeat:no-repeat !important;
+    }
+    .admin-lesson-thumb{
+      width:100%;
+      min-height:120px;
+      border-radius:16px;
+      border:1px solid #dfe6f2;
+      background:linear-gradient(135deg,#edf2f7 0%,#dbe4ef 100%);
+      display:flex;
+      align-items:flex-end;
+      padding:14px;
+      color:#64748b;
+      font-size:12px;
+      font-weight:800;
+      overflow:hidden;
+      position:relative;
+      margin-bottom:10px;
+    }
+    .admin-lesson-thumb.lesson-thumb-has-image::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(10,18,28,.08) 0%, rgba(10,18,28,.62) 100%);
+      z-index:0;
+    }
+    .admin-lesson-thumb > span{position:relative;z-index:1}
     .course-edit-modal .course-edit-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:18px}
     .course-edit-modal .course-edit-add-card{
       margin-top:14px;
@@ -6777,9 +6833,24 @@
 <input id="lessonTitleField" placeholder="Clase 1 · Bienvenida" type="text"/>
 </div>
 <div class="field">
+<label>Miniatura de la clase</label>
+<label class="cover-upload-drop" for="lessonThumbUploadField">
+<input accept="image/*" id="lessonThumbUploadField" type="file"/>
+<span class="cover-upload-title">Subir miniatura para esta clase</span>
+<span class="cover-upload-meta">PNG, JPG o WEBP · se comprime y se guarda en Firestore</span>
+</label>
+<div class="cover-upload-file-name" id="lessonThumbUploadStatus">No has seleccionado ninguna miniatura.</div>
+<div class="lesson-thumb-preview" id="lessonThumbPreview"><span>Vista previa de clase</span></div>
+</div>
+<div class="field">
 <label>Enlace privado del video</label>
 <input autocomplete="off" class="secure-video-url" id="lessonUrlField" placeholder="Pega aquí el enlace del video" spellcheck="false" type="password"/>
 <small class="cover-upload-meta">El enlace quedará oculto en la vista del curso y el reproductor usará modo protegido cuando sea YouTube.</small>
+</div>
+<div class="field">
+<label>Código iframe del video</label>
+<textarea id="lessonIframeField" placeholder="Pega aquí el iframe completo del video, por ejemplo: &lt;iframe src=&quot;https://...&quot;&gt;&lt;/iframe&gt;"></textarea>
+<small class="cover-upload-meta">Opcional. Si pegas un iframe, el sistema tomará automáticamente el src y guardará solo el enlace protegido.</small>
 </div>
 <div class="field">
 <label>Subir video desde admin</label>
@@ -9839,6 +9910,12 @@ function toggleUserCard(userId, event){
       }
     }
 
+    function getVideoInputValue(urlInputId, iframeInputId){
+      const iframeValue = iframeInputId ? (document.getElementById(iframeInputId)?.value || '').trim() : '';
+      const urlValue = urlInputId ? (document.getElementById(urlInputId)?.value || '').trim() : '';
+      return iframeValue || urlValue;
+    }
+
     function isDirectVideoUrl(url){
       const clean = String(url || '').split('?')[0].toLowerCase();
       return clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.ogg') || clean.endsWith('.m3u8') || clean.includes('/manifest/video.m3u8');
@@ -10451,7 +10528,7 @@ function renderPlayer(courseId){
         const resourcesLabel = lessonResourcesCount ? ` · ${lessonResourcesCount} recurso${lessonResourcesCount === 1 ? '' : 's'}` : '';
         return `<div class="player-lesson-row${active}${doneClass}" onclick="selectLesson(${course.id}, ${idx})">
           <div class="player-lesson-index">${idx + 1}</div>
-          <img class="player-lesson-thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='80'><rect width='100%25' height='100%25' fill='%23d9dee7'/><text x='50%25' y='50%25' font-size='12' text-anchor='middle' fill='%236b7280' dy='.3em'>Clase</text></svg>" alt="Miniatura de clase">
+          ${renderLessonThumbnailBox(ls, idx, 'player-lesson-thumb')}
           <div class="player-lesson-text">
             <strong>${ls.title}</strong>
             <small>${ls.module}${resourcesLabel}</small>
@@ -10464,13 +10541,63 @@ function renderPlayer(courseId){
       if (typeof saveState === 'function') saveState({ localOnly: true });
     }
 
+    function bindCreateLessonThumbnailUpload(){
+      const input = document.getElementById('lessonThumbUploadField');
+      if(!input || input.dataset.boundLessonThumb === 'true') return;
+      input.dataset.boundLessonThumb = 'true';
+      input.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        const status = document.getElementById('lessonThumbUploadStatus');
+        if(!file){
+          delete event.target.dataset.thumbnail;
+          delete event.target.dataset.thumbnailData;
+          if(status) status.textContent = 'No has seleccionado ninguna miniatura.';
+          applyLessonThumbnailPreview(document.getElementById('lessonThumbPreview'), {});
+          return;
+        }
+        if(!file.type.startsWith('image/')){
+          toast('Sube una imagen válida para la miniatura de la clase.');
+          event.target.value = '';
+          return;
+        }
+        try{
+          if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo miniatura a Firestore...'; }
+          const uploaded = await uploadLessonThumbnailFile(file, {
+            courseTitle: document.getElementById('courseTitleField')?.value?.trim() || 'Curso nuevo',
+            lessonTitle: document.getElementById('lessonTitleField')?.value?.trim() || '',
+            lessonIndex: (state.pendingLessons || []).length + 1
+          });
+          event.target.dataset.thumbnail = uploaded.thumbnail;
+          event.target.dataset.thumbnailData = uploaded.thumbnailData;
+          if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+          applyLessonThumbnailPreview(document.getElementById('lessonThumbPreview'), uploaded);
+          toast('Miniatura de clase guardada en Firestore.');
+        }catch(error){
+          console.error('No se pudo subir la miniatura de la clase.', error);
+          delete event.target.dataset.thumbnail;
+          delete event.target.dataset.thumbnailData;
+          event.target.value = '';
+          if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir la miniatura.'; }
+          toast(error.message || 'No se pudo subir la miniatura de la clase.');
+        }
+      });
+    }
+
+    function resetCreateLessonThumbnailInput(){
+      const input = document.getElementById('lessonThumbUploadField');
+      const status = document.getElementById('lessonThumbUploadStatus');
+      if(input){ input.value = ''; delete input.dataset.thumbnail; delete input.dataset.thumbnailData; }
+      if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ninguna miniatura.'; }
+      applyLessonThumbnailPreview(document.getElementById('lessonThumbPreview'), {});
+    }
+
     function renderLessonsPreview(){
       const box = document.getElementById('lessonsPreviewBox');
       if(!box) return;
       if(state.pendingLessons.length === 0){
         box.innerHTML = 'Aún no has agregado clases para este curso.';
       } else {
-        box.innerHTML = state.pendingLessons.map((ls, idx) => `<div><strong>${idx+1}. ${ls.title}</strong> · <span class="muted-text">${ls.module}</span> · <span class="pill-note" style="padding:4px 8px;font-size:11px">${getVideoProviderLabel(ls.url)}</span></div>`).join('');
+        box.innerHTML = state.pendingLessons.map((ls, idx) => `<div style="display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center;margin-bottom:10px">${renderLessonThumbnailBox(ls, idx, 'player-lesson-thumb')}<div><strong>${idx+1}. ${escapeHtml(ls.title)}</strong> · <span class="muted-text">${escapeHtml(ls.module)}</span> · <span class="pill-note" style="padding:4px 8px;font-size:11px">${getVideoProviderLabel(ls.url)}</span>${getLessonThumbnailRef(ls) || getLessonThumbnailInlineData(ls) ? ' · <span class="pill-note" style="padding:4px 8px;font-size:11px">Miniatura</span>' : ''}</div></div>`).join('');
       }
     }
 
@@ -10530,6 +10657,77 @@ function renderPlayer(courseId){
 
     function getCourseCoverInlineData(course){
       return String(course?.coverData || course?.coverDataUrl || course?.coverInlineData || '').trim();
+    }
+
+    function getLessonThumbnailRef(lesson){
+      return String(lesson?.thumbnail || lesson?.thumb || lesson?.thumbnailUrl || lesson?.cover || '').trim();
+    }
+
+    function getLessonThumbnailInlineData(lesson){
+      return String(lesson?.thumbnailData || lesson?.thumbData || lesson?.thumbnailInlineData || lesson?.coverData || '').trim();
+    }
+
+    function getLessonPlaceholderSvg(label = 'Clase'){
+      const safeLabel = encodeURIComponent(String(label || 'Clase')).replace(/'/g, '%27');
+      return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='80'><rect width='100%25' height='100%25' fill='%23211f27'/><text x='50%25' y='50%25' font-size='12' text-anchor='middle' fill='%23d8d4dc' dy='.3em'>${safeLabel}</text></svg>`;
+    }
+
+    function buildLessonThumbnailStyle(lesson){
+      const thumb = getLessonThumbnailRef(lesson);
+      const inlineData = getLessonThumbnailInlineData(lesson);
+      const finalThumb = isFirestoreCoverRef(thumb) ? inlineData : (thumb || inlineData);
+      return finalThumb ? buildCoverInlineStyle(finalThumb) : '';
+    }
+
+    function renderLessonThumbnailBox(lesson, index = 0, className = 'player-lesson-thumb'){
+      const thumb = getLessonThumbnailRef(lesson);
+      const inlineData = getLessonThumbnailInlineData(lesson);
+      const hasThumb = Boolean(thumb || inlineData);
+      const label = `Clase ${Number(index) + 1}`;
+      if(hasThumb && isFirestoreCoverRef(thumb)){
+        const docId = escapeHtml(getFirestoreCoverDocId(thumb));
+        const style = inlineData ? buildCoverInlineStyle(inlineData) : '';
+        queueHydrateFirestoreCovers();
+        return `<div class="${className} lesson-thumb-has-image" data-firestore-cover-id="${docId}"${style} aria-label="Miniatura de ${escapeHtml(label)}"><span>${escapeHtml(label)}</span></div>`;
+      }
+      if(hasThumb){
+        const finalThumb = thumb || inlineData;
+        return `<div class="${className} lesson-thumb-has-image"${buildCoverInlineStyle(finalThumb)} aria-label="Miniatura de ${escapeHtml(label)}"><span>${escapeHtml(label)}</span></div>`;
+      }
+      const placeholder = getLessonPlaceholderSvg('Clase');
+      return `<div class="${className}" style="background-image:url('${placeholder}');background-size:cover;background-position:center;" aria-label="Miniatura de ${escapeHtml(label)}"></div>`;
+    }
+
+    function applyLessonThumbnailPreview(element, lesson){
+      if(!element) return;
+      const thumb = getLessonThumbnailRef(lesson);
+      const inlineData = getLessonThumbnailInlineData(lesson);
+      if(thumb || inlineData){
+        element.classList.add('has-image');
+        applyCoverSrcToElement(element, thumb || inlineData, inlineData);
+        element.innerHTML = '<span>Miniatura seleccionada</span>';
+      }else{
+        element.classList.remove('has-image');
+        clearCoverBackgroundImage(element);
+        delete element.dataset.firestoreCoverId;
+        element.innerHTML = '<span>Vista previa de clase</span>';
+      }
+    }
+
+    async function uploadLessonThumbnailFile(file, context = {}){
+      const uploaded = await uploadCourseCoverToFirestore(file, {
+        courseId: context.courseId || null,
+        courseTitle: context.courseTitle || '',
+        lessonIndex: context.lessonIndex ?? null,
+        lessonTitle: context.lessonTitle || ''
+      });
+      return {
+        thumbnail: uploaded.ref,
+        thumbnailData: uploaded.inlineDataUrl || uploaded.dataUrl || '',
+        sizeBytes: uploaded.sizeBytes || uploaded.inlineSizeBytes || 0,
+        ref: uploaded.ref,
+        inlineDataUrl: uploaded.inlineDataUrl || uploaded.dataUrl || ''
+      };
     }
 
     function isFirestoreCoverRef(src){
@@ -11399,8 +11597,23 @@ function renderPlayer(courseId){
                   <input type="text" id="editNewLessonTitleField" placeholder="Clase 1 · Bienvenida">
                 </div>
                 <div class="field course-edit-full">
+                  <label>Miniatura de la clase</label>
+                  <div class="lesson-thumb-preview" id="editNewLessonThumbPreview"><span>Vista previa de clase</span></div>
+                  <label class="cover-upload-drop" for="editNewLessonThumbUploadField" style="margin-top:10px">
+                    <input type="file" id="editNewLessonThumbUploadField" accept="image/*">
+                    <span class="cover-upload-title">Subir miniatura para la nueva clase</span>
+                    <span class="cover-upload-meta">Se guarda en Firestore y aparece en el reproductor.</span>
+                  </label>
+                  <div class="cover-upload-file-name" id="editNewLessonThumbUploadStatus">No has seleccionado ninguna miniatura.</div>
+                </div>
+                <div class="field course-edit-full">
                   <label>Enlace privado del video</label>
                   <input type="password" class="secure-video-url" id="editNewLessonUrlField" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
+                </div>
+                <div class="field course-edit-full">
+                  <label>Código iframe del video</label>
+                  <textarea id="editNewLessonIframeField" placeholder="Pega aquí el iframe completo del video. El sistema guardará solo el src protegido."></textarea>
+                  <small class="cover-upload-meta">Opcional. Úsalo cuando la plataforma te entregue un código iframe en vez de un enlace directo.</small>
                 </div>
                 <div class="field course-edit-full">
                   <label>Subir video desde admin</label>
@@ -11486,6 +11699,7 @@ function renderPlayer(courseId){
         }
       });
       bindVideoUploadInput('editNewLessonVideoUploadField', 'editNewLessonUrlField', 'editNewLessonVideoUploadStatus', () => ({ courseId, lessonIndex: 'nueva' }));
+      bindCourseEditLessonThumbnailUploadInputs();
       bindCourseEditLessonVideoUploadInputs();
     }
 
@@ -11518,10 +11732,16 @@ function renderPlayer(courseId){
         const moduleField = document.getElementById(`editLessonModule_${idx}`);
         const titleField = document.getElementById(`editLessonTitle_${idx}`);
         const urlField = document.getElementById(`editLessonUrl_${idx}`);
+        const iframeField = document.getElementById(`editLessonIframe_${idx}`);
+        const thumbField = document.getElementById(`editLessonThumb_${idx}`);
+        const currentLesson = courseEditDraft.lessons?.[idx] || lesson || {};
+        const rawVideoValue = (iframeField && iframeField.value.trim()) || (urlField && urlField.value.trim()) || lesson.url || '';
         return {
           module: moduleField ? moduleField.value.trim() : (lesson.module || ''),
           title: titleField ? titleField.value.trim() : (lesson.title || ''),
-          url: urlField ? normalizeVideoUrl(urlField.value.trim()) : normalizeVideoUrl(lesson.url || '')
+          url: normalizeVideoUrl(rawVideoValue),
+          thumbnail: thumbField ? thumbField.value.trim() : getLessonThumbnailRef(currentLesson),
+          thumbnailData: getLessonThumbnailInlineData(currentLesson)
         };
       });
     }
@@ -11557,6 +11777,22 @@ function renderPlayer(courseId){
               <div class="field course-edit-full">
                 <label>Enlace privado del video</label>
                 <input type="password" class="secure-video-url" id="editLessonUrl_${idx}" value="${escapeHtml(lesson.url || '')}" autocomplete="off" spellcheck="false" placeholder="Pega aquí el enlace del video">
+                <small class="cover-upload-meta">También puedes pegar un iframe completo en el campo de abajo para reemplazar este enlace.</small>
+              </div>
+              <div class="field course-edit-full">
+                <label>Código iframe del video</label>
+                <textarea id="editLessonIframe_${idx}" placeholder="Pega aquí el iframe completo del video. El sistema guardará solo el src protegido."></textarea>
+              </div>
+              <div class="field course-edit-full">
+                <label>Miniatura de esta clase</label>
+                <input type="hidden" id="editLessonThumb_${idx}" value="${escapeHtml(getLessonThumbnailRef(lesson))}">
+                <div class="lesson-thumb-preview${getLessonThumbnailRef(lesson) || getLessonThumbnailInlineData(lesson) ? ' has-image' : ''}" id="editLessonThumbPreview_${idx}"><span>${getLessonThumbnailRef(lesson) || getLessonThumbnailInlineData(lesson) ? 'Miniatura actual' : 'Vista previa de clase'}</span></div>
+                <label class="cover-upload-drop" for="editLessonThumbUpload_${idx}" style="margin-top:10px">
+                  <input type="file" id="editLessonThumbUpload_${idx}" accept="image/*" data-lesson-thumb-index="${idx}">
+                  <span class="cover-upload-title">Subir o reemplazar miniatura</span>
+                  <span class="cover-upload-meta">Opcional · se guarda en Firestore y queda visible en la lista de clases.</span>
+                </label>
+                <div class="cover-upload-file-name" id="editLessonThumbUploadStatus_${idx}">${getLessonThumbnailRef(lesson) ? 'Miniatura actual cargada.' : 'No has seleccionado ninguna miniatura.'}</div>
               </div>
               <div class="field course-edit-full">
                 <label>Reemplazar/subir video</label>
@@ -11571,22 +11807,131 @@ function renderPlayer(courseId){
           </div>
         `;
       }).join('');
+      hydrateCourseEditLessonThumbnailPreviews();
+      bindCourseEditLessonThumbnailUploadInputs();
       bindCourseEditLessonVideoUploadInputs();
+    }
+
+    function hydrateCourseEditLessonThumbnailPreviews(){
+      const lessons = Array.isArray(courseEditDraft?.lessons) ? courseEditDraft.lessons : [];
+      lessons.forEach((lesson, idx) => {
+        applyLessonThumbnailPreview(document.getElementById(`editLessonThumbPreview_${idx}`), lesson);
+      });
+      applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {
+        thumbnail: document.getElementById('editNewLessonThumbUploadField')?.dataset?.thumbnail || '',
+        thumbnailData: document.getElementById('editNewLessonThumbUploadField')?.dataset?.thumbnailData || ''
+      });
+    }
+
+    function bindCourseEditLessonThumbnailUploadInputs(){
+      document.querySelectorAll('[id^="editLessonThumbUpload_"]').forEach(input => {
+        if(input.dataset.boundLessonThumb === 'true') return;
+        input.dataset.boundLessonThumb = 'true';
+        input.addEventListener('change', async (event) => {
+          const file = event.target.files?.[0];
+          const idx = Number(event.target.dataset.lessonThumbIndex);
+          const status = document.getElementById(`editLessonThumbUploadStatus_${idx}`);
+          if(!Number.isFinite(idx) || !courseEditDraft?.lessons?.[idx]) return;
+          if(!file){
+            if(status) status.textContent = getLessonThumbnailRef(courseEditDraft.lessons[idx]) ? 'Miniatura actual cargada.' : 'No has seleccionado ninguna miniatura.';
+            return;
+          }
+          if(!file.type.startsWith('image/')){
+            toast('Sube una imagen válida para la miniatura.');
+            event.target.value = '';
+            return;
+          }
+          syncAllCourseEditLessonsFromDom();
+          try{
+            if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo miniatura a Firestore...'; }
+            const uploaded = await uploadLessonThumbnailFile(file, {
+              courseId: courseEditDraft.courseId,
+              courseTitle: document.getElementById('editCourseTitleField')?.value?.trim() || '',
+              lessonIndex: idx + 1,
+              lessonTitle: document.getElementById(`editLessonTitle_${idx}`)?.value?.trim() || courseEditDraft.lessons[idx].title || ''
+            });
+            courseEditDraft.lessons[idx].thumbnail = uploaded.thumbnail;
+            courseEditDraft.lessons[idx].thumbnailData = uploaded.thumbnailData;
+            const hidden = document.getElementById(`editLessonThumb_${idx}`);
+            if(hidden) hidden.value = uploaded.thumbnail;
+            if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+            applyLessonThumbnailPreview(document.getElementById(`editLessonThumbPreview_${idx}`), courseEditDraft.lessons[idx]);
+            toast('Miniatura de clase guardada en Firestore.');
+          }catch(error){
+            console.error('No se pudo subir la miniatura de la clase.', error);
+            event.target.value = '';
+            if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir la miniatura.'; }
+            toast(error.message || 'No se pudo subir la miniatura de la clase.');
+          }
+        });
+      });
+
+      const newInput = document.getElementById('editNewLessonThumbUploadField');
+      if(newInput && newInput.dataset.boundLessonThumb !== 'true'){
+        newInput.dataset.boundLessonThumb = 'true';
+        newInput.addEventListener('change', async (event) => {
+          const file = event.target.files?.[0];
+          const status = document.getElementById('editNewLessonThumbUploadStatus');
+          if(!file){
+            delete event.target.dataset.thumbnail;
+            delete event.target.dataset.thumbnailData;
+            if(status) status.textContent = 'No has seleccionado ninguna miniatura.';
+            applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {});
+            return;
+          }
+          if(!file.type.startsWith('image/')){
+            toast('Sube una imagen válida para la miniatura.');
+            event.target.value = '';
+            return;
+          }
+          try{
+            if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo miniatura a Firestore...'; }
+            const uploaded = await uploadLessonThumbnailFile(file, {
+              courseId: courseEditDraft.courseId,
+              courseTitle: document.getElementById('editCourseTitleField')?.value?.trim() || '',
+              lessonIndex: (courseEditDraft.lessons || []).length + 1,
+              lessonTitle: document.getElementById('editNewLessonTitleField')?.value?.trim() || ''
+            });
+            event.target.dataset.thumbnail = uploaded.thumbnail;
+            event.target.dataset.thumbnailData = uploaded.thumbnailData;
+            if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${file.name} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+            applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), uploaded);
+            toast('Miniatura de la nueva clase guardada en Firestore.');
+          }catch(error){
+            console.error('No se pudo subir la miniatura de la nueva clase.', error);
+            delete event.target.dataset.thumbnail;
+            delete event.target.dataset.thumbnailData;
+            event.target.value = '';
+            if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir la miniatura.'; }
+            toast(error.message || 'No se pudo subir la miniatura de la clase.');
+          }
+        });
+      }
     }
 
     async function addCourseEditLesson(){
       syncAllCourseEditLessonsFromDom();
       const module = document.getElementById('editNewLessonModuleField')?.value.trim() || '';
       const title = document.getElementById('editNewLessonTitleField')?.value.trim() || '';
-      const url = document.getElementById('editNewLessonUrlField')?.value.trim() || '';
+      const url = getVideoInputValue('editNewLessonUrlField', 'editNewLessonIframeField');
+      const thumbInput = document.getElementById('editNewLessonThumbUploadField');
+      const thumbnail = thumbInput?.dataset?.thumbnail || '';
+      const thumbnailData = thumbInput?.dataset?.thumbnailData || '';
       if(!module || !title){ toast('Agrega módulo y título de la nueva clase.'); return; }
-      courseEditDraft.lessons.push({ module, title, url: normalizeVideoUrl(url) });
+      courseEditDraft.lessons.push({ module, title, url: normalizeVideoUrl(url), thumbnail, thumbnailData });
       document.getElementById('editNewLessonModuleField').value = '';
       document.getElementById('editNewLessonTitleField').value = '';
       document.getElementById('editNewLessonUrlField').value = '';
+      const editNewIframeField = document.getElementById('editNewLessonIframeField');
+      if(editNewIframeField) editNewIframeField.value = '';
       const newUploadField = document.getElementById('editNewLessonVideoUploadField');
       if(newUploadField) newUploadField.value = '';
       setUploadStatus('editNewLessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
+      const newThumbField = document.getElementById('editNewLessonThumbUploadField');
+      if(newThumbField){ newThumbField.value = ''; delete newThumbField.dataset.thumbnail; delete newThumbField.dataset.thumbnailData; }
+      const newThumbStatus = document.getElementById('editNewLessonThumbUploadStatus');
+      if(newThumbStatus){ delete newThumbStatus.dataset.uploadKind; newThumbStatus.textContent = 'No has seleccionado ninguna miniatura.'; }
+      applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {});
       renderCourseEditLessonsDraft();
       if(courseEditDraft.courseId){
         await saveEditedCourse(courseEditDraft.courseId, {
@@ -11644,8 +11989,14 @@ function renderPlayer(courseId){
       const allowPartial = (document.getElementById('editCourseAllowPartialField')?.value || 'true') === 'true';
       const installments = Math.max(1, Number(document.getElementById('editCourseInstallmentsField')?.value || 1));
       const lessons = (courseEditDraft.lessons || [])
-        .map(lesson => ({ module: (lesson.module || '').trim(), title: (lesson.title || '').trim(), url: normalizeVideoUrl(lesson.url || '') }))
-        .filter(lesson => lesson.module || lesson.title || lesson.url);
+        .map(lesson => ({
+          module: (lesson.module || '').trim(),
+          title: (lesson.title || '').trim(),
+          url: normalizeVideoUrl(lesson.url || ''),
+          thumbnail: getLessonThumbnailRef(lesson),
+          thumbnailData: getLessonThumbnailInlineData(lesson)
+        }))
+        .filter(lesson => lesson.module || lesson.title || lesson.url || lesson.thumbnail || lesson.thumbnailData);
 
       if(!title){ toast('El curso necesita un título.'); return; }
       if(!description){ toast('Agrega una descripción del curso.'); return; }
@@ -11784,6 +12135,7 @@ function renderPlayer(courseId){
             return `
               <div class="admin-lesson-preview">
                 <div class="admin-lesson-info">
+                  ${renderLessonThumbnailBox(lesson, lesson.originalIndex, 'admin-lesson-thumb')}
                   <span class="pill-note">Clase ${Number(lesson.originalIndex) + 1} · ${escapeHtml(provider)}</span>
                   <strong>${escapeHtml(lesson.title || 'Clase sin título')}</strong>
                   <small>${finalUrl ? escapeHtml(getVideoAccessLabel(finalUrl)) : 'Sin video protegido'}</small>
@@ -12828,6 +13180,7 @@ function bindButtons(){
       });
 
       bindCreateLessonVideoUpload();
+      bindCreateLessonThumbnailUpload();
 
       byId('btnCreateCourseNext')?.addEventListener('click', () => {
         const title = byId('courseTitleField')?.value.trim() || '';
@@ -12842,16 +13195,22 @@ function bindButtons(){
       byId('btnAddLessonInline')?.addEventListener('click', () => {
         const module = byId('lessonModuleField').value.trim();
         const title = byId('lessonTitleField').value.trim();
-        const url = byId('lessonUrlField').value.trim();
+        const url = getVideoInputValue('lessonUrlField', 'lessonIframeField');
         const normalizedUrl = normalizeVideoUrl(url);
+        const thumbInput = byId('lessonThumbUploadField');
+        const thumbnail = thumbInput?.dataset?.thumbnail || '';
+        const thumbnailData = thumbInput?.dataset?.thumbnailData || '';
         if(!module || !title){ toast('Agrega módulo y título.'); return; }
-        state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') });
+        state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), thumbnail, thumbnailData });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
+        const lessonIframeField = byId('lessonIframeField');
+        if(lessonIframeField) lessonIframeField.value = '';
         const lessonUploadField = byId('lessonVideoUploadField');
         if(lessonUploadField) lessonUploadField.value = '';
         setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
-        renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}`);
+        resetCreateLessonThumbnailInput();
+        renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}${thumbnail ? ' · Miniatura' : ''}`);
       });
 
       byId('btnSaveCourseInline')?.addEventListener('click', () => {
@@ -12883,6 +13242,7 @@ function bindButtons(){
         if(byId('courseAllowPartialField')) byId('courseAllowPartialField').value = 'true';
         if(byId('courseInstallmentsField')) byId('courseInstallmentsField').value = '1';
         resetCourseCoverInputs();
+        resetCreateLessonThumbnailInput();
         setCreateCourseStep('info');
         renderLessonsPreview(); renderAdminCourses(); renderStudentDiscover(); fillCourseSelects(); renderAdminDashboard();
         addActivity('Se creó el curso ' + title + ' con precio definido.');
