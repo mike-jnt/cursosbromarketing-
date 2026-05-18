@@ -8400,6 +8400,123 @@
       }
     }
 
+
+
+    /* === Barra de tiempo sincronizada para controles personalizados de YouTube === */
+    .youtube-time-control{
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:1 1 300px;
+      min-width:180px;
+      max-width:470px;
+      padding:0 2px;
+    }
+    .youtube-time-label{
+      min-width:42px;
+      color:rgba(255,255,255,.86);
+      font-size:12px;
+      font-weight:800;
+      line-height:1;
+      font-variant-numeric:tabular-nums;
+      text-align:center;
+      letter-spacing:.01em;
+      user-select:none;
+    }
+    .youtube-progress-range{
+      --yt-progress:0%;
+      flex:1 1 auto;
+      width:100%;
+      min-width:90px;
+      height:22px;
+      margin:0;
+      padding:0;
+      border:0;
+      outline:none;
+      background:transparent !important;
+      cursor:pointer;
+      -webkit-appearance:none;
+      appearance:none;
+      box-shadow:none !important;
+    }
+    .youtube-progress-range::-webkit-slider-runnable-track{
+      height:6px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#ff5a1f 0%,#ff762e var(--yt-progress),rgba(255,255,255,.22) var(--yt-progress),rgba(255,255,255,.22) 100%);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+    }
+    .youtube-progress-range::-moz-range-track{
+      height:6px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#ff5a1f 0%,#ff762e var(--yt-progress),rgba(255,255,255,.22) var(--yt-progress),rgba(255,255,255,.22) 100%);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+    }
+    .youtube-progress-range::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:2px solid #ffffff;
+      background:#ff5a1f;
+      margin-top:-4px;
+      box-shadow:0 5px 14px rgba(255,90,31,.38), 0 0 0 4px rgba(255,90,31,.14);
+    }
+    .youtube-progress-range::-moz-range-thumb{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:2px solid #ffffff;
+      background:#ff5a1f;
+      box-shadow:0 5px 14px rgba(255,90,31,.38), 0 0 0 4px rgba(255,90,31,.14);
+    }
+    .youtube-progress-range:focus-visible::-webkit-slider-thumb{
+      box-shadow:0 5px 14px rgba(255,90,31,.38), 0 0 0 5px rgba(255,255,255,.22);
+    }
+    .youtube-progress-range:focus-visible::-moz-range-thumb{
+      box-shadow:0 5px 14px rgba(255,90,31,.38), 0 0 0 5px rgba(255,255,255,.22);
+    }
+    .youtube-progress-range:disabled{
+      cursor:not-allowed;
+      opacity:.68;
+    }
+    .youtube-custom-controls.has-timebar{
+      width:min(96%, 980px) !important;
+      justify-content:center !important;
+    }
+    .video-frame.is-youtube-protected:fullscreen .youtube-custom-controls.has-timebar,
+    .video-frame.is-youtube-protected:-webkit-full-screen .youtube-custom-controls.has-timebar{
+      width:min(92%, 1180px) !important;
+    }
+    @media (max-width:760px){
+      .youtube-custom-controls.has-timebar{
+        display:grid !important;
+        grid-template-columns:42px 48px 42px 1fr 38px;
+        width:min(96%, 560px) !important;
+        border-radius:20px !important;
+        row-gap:7px !important;
+        column-gap:7px !important;
+        padding:8px 9px !important;
+      }
+      .youtube-custom-controls.has-timebar .youtube-time-control{
+        grid-column:1 / -1;
+        grid-row:2;
+        max-width:none;
+        width:100%;
+        min-width:0;
+        order:2;
+      }
+      .youtube-custom-controls.has-timebar #btnYoutubeBack{grid-column:1;grid-row:1;}
+      .youtube-custom-controls.has-timebar #btnYoutubePlayPause{grid-column:2;grid-row:1;}
+      .youtube-custom-controls.has-timebar #btnYoutubeForward{grid-column:3;grid-row:1;}
+      .youtube-custom-controls.has-timebar #btnYoutubeFullscreen{grid-column:5;grid-row:1;}
+      .youtube-custom-controls.has-timebar .youtube-control-label{display:none !important;}
+      .youtube-time-label{min-width:38px;font-size:11px;}
+      .youtube-progress-range{min-width:0;}
+    }
+
 </style>
 </head>
 <body>
@@ -9387,7 +9504,11 @@
 <button aria-label="Retroceder 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeBack" type="button"><span>↺</span><small>10</small></button>
 <button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
 <button aria-label="Adelantar 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeForward" type="button"><small>10</small><span>↻</span></button>
-<span class="youtube-control-spacer"></span>
+<div class="youtube-time-control" aria-label="Progreso del video">
+  <span class="youtube-time-label" id="youtubeCurrentTime">0:00</span>
+  <input aria-label="Barra de tiempo del video" class="youtube-progress-range" id="youtubeProgressRange" max="1000" min="0" step="1" type="range" value="0"/>
+  <span class="youtube-time-label" id="youtubeDuration">0:00</span>
+</div>
 <span class="youtube-control-label">Clase privada</span>
 <button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
 </div>
@@ -12151,6 +12272,7 @@ function toggleUserCard(userId, event){
       iframe: null,
       playing: false,
       currentTime: 0,
+      duration: 0,
       lastTick: 0,
       timer: null,
       uiTimer: null,
@@ -12159,7 +12281,9 @@ function toggleUserCard(userId, event){
       activeUrl: '',
       lessonTitle: '',
       courseTitle: '',
-      stateListenerBound: false
+      stateListenerBound: false,
+      timebarBound: false,
+      progressDragging: false
     };
 
     function isLocalFileMode(){
@@ -12937,12 +13061,110 @@ function toggleUserCard(userId, event){
       if(courseNode) courseNode.textContent = courseTitle;
     }
 
+    function formatYoutubeTime(seconds){
+      const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+      const h = Math.floor(safeSeconds / 3600);
+      const m = Math.floor((safeSeconds % 3600) / 60);
+      const s = safeSeconds % 60;
+      if(h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateYoutubeTimeControls(){
+      const range = document.getElementById('youtubeProgressRange');
+      const currentNode = document.getElementById('youtubeCurrentTime');
+      const durationNode = document.getElementById('youtubeDuration');
+      const controls = getYoutubeCustomControlsNode();
+      if(controls) controls.classList.add('has-timebar');
+
+      const duration = Math.max(0, Number(youtubeCustomState.duration) || 0);
+      const current = Math.max(0, Number(youtubeCustomState.currentTime) || 0);
+      const clampedCurrent = duration > 0 ? Math.min(current, duration) : current;
+
+      if(currentNode) currentNode.textContent = formatYoutubeTime(clampedCurrent);
+      if(durationNode) durationNode.textContent = duration > 0 ? formatYoutubeTime(duration) : '0:00';
+
+      if(range){
+        const max = duration > 0 ? Math.max(1, Math.ceil(duration)) : 1;
+        const value = duration > 0 ? Math.min(max, clampedCurrent) : 0;
+        range.max = String(max);
+        if(!youtubeCustomState.progressDragging){
+          range.value = String(value);
+        }
+        range.disabled = duration <= 0;
+        const percent = duration > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
+        range.style.setProperty('--yt-progress', `${percent}%`);
+        range.setAttribute('aria-valuetext', `${formatYoutubeTime(clampedCurrent)} de ${duration > 0 ? formatYoutubeTime(duration) : '0:00'}`);
+      }
+    }
+
+    function requestYoutubeTimeInfo(){
+      if(!youtubeCustomState.iframe) return;
+      // La API del iframe entrega currentTime y duration mediante infoDelivery.
+      // Estos comandos ayudan a mantener el intercambio activo sin mostrar controles nativos.
+      sendYoutubePlayerCommand('getCurrentTime');
+      sendYoutubePlayerCommand('getDuration');
+    }
+
+    function bindYoutubeTimebarControls(){
+      if(youtubeCustomState.timebarBound) return;
+      const range = document.getElementById('youtubeProgressRange');
+      if(!range) return;
+      youtubeCustomState.timebarBound = true;
+
+      const previewTime = () => {
+        const next = Math.max(0, Number(range.value) || 0);
+        youtubeCustomState.progressDragging = true;
+        youtubeCustomState.currentTime = next;
+        youtubeCustomState.lastTick = Date.now();
+        updateYoutubeTimeControls();
+        showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 5200 });
+      };
+      const commitSeek = () => {
+        const duration = Math.max(0, Number(youtubeCustomState.duration) || 0);
+        if(duration <= 0){
+          youtubeCustomState.progressDragging = false;
+          updateYoutubeTimeControls();
+          return;
+        }
+        const next = Math.max(0, Math.min(duration, Number(range.value) || 0));
+        youtubeCustomState.progressDragging = false;
+        youtubeCustomState.currentTime = next;
+        youtubeCustomState.lastTick = Date.now();
+        updateYoutubeTimeControls();
+        sendYoutubePlayerCommand('seekTo', [next, true]);
+        if(youtubeCustomState.playing){
+          window.setTimeout(() => sendYoutubePlayerCommand('playVideo'), 120);
+        }
+        showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 5200 });
+      };
+
+      range.addEventListener('input', previewTime);
+      range.addEventListener('change', commitSeek);
+      range.addEventListener('pointerdown', () => { youtubeCustomState.progressDragging = true; });
+      range.addEventListener('pointerup', commitSeek);
+      range.addEventListener('touchstart', () => { youtubeCustomState.progressDragging = true; }, { passive: true });
+      range.addEventListener('touchend', commitSeek, { passive: true });
+      range.addEventListener('keydown', event => {
+        if(event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home' || event.key === 'End'){
+          window.setTimeout(commitSeek, 0);
+        }
+      });
+    }
+
     function syncYoutubeApproximateTime(){
-      if(!youtubeCustomState.playing || !youtubeCustomState.lastTick) return;
+      if(!youtubeCustomState.playing || !youtubeCustomState.lastTick){
+        updateYoutubeTimeControls();
+        return;
+      }
       const now = Date.now();
       const diff = Math.max(0, (now - youtubeCustomState.lastTick) / 1000);
       youtubeCustomState.currentTime += diff;
+      if(youtubeCustomState.duration > 0){
+        youtubeCustomState.currentTime = Math.min(youtubeCustomState.currentTime, youtubeCustomState.duration);
+      }
       youtubeCustomState.lastTick = now;
+      updateYoutubeTimeControls();
     }
 
     function sendYoutubePlayerCommand(func, args = []){
@@ -12974,9 +13196,11 @@ function toggleUserCard(userId, event){
 
       if(stateValue === 0){
         youtubeCustomState.playing = false;
+        if(youtubeCustomState.duration > 0) youtubeCustomState.currentTime = youtubeCustomState.duration;
         stopYoutubeClock();
         clearLessonAutoCompleteTimer();
         setYoutubePlayButtonState(false);
+        updateYoutubeTimeControls();
         completeCurrentLessonFromViewing('youtube-ended');
         return;
       }
@@ -12995,18 +13219,39 @@ function toggleUserCard(userId, event){
       const payload = parseYoutubeMessageData(event.data);
       if(!payload) return;
 
+      let timeInfoChanged = false;
       if(payload.info && typeof payload.info.currentTime !== 'undefined'){
         const current = Number(payload.info.currentTime);
-        if(Number.isFinite(current)) youtubeCustomState.currentTime = Math.max(0, current);
+        if(Number.isFinite(current) && !youtubeCustomState.progressDragging){
+          youtubeCustomState.currentTime = Math.max(0, current);
+          youtubeCustomState.lastTick = Date.now();
+          timeInfoChanged = true;
+        }
+      }
+      if(payload.info && typeof payload.info.duration !== 'undefined'){
+        const duration = Number(payload.info.duration);
+        if(Number.isFinite(duration) && duration > 0){
+          youtubeCustomState.duration = Math.max(0, duration);
+          timeInfoChanged = true;
+        }
+      }
+      if(timeInfoChanged) updateYoutubeTimeControls();
+
+      if(payload.event === 'onReady'){
+        requestYoutubeTimeInfo();
+        updateYoutubeTimeControls();
+        return;
       }
 
       if(payload.event === 'onStateChange'){
         syncYoutubeStateFromPlayerState(payload.info);
+        updateYoutubeTimeControls();
         return;
       }
 
       if(payload.event === 'infoDelivery' && payload.info && typeof payload.info.playerState !== 'undefined'){
         syncYoutubeStateFromPlayerState(payload.info.playerState);
+        updateYoutubeTimeControls();
       }
     }
 
@@ -13022,16 +13267,21 @@ function toggleUserCard(userId, event){
       const playerId = target.id || 'playerIframe';
       try{
         target.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: playerId }), '*');
+        target.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onReady'] }), '*');
         target.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+        window.setTimeout(requestYoutubeTimeInfo, 120);
       } catch(err){}
     }
 
     function startYoutubeClock(){
       stopYoutubeClock();
       youtubeCustomState.lastTick = Date.now();
+      let requestCounter = 0;
       youtubeCustomState.timer = window.setInterval(() => {
         syncYoutubeApproximateTime();
-      }, 1000);
+        requestCounter += 1;
+        if(requestCounter % 2 === 0) requestYoutubeTimeInfo();
+      }, 500);
     }
 
     function stopYoutubeClock(){
@@ -13047,11 +13297,17 @@ function toggleUserCard(userId, event){
       youtubeCustomState.iframe = null;
       youtubeCustomState.playing = false;
       youtubeCustomState.currentTime = 0;
+      youtubeCustomState.duration = 0;
+      youtubeCustomState.progressDragging = false;
       youtubeCustomState.lastTick = 0;
       youtubeCustomState.activeUrl = '';
       setYoutubePlayButtonState(false);
+      updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
-      if(controls) controls.style.display = 'none';
+      if(controls){
+        controls.style.display = 'none';
+        controls.classList.remove('has-timebar');
+      }
       const frame = document.querySelector('.video-frame');
       if(frame) frame.classList.remove('is-youtube-custom-controls', 'is-youtube-playing', 'is-youtube-ui-hidden', 'is-youtube-title-hidden', 'is-youtube-shading-cleared');
     }
@@ -13062,12 +13318,19 @@ function toggleUserCard(userId, event){
       youtubeCustomState.iframe = iframe || document.getElementById('playerIframe');
       youtubeCustomState.playing = false;
       youtubeCustomState.currentTime = 0;
+      youtubeCustomState.duration = 0;
+      youtubeCustomState.progressDragging = false;
       youtubeCustomState.lastTick = 0;
       youtubeCustomState.shadingCleared = false;
       youtubeCustomState.activeUrl = url || '';
+      bindYoutubeTimebarControls();
       setYoutubePlayButtonState(false);
+      updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
-      if(controls) controls.style.display = 'flex';
+      if(controls){
+        controls.style.display = 'flex';
+        controls.classList.add('has-timebar');
+      }
       const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('.video-frame');
       if(frame){
         frame.classList.add('is-youtube-custom-controls');
@@ -13078,8 +13341,13 @@ function toggleUserCard(userId, event){
       window.setTimeout(() => {
         sendYoutubeListeningHandshake(iframe);
         sendYoutubePlayerCommand('pauseVideo');
+        requestYoutubeTimeInfo();
       }, 450);
-      window.setTimeout(() => sendYoutubeListeningHandshake(iframe), 1100);
+      window.setTimeout(() => {
+        sendYoutubeListeningHandshake(iframe);
+        requestYoutubeTimeInfo();
+      }, 1100);
+      window.setTimeout(requestYoutubeTimeInfo, 2200);
     }
 
     function toggleYoutubePlayPause(){
@@ -13091,12 +13359,16 @@ function toggleUserCard(userId, event){
         stopYoutubeClock();
         clearLessonAutoCompleteTimer();
         setYoutubePlayButtonState(false);
+        requestYoutubeTimeInfo();
+        updateYoutubeTimeControls();
       }else{
         sendYoutubePlayerCommand('playVideo');
         youtubeCustomState.playing = true;
         startYoutubeClock();
+        requestYoutubeTimeInfo();
         // No se marca la clase por tiempo. El check se hace solo al finalizar el video.
         setYoutubePlayButtonState(true);
+        updateYoutubeTimeControls();
       }
     }
 
@@ -13104,8 +13376,11 @@ function toggleUserCard(userId, event){
       if(!youtubeCustomState.iframe) return;
       showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 4400 });
       syncYoutubeApproximateTime();
-      youtubeCustomState.currentTime = Math.max(0, youtubeCustomState.currentTime + seconds);
+      const duration = Math.max(0, Number(youtubeCustomState.duration) || 0);
+      const nextTime = Math.max(0, youtubeCustomState.currentTime + seconds);
+      youtubeCustomState.currentTime = duration > 0 ? Math.min(duration, nextTime) : nextTime;
       youtubeCustomState.lastTick = Date.now();
+      updateYoutubeTimeControls();
       sendYoutubePlayerCommand('seekTo', [youtubeCustomState.currentTime, true]);
       if(youtubeCustomState.playing){
         window.setTimeout(() => sendYoutubePlayerCommand('playVideo'), 120);
