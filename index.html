@@ -13161,12 +13161,10 @@ function toggleUserCard(userId, event){
 
     function requestYoutubeTimeInfo(){
       if(!youtubeCustomState.iframe) return;
-      // La API del iframe entrega currentTime, duration y datos de calidad mediante infoDelivery.
-      // Estos comandos ayudan a mantener el intercambio activo sin mostrar controles nativos.
-      sendYoutubePlayerCommand('getCurrentTime');
-      sendYoutubePlayerCommand('getDuration');
-      sendYoutubePlayerCommand('getPlaybackQuality');
-      sendYoutubePlayerCommand('getAvailableQualityLevels');
+      // Evitamos enviar comandos getter directos al iframe de YouTube porque algunos embeds
+      // recientes disparan errores internos como isExternalMethodAvailable.
+      // El tiempo/duración se sincroniza con los mensajes infoDelivery y el reloj local.
+      updateYoutubeTimeControls();
     }
 
     function getYoutubeQualityLabel(value){
@@ -13194,7 +13192,8 @@ function toggleUserCard(userId, event){
       if(!select) return;
       const order = getYoutubeQualityOptionOrder();
       const availableRaw = Array.isArray(youtubeCustomState.availableQualities) ? youtubeCustomState.availableQualities.filter(Boolean) : [];
-      const available = availableRaw.length ? Array.from(new Set(['default', ...availableRaw])) : order.filter(q => ['default','small','medium','large','hd720','hd1080','highres'].includes(q));
+      const baseOptions = order.filter(q => ['default','small','medium','large','hd720','hd1080','highres'].includes(q));
+      const available = Array.from(new Set(['default', ...baseOptions, ...availableRaw]));
       const sorted = available.sort((a,b) => order.indexOf(a) - order.indexOf(b));
       const currentValue = youtubeCustomState.selectedQuality || youtubeCustomState.playbackQuality || 'default';
       select.innerHTML = sorted.map(q => `<option value="${q}">${getYoutubeQualityLabel(q)}</option>`).join('');
@@ -13209,12 +13208,12 @@ function toggleUserCard(userId, event){
       youtubeCustomState.playbackQuality = nextQuality;
       updateYoutubeQualitySelect();
       if(!youtubeCustomState.iframe) return;
-      sendYoutubePlayerCommand('setPlaybackQuality', [nextQuality]);
-      sendYoutubePlayerCommand('setPlaybackQualityRange', [nextQuality]);
-      window.setTimeout(() => {
+      // Solo enviamos el comando oficial de calidad. No usamos setPlaybackQualityRange
+      // ni comandos getter porque pueden romper algunos iframes de YouTube/nocookie.
+      if(nextQuality !== 'default'){
         sendYoutubePlayerCommand('setPlaybackQuality', [nextQuality]);
-        requestYoutubeTimeInfo();
-      }, 350);
+      }
+      window.setTimeout(requestYoutubeTimeInfo, 350);
       showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 5200 });
     }
 
@@ -13402,9 +13401,9 @@ function toggleUserCard(userId, event){
       if(!target || !target.contentWindow) return;
       const playerId = target.id || 'playerIframe';
       try{
+        // Handshake liviano: escuchar infoDelivery sin registrar listeners externos.
+        // Los addEventListener por postMessage pueden disparar errores internos de YouTube.
         target.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: playerId }), '*');
-        target.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onReady'] }), '*');
-        target.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
         window.setTimeout(requestYoutubeTimeInfo, 120);
       } catch(err){}
     }
