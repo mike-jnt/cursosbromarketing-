@@ -2648,6 +2648,15 @@
       background:#eef7fd;
       color:var(--player-accent-strong);
     }
+    .player-lesson-row.done .player-lesson-check{
+      box-shadow:0 0 0 4px rgba(4,120,87,.10);
+    }
+    #btnMarkCurrentLesson.is-completed{
+      background:#047857 !important;
+      border-color:#047857 !important;
+      color:#ffffff !important;
+      box-shadow:0 12px 24px rgba(4,120,87,.22) !important;
+    }
     .player-lesson-index{
       width:34px;
       height:34px;
@@ -12938,11 +12947,13 @@ function toggleUserCard(userId, event){
         sendYoutubePlayerCommand('pauseVideo');
         youtubeCustomState.playing = false;
         stopYoutubeClock();
+        clearLessonAutoCompleteTimer();
         setYoutubePlayButtonState(false);
       }else{
         sendYoutubePlayerCommand('playVideo');
         youtubeCustomState.playing = true;
         startYoutubeClock();
+        scheduleCurrentLessonAutoComplete(9000, 'youtube');
         setYoutubePlayButtonState(true);
       }
     }
@@ -12973,7 +12984,34 @@ function toggleUserCard(userId, event){
       else if(frame.msRequestFullscreen) frame.msRequestFullscreen();
     }
 
+    function bindDirectVideoProgressTracker(video){
+      if(!video || video.dataset.lessonProgressBound === 'true') return;
+      video.dataset.lessonProgressBound = 'true';
+
+      const shouldMarkByWatchTime = () => {
+        const current = Number(video.currentTime) || 0;
+        const duration = Number(video.duration) || 0;
+        return current >= 8 || (duration > 0 && current / duration >= 0.72);
+      };
+
+      video.addEventListener('play', () => {
+        scheduleCurrentLessonAutoComplete(9000, 'video');
+      });
+      video.addEventListener('pause', () => {
+        clearLessonAutoCompleteTimer();
+      });
+      video.addEventListener('timeupdate', () => {
+        if(shouldMarkByWatchTime()){
+          completeCurrentLessonFromViewing('video');
+        }
+      });
+      video.addEventListener('ended', () => {
+        completeCurrentLessonFromViewing('video');
+      });
+    }
+
     function resetPlayerMedia(iframe, video){
+      clearLessonAutoCompleteTimer();
       if(activeHlsPlayer){
         try{ activeHlsPlayer.destroy(); } catch(err){}
         activeHlsPlayer = null;
@@ -13038,6 +13076,7 @@ function toggleUserCard(userId, event){
           video.src = finalUrl;
         }
         video.style.display = 'block';
+        bindDirectVideoProgressTracker(video);
         if(placeholder) placeholder.style.display = 'none';
         return;
       }
@@ -13140,6 +13179,13 @@ function renderPlayer(courseId){
         favoriteBtn.setAttribute('aria-label', isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos');
         favoriteBtn.title = isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos';
         favoriteBtn.classList.toggle('is-favorite', isFavorite);
+      }
+      const markBtn = document.getElementById('btnMarkCurrentLesson');
+      const currentIsDone = completedLessons.includes(state.currentLessonIndex);
+      if(markBtn){
+        markBtn.textContent = currentIsDone ? 'Clase vista ✓' : 'Marcar como vista';
+        markBtn.classList.toggle('is-completed', currentIsDone);
+        markBtn.setAttribute('aria-pressed', currentIsDone ? 'true' : 'false');
       }
 
       let message = 'Sigue avanzando. Cada clase te acerca más a completar este curso.';
@@ -15421,23 +15467,65 @@ function openPaymentHistoryModal(id){
       `);
     }
 
-    function openCoursePlayer(courseId){
+    function getNextLessonIndexForCourse(courseId){
+      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+      if(!course || !Array.isArray(course.lessons) || !course.lessons.length) return 0;
+      const total = course.lessons.length;
+      const completedLessons = state.currentUser && state.currentUser.role === 'student'
+        ? getStudentCompletedLessons(courseId)
+        : (Array.isArray(course.completedLessons) ? course.completedLessons : []);
+      const done = new Set(completedLessons.map(Number).filter(Number.isFinite));
+      for(let i = 0; i < total; i++){
+        if(!done.has(i)) return i;
+      }
+      return 0;
+    }
+
+    function getRecommendedContinueCourse(){
+      const assigned = getStudentCourses();
+      if(!assigned.length) return null;
+      return [...assigned].sort((a,b)=>{
+        const ap = a.progress > 0 && a.progress < 100 ? 0 : a.progress === 0 ? 1 : 2;
+        const bp = b.progress > 0 && b.progress < 100 ? 0 : b.progress === 0 ? 1 : 2;
+        return ap - bp || b.progress - a.progress;
+      })[0] || assigned[0];
+    }
+
+    function openContinueFromStudentPanel(){
+      const course = getRecommendedContinueCourse();
+      if(!course){
+        toast('Aún no tienes un curso activo para continuar.');
+        showTab('student-courses');
+        return;
+      }
+      const nextIndex = getNextLessonIndexForCourse(course.id);
+      openCoursePlayer(course.id, { lessonIndex: nextIndex });
+    }
+
+    function openCoursePlayer(courseId, options = {}){
       if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(courseId)){
         const course = courseById(courseId);
         toast(!isCourseVisible(course) ? 'Este curso no está visible para alumnos en este momento.' : 'Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
         showTab('student-courses');
         return;
       }
+      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+      const total = Array.isArray(course?.lessons) ? course.lessons.length : 0;
+      const requestedIndex = Number(options.lessonIndex);
+      const nextIndex = Number.isFinite(requestedIndex) ? requestedIndex : getNextLessonIndexForCourse(courseId);
       state.currentCourseId = courseId;
-      state.currentLessonIndex = 0;
+      state.currentLessonIndex = total ? Math.max(0, Math.min(nextIndex, total - 1)) : 0;
       if (typeof saveState === 'function') saveState({ localOnly: true });
       showTab('student-player');
       renderPlayer(courseId);
     }
 
     function selectLesson(courseId, lessonIndex){
+      clearLessonAutoCompleteTimer();
+      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+      const total = Array.isArray(course?.lessons) ? course.lessons.length : 0;
       state.currentCourseId = courseId;
-      state.currentLessonIndex = lessonIndex;
+      state.currentLessonIndex = total ? Math.max(0, Math.min(Number(lessonIndex) || 0, total - 1)) : 0;
       saveState({ localOnly: true });
       renderPlayer(courseId);
     }
@@ -15627,6 +15715,79 @@ function openPaymentHistoryModal(id){
       updateStudentDesire();
     }
 
+    function getCompletedLessonsForCurrentContext(courseId){
+      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+      if(state.currentUser && state.currentUser.role === 'student'){
+        return getStudentCompletedLessons(courseId);
+      }
+      return Array.isArray(course?.completedLessons) ? course.completedLessons.map(Number).filter(Number.isFinite) : [];
+    }
+
+    function isLessonCompleted(courseId, idx){
+      return getCompletedLessonsForCurrentContext(courseId).includes(Number(idx));
+    }
+
+    function setLessonCompleted(courseId, idx, options = {}){
+      const baseCourse = courseById(courseId);
+      if(!baseCourse || !Array.isArray(baseCourse.lessons) || !baseCourse.lessons.length) return false;
+      const lessonIndex = Math.max(0, Math.min(Number(idx) || 0, baseCourse.lessons.length - 1));
+      let completedLessons = getCompletedLessonsForCurrentContext(courseId);
+      if(completedLessons.includes(lessonIndex)){
+        if(!options.silent) toast('Esta clase ya está marcada como vista.');
+        return false;
+      }
+
+      completedLessons.push(lessonIndex);
+      completedLessons = Array.from(new Set(completedLessons.map(Number).filter(Number.isFinite))).sort((a,b) => a-b);
+      let progress = 0;
+      if(state.currentUser && state.currentUser.role === 'student'){
+        const updatedUser = updateStudentCourseProgress(courseId, completedLessons);
+        progress = updatedUser?.progressByCourse?.[courseId] || 0;
+      } else {
+        baseCourse.completedLessons = completedLessons;
+        baseCourse.progress = Math.max(0, Math.min(100, Math.round((completedLessons.length / Math.max(1, baseCourse.lessons.length)) * 100)));
+        progress = baseCourse.progress;
+      }
+
+      state.activityLog.unshift({
+        id: Date.now(),
+        text: `Clase vista: ${baseCourse.lessons[lessonIndex]?.title || 'Clase'} de ${baseCourse.title}`,
+        time: 'Ahora'
+      });
+
+      if(progress >= 100 && !state.certificates.some(c => c.courseId === courseId && c.email === getStudentIdentifier())){
+        state.certificates.push({ courseId, email: getStudentIdentifier() });
+      }
+
+      saveState(state.currentUser && state.currentUser.role === 'student' ? { localOnly: true } : {});
+      if(options.render !== false){
+        renderPlayer(courseId);
+        renderStudentAssignedCourses();
+        renderStudentProgress();
+        renderStudentCertificates();
+        updateStudentDesire();
+      }
+      if(!options.silent) toast(options.source === 'manual' ? 'Clase marcada como vista ✓' : 'Clase vista ✓ Progreso actualizado');
+      return true;
+    }
+
+    function completeCurrentLessonFromViewing(source = 'auto'){
+      if(!state.currentCourseId && state.currentCourseId !== 0) return false;
+      return setLessonCompleted(state.currentCourseId, state.currentLessonIndex, { source, silent: source === 'silent' });
+    }
+
+    function scheduleCurrentLessonAutoComplete(delay = 9000, source = 'auto'){
+      clearLessonAutoCompleteTimer();
+      const courseId = state.currentCourseId;
+      const lessonIndex = state.currentLessonIndex;
+      if(!courseId || isLessonCompleted(courseId, lessonIndex)) return;
+      lessonAutoCompleteTimer = window.setTimeout(() => {
+        if(Number(state.currentCourseId) === Number(courseId) && Number(state.currentLessonIndex) === Number(lessonIndex)){
+          setLessonCompleted(courseId, lessonIndex, { source });
+        }
+      }, delay);
+    }
+
     function toggleFavorite(courseId){
       if(state.favorites.includes(courseId)) state.favorites = state.favorites.filter(id => id !== courseId);
       else state.favorites.push(courseId);
@@ -15643,44 +15804,10 @@ function openPaymentHistoryModal(id){
     }
 
     function toggleLessonComplete(courseId, idx){
-      const baseCourse = courseById(courseId);
-      if(!baseCourse) return;
-      let completedLessons = [];
-      if(state.currentUser && state.currentUser.role === 'student'){
-        completedLessons = getStudentCompletedLessons(courseId);
-      } else {
-        if(!baseCourse.completedLessons) baseCourse.completedLessons = [];
-        completedLessons = [...baseCourse.completedLessons];
-      }
-
-      if(completedLessons.includes(idx)){
-        completedLessons = completedLessons.filter(i => i !== idx);
-      }else{
-        completedLessons.push(idx);
-        state.activityLog.unshift({ id: Date.now(), text: `Completaste una clase de ${baseCourse.title}`, time: 'Ahora' });
-      }
-
-      completedLessons = Array.from(new Set(completedLessons)).sort((a,b) => a-b);
-      let progress = 0;
-      if(state.currentUser && state.currentUser.role === 'student'){
-        const updatedUser = updateStudentCourseProgress(courseId, completedLessons);
-        progress = updatedUser?.progressByCourse?.[courseId] || 0;
-      } else {
-        baseCourse.completedLessons = completedLessons;
-        baseCourse.progress = Math.max(0, Math.min(100, Math.round((completedLessons.length / Math.max(1, baseCourse.lessons.length)) * 100)));
-        progress = baseCourse.progress;
-      }
-
-      if(progress >= 100 && !state.certificates.some(c => c.courseId === courseId && c.email === getStudentIdentifier())){
-        state.certificates.push({ courseId, email: getStudentIdentifier() });
-      }
-      saveState();
-      renderPlayer(courseId);
-      renderStudentAssignedCourses();
-      renderStudentProgress();
-      renderStudentCertificates();
-      updateStudentDesire();
-      toast('Progreso actualizado');
+      // Se conserva el nombre para no romper botones antiguos, pero ahora la acción
+      // principal es marcar la clase como vista. Así evitamos quitar accidentalmente
+      // el chulo y afectar el avance del alumno.
+      setLessonCompleted(courseId, idx, { source: 'manual' });
     }
 
 function scrollToPanelElement(elementId){
@@ -16078,8 +16205,10 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
         toast('Perfil actualizado');
       });
 
+      byId('btnContinueMain')?.addEventListener('click', openContinueFromStudentPanel);
+
       byId('btnMarkCurrentLesson')?.addEventListener('click', () => {
-        toggleLessonComplete(state.currentCourseId, state.currentLessonIndex);
+        setLessonCompleted(state.currentCourseId, state.currentLessonIndex, { source: 'manual' });
       });
 
       byId('btnFavoriteCurrentCourse')?.addEventListener('click', () => {
@@ -16111,14 +16240,18 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       byId('btnPrevLesson')?.addEventListener('click', () => {
         const c = courseById(state.currentCourseId);
         if(!c) return;
+        clearLessonAutoCompleteTimer();
         state.currentLessonIndex = Math.max(state.currentLessonIndex - 1, 0);
+        saveState({ localOnly: true });
         renderPlayer(c.id);
       });
 
       byId('btnNextLesson')?.addEventListener('click', () => {
         const c = courseById(state.currentCourseId);
         if(!c) return;
+        clearLessonAutoCompleteTimer();
         state.currentLessonIndex = Math.min(state.currentLessonIndex + 1, c.lessons.length - 1);
+        saveState({ localOnly: true });
         renderPlayer(c.id);
       });
     }
