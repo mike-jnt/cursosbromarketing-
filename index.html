@@ -7252,6 +7252,46 @@
 
 
 
+    /* === Mantener barras visibles hasta que el video esté reproduciéndose === */
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-custom-controls,
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing) .youtube-custom-controls{
+      opacity:1 !important;
+      transform:none !important;
+      pointer-events:auto !important;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-private-titlebar,
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden:not(.is-youtube-playing) .youtube-private-titlebar{
+      opacity:1 !important;
+      transform:none !important;
+      pointer-events:auto !important;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing),
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing){
+      cursor:auto !important;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing)::before,
+    .video-frame.is-youtube-custom-controls.is-youtube-title-hidden:not(.is-youtube-playing)::before,
+    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared:not(.is-youtube-playing)::before{
+      opacity:1 !important;
+      height:var(--yt-private-top-height) !important;
+      pointer-events:auto !important;
+      background:linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,.995) 48%, rgba(0,0,0,.86) 76%, rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(2px) saturate(105%) !important;
+      -webkit-backdrop-filter:blur(2px) saturate(105%) !important;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing)::after,
+    .video-frame.is-youtube-custom-controls.is-youtube-ui-hidden:not(.is-youtube-playing)::after,
+    .video-frame.is-youtube-custom-controls.is-youtube-shading-cleared:not(.is-youtube-playing)::after{
+      opacity:1 !important;
+      height:var(--yt-private-bottom-height) !important;
+      pointer-events:auto !important;
+      background:linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,.995) 46%, rgba(0,0,0,.86) 74%, rgba(0,0,0,0) 100%) !important;
+      backdrop-filter:blur(2px) saturate(105%) !important;
+      -webkit-backdrop-filter:blur(2px) saturate(105%) !important;
+    }
+
+
+
     /* =========================================================
        VISUAL TIPO PLATAFORMA PREMIUM - REPRODUCTOR + CURSOS
        Inspirado en la referencia enviada. No altera la lógica del player,
@@ -12796,17 +12836,25 @@ function toggleUserCard(userId, event){
       const frame = getYoutubeActiveFrame();
       if(!frame || !frame.classList.contains('is-youtube-custom-controls')) return;
       clearYoutubeUiTimers();
+
+      // Si el video aún no se está reproduciendo, no ocultamos barras ni controles.
+      // Esto evita que al cargar la clase o al estar pausada desaparezca la interfaz.
+      if(!youtubeCustomState.playing && options.force !== true){
+        frame.classList.remove('is-youtube-ui-hidden', 'is-youtube-title-hidden');
+        return;
+      }
+
       const titleDelay = Number(options.titleDelay || 4000);
       const controlsDelay = Number(options.controlsDelay || 5200);
       youtubeCustomState.titleTimer = window.setTimeout(() => {
         const activeFrame = getYoutubeActiveFrame();
-        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
+        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls') && youtubeCustomState.playing){
           activeFrame.classList.add('is-youtube-title-hidden');
         }
       }, titleDelay);
       youtubeCustomState.uiTimer = window.setTimeout(() => {
         const activeFrame = getYoutubeActiveFrame();
-        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls')){
+        if(activeFrame && activeFrame.classList.contains('is-youtube-custom-controls') && youtubeCustomState.playing){
           activeFrame.classList.add('is-youtube-ui-hidden');
           // Después de la primera ocultación real de controles, retiramos las máscaras oscuras
           // para que el video quede limpio y sin sombras permanentes.
@@ -12825,9 +12873,17 @@ function toggleUserCard(userId, event){
       if(options.showTitle !== false){
         frame.classList.remove('is-youtube-title-hidden');
       }
+
+      // Antes de dar play o cuando el video queda en pausa, la interfaz debe permanecer visible.
+      if(!youtubeCustomState.playing && options.force !== true){
+        clearYoutubeUiTimers();
+        return;
+      }
+
       scheduleYoutubeAutoHide({
         titleDelay: options.titleDelay || 4000,
-        controlsDelay: options.controlsDelay || (youtubeCustomState.playing ? 4400 : 5200)
+        controlsDelay: options.controlsDelay || 4400,
+        force: options.force === true
       });
     }
 
