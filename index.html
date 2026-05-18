@@ -8425,6 +8425,48 @@
       letter-spacing:.01em;
       user-select:none;
     }
+    .youtube-quality-control{
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      gap:7px;
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.84);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      user-select:none;
+    }
+    .youtube-quality-control select{
+      width:auto;
+      min-width:78px;
+      height:30px;
+      padding:4px 26px 4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:#111111 !important;
+      color:#ffffff !important;
+      font-size:12px;
+      font-weight:900;
+      outline:none;
+      cursor:pointer;
+      box-shadow:none !important;
+      text-transform:none;
+    }
+    .youtube-quality-control select:focus{
+      border-color:rgba(255,90,31,.68);
+      box-shadow:0 0 0 3px rgba(255,90,31,.18) !important;
+    }
+    .youtube-quality-control select:disabled{
+      opacity:.62;
+      cursor:not-allowed;
+    }
     .youtube-progress-range{
       --yt-progress:0%;
       flex:1 1 auto;
@@ -8493,7 +8535,7 @@
     @media (max-width:760px){
       .youtube-custom-controls.has-timebar{
         display:grid !important;
-        grid-template-columns:42px 48px 42px 1fr 38px;
+        grid-template-columns:42px 48px 42px 1fr 92px 38px;
         width:min(96%, 560px) !important;
         border-radius:20px !important;
         row-gap:7px !important;
@@ -8511,7 +8553,10 @@
       .youtube-custom-controls.has-timebar #btnYoutubeBack{grid-column:1;grid-row:1;}
       .youtube-custom-controls.has-timebar #btnYoutubePlayPause{grid-column:2;grid-row:1;}
       .youtube-custom-controls.has-timebar #btnYoutubeForward{grid-column:3;grid-row:1;}
-      .youtube-custom-controls.has-timebar #btnYoutubeFullscreen{grid-column:5;grid-row:1;}
+      .youtube-custom-controls.has-timebar #btnYoutubeFullscreen{grid-column:6;grid-row:1;}
+      .youtube-custom-controls.has-timebar .youtube-quality-control{grid-column:5;grid-row:1;align-self:center;justify-self:end;padding:4px 5px;}
+      .youtube-custom-controls.has-timebar .youtube-quality-control span{display:none;}
+      .youtube-custom-controls.has-timebar .youtube-quality-control select{min-width:82px;height:34px;font-size:11px;padding-left:9px;}
       .youtube-custom-controls.has-timebar .youtube-control-label{display:none !important;}
       .youtube-time-label{min-width:38px;font-size:11px;}
       .youtube-progress-range{min-width:0;}
@@ -9508,6 +9553,18 @@
   <span class="youtube-time-label" id="youtubeCurrentTime">0:00</span>
   <input aria-label="Barra de tiempo del video" class="youtube-progress-range" id="youtubeProgressRange" max="1000" min="0" step="1" type="range" value="0"/>
   <span class="youtube-time-label" id="youtubeDuration">0:00</span>
+</div>
+<div class="youtube-quality-control" aria-label="Calidad del video">
+  <span>Calidad</span>
+  <select id="youtubeQualitySelect" aria-label="Elegir calidad del video">
+    <option value="default">Auto</option>
+    <option value="small">240p</option>
+    <option value="medium">360p</option>
+    <option value="large">480p</option>
+    <option value="hd720">720p</option>
+    <option value="hd1080">1080p</option>
+    <option value="highres">Máxima</option>
+  </select>
 </div>
 <span class="youtube-control-label">Clase privada</span>
 <button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
@@ -12283,7 +12340,11 @@ function toggleUserCard(userId, event){
       courseTitle: '',
       stateListenerBound: false,
       timebarBound: false,
-      progressDragging: false
+      qualityBound: false,
+      progressDragging: false,
+      selectedQuality: 'default',
+      playbackQuality: 'default',
+      availableQualities: []
     };
 
     function isLocalFileMode(){
@@ -13100,10 +13161,71 @@ function toggleUserCard(userId, event){
 
     function requestYoutubeTimeInfo(){
       if(!youtubeCustomState.iframe) return;
-      // La API del iframe entrega currentTime y duration mediante infoDelivery.
+      // La API del iframe entrega currentTime, duration y datos de calidad mediante infoDelivery.
       // Estos comandos ayudan a mantener el intercambio activo sin mostrar controles nativos.
       sendYoutubePlayerCommand('getCurrentTime');
       sendYoutubePlayerCommand('getDuration');
+      sendYoutubePlayerCommand('getPlaybackQuality');
+      sendYoutubePlayerCommand('getAvailableQualityLevels');
+    }
+
+    function getYoutubeQualityLabel(value){
+      const labels = {
+        default: 'Auto',
+        tiny: '144p',
+        small: '240p',
+        medium: '360p',
+        large: '480p',
+        hd720: '720p',
+        hd1080: '1080p',
+        hd1440: '1440p',
+        hd2160: '2160p',
+        highres: 'Máxima'
+      };
+      return labels[value] || value;
+    }
+
+    function getYoutubeQualityOptionOrder(){
+      return ['default','tiny','small','medium','large','hd720','hd1080','hd1440','hd2160','highres'];
+    }
+
+    function updateYoutubeQualitySelect(){
+      const select = document.getElementById('youtubeQualitySelect');
+      if(!select) return;
+      const order = getYoutubeQualityOptionOrder();
+      const availableRaw = Array.isArray(youtubeCustomState.availableQualities) ? youtubeCustomState.availableQualities.filter(Boolean) : [];
+      const available = availableRaw.length ? Array.from(new Set(['default', ...availableRaw])) : order.filter(q => ['default','small','medium','large','hd720','hd1080','highres'].includes(q));
+      const sorted = available.sort((a,b) => order.indexOf(a) - order.indexOf(b));
+      const currentValue = youtubeCustomState.selectedQuality || youtubeCustomState.playbackQuality || 'default';
+      select.innerHTML = sorted.map(q => `<option value="${q}">${getYoutubeQualityLabel(q)}</option>`).join('');
+      select.value = sorted.includes(currentValue) ? currentValue : 'default';
+      select.disabled = !youtubeCustomState.iframe || sorted.length <= 1;
+      select.title = select.disabled ? 'La calidad se activará cuando el video esté listo' : 'Elegir calidad del video';
+    }
+
+    function applyYoutubeQuality(quality){
+      const nextQuality = quality || 'default';
+      youtubeCustomState.selectedQuality = nextQuality;
+      youtubeCustomState.playbackQuality = nextQuality;
+      updateYoutubeQualitySelect();
+      if(!youtubeCustomState.iframe) return;
+      sendYoutubePlayerCommand('setPlaybackQuality', [nextQuality]);
+      sendYoutubePlayerCommand('setPlaybackQualityRange', [nextQuality]);
+      window.setTimeout(() => {
+        sendYoutubePlayerCommand('setPlaybackQuality', [nextQuality]);
+        requestYoutubeTimeInfo();
+      }, 350);
+      showYoutubeUiTemporarily({ showTitle: false, controlsDelay: 5200 });
+    }
+
+    function bindYoutubeQualityControls(){
+      if(youtubeCustomState.qualityBound) return;
+      const select = document.getElementById('youtubeQualitySelect');
+      if(!select) return;
+      youtubeCustomState.qualityBound = true;
+      select.addEventListener('change', () => {
+        applyYoutubeQuality(select.value || 'default');
+      });
     }
 
     function bindYoutubeTimebarControls(){
@@ -13235,6 +13357,20 @@ function toggleUserCard(userId, event){
           timeInfoChanged = true;
         }
       }
+      if(payload.info && Array.isArray(payload.info.availableQualityLevels)){
+        youtubeCustomState.availableQualities = payload.info.availableQualityLevels.filter(Boolean);
+        updateYoutubeQualitySelect();
+      }
+      if(payload.info && typeof payload.info.playbackQuality !== 'undefined'){
+        const playbackQuality = String(payload.info.playbackQuality || 'default');
+        if(playbackQuality){
+          youtubeCustomState.playbackQuality = playbackQuality;
+          if(!youtubeCustomState.selectedQuality || youtubeCustomState.selectedQuality === 'default'){
+            youtubeCustomState.selectedQuality = playbackQuality === 'unknown' ? 'default' : playbackQuality;
+          }
+          updateYoutubeQualitySelect();
+        }
+      }
       if(timeInfoChanged) updateYoutubeTimeControls();
 
       if(payload.event === 'onReady'){
@@ -13299,8 +13435,12 @@ function toggleUserCard(userId, event){
       youtubeCustomState.currentTime = 0;
       youtubeCustomState.duration = 0;
       youtubeCustomState.progressDragging = false;
+      youtubeCustomState.selectedQuality = 'default';
+      youtubeCustomState.playbackQuality = 'default';
+      youtubeCustomState.availableQualities = [];
       youtubeCustomState.lastTick = 0;
       youtubeCustomState.activeUrl = '';
+      updateYoutubeQualitySelect();
       setYoutubePlayButtonState(false);
       updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
@@ -13320,10 +13460,15 @@ function toggleUserCard(userId, event){
       youtubeCustomState.currentTime = 0;
       youtubeCustomState.duration = 0;
       youtubeCustomState.progressDragging = false;
+      youtubeCustomState.selectedQuality = 'default';
+      youtubeCustomState.playbackQuality = 'default';
+      youtubeCustomState.availableQualities = [];
       youtubeCustomState.lastTick = 0;
       youtubeCustomState.shadingCleared = false;
       youtubeCustomState.activeUrl = url || '';
       bindYoutubeTimebarControls();
+      bindYoutubeQualityControls();
+      updateYoutubeQualitySelect();
       setYoutubePlayButtonState(false);
       updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
