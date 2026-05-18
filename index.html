@@ -8318,6 +8318,39 @@
         margin-top:0 !important;
       }
     }
+
+
+    /* =========================================================
+       CORRECCIÓN FINAL: alinear arriba reproductor + lecciones
+       Este bloque conserva el header y el diseño actual. Solo
+       fuerza que el panel lateral comience visualmente a la misma
+       altura del bloque de video.
+    ========================================================= */
+    #tab-student-player .player-shell,
+    #tab-student-player .player-shell.bro-player-visual{
+      align-items:start !important;
+      align-content:start !important;
+    }
+
+    #tab-student-player .player-main-card,
+    #tab-student-player .player-side-card{
+      align-self:start !important;
+      margin-top:0 !important;
+      padding-top:0 !important;
+    }
+
+    #tab-student-player .player-video-wrap,
+    #tab-student-player .player-side-card{
+      margin-block-start:0 !important;
+    }
+
+    @media (max-width:1180px){
+      #tab-student-player .player-side-card{
+        transform:none !important;
+        margin-top:0 !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -16159,5 +16192,108 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.toggleLessonComplete = toggleLessonComplete;
     window.resetDemoState = resetDemoState;
   </script>
+
+<script>
+(function(){
+  function getVisiblePlayerSection(){
+    const section = document.getElementById('tab-student-player');
+    if(!section || section.classList.contains('hidden')) return null;
+    return section;
+  }
+
+  function alignPlayerLessonsPanel(){
+    const section = getVisiblePlayerSection();
+    if(!section) return;
+
+    const videoWrap = section.querySelector('.player-video-wrap');
+    const sideCard = section.querySelector('.player-side-card');
+    const scrollBox = section.querySelector('.player-lessons-scroll');
+
+    if(!videoWrap || !sideCard) return;
+
+    sideCard.style.removeProperty('transform');
+    sideCard.style.removeProperty('margin-top');
+
+    if(window.innerWidth <= 1180){
+      sideCard.style.setProperty('transform', 'none', 'important');
+      sideCard.style.setProperty('margin-top', '0px', 'important');
+      if(scrollBox) scrollBox.style.removeProperty('max-height');
+      return;
+    }
+
+    const videoTop = videoWrap.getBoundingClientRect().top;
+    const sideTop = sideCard.getBoundingClientRect().top;
+    const offset = Math.round(videoTop - sideTop);
+
+    if(Math.abs(offset) > 2){
+      sideCard.style.setProperty('transform', 'translateY(' + offset + 'px)', 'important');
+    }else{
+      sideCard.style.setProperty('transform', 'none', 'important');
+    }
+
+    const maxHeight = Math.max(360, Math.round(window.innerHeight - videoTop - 24));
+    sideCard.style.setProperty('max-height', maxHeight + 'px', 'important');
+    if(scrollBox){
+      scrollBox.style.setProperty('max-height', Math.max(280, maxHeight - 82) + 'px', 'important');
+    }
+  }
+
+  function schedulePlayerLessonsAlignment(){
+    window.requestAnimationFrame(function(){
+      window.requestAnimationFrame(alignPlayerLessonsPanel);
+    });
+  }
+
+  window.alignPlayerLessonsPanel = alignPlayerLessonsPanel;
+  window.schedulePlayerLessonsAlignment = schedulePlayerLessonsAlignment;
+
+  const previousShowTab = window.showTab;
+  if(typeof previousShowTab === 'function'){
+    window.showTab = function(){
+      const result = previousShowTab.apply(this, arguments);
+      schedulePlayerLessonsAlignment();
+      setTimeout(schedulePlayerLessonsAlignment, 120);
+      return result;
+    };
+  }
+
+  const previousOpenCoursePlayer = window.openCoursePlayer;
+  if(typeof previousOpenCoursePlayer === 'function'){
+    window.openCoursePlayer = function(){
+      const result = previousOpenCoursePlayer.apply(this, arguments);
+      schedulePlayerLessonsAlignment();
+      setTimeout(schedulePlayerLessonsAlignment, 160);
+      return result;
+    };
+  }
+
+  const previousSelectLesson = window.selectLesson;
+  if(typeof previousSelectLesson === 'function'){
+    window.selectLesson = function(){
+      const result = previousSelectLesson.apply(this, arguments);
+      schedulePlayerLessonsAlignment();
+      return result;
+    };
+  }
+
+  window.addEventListener('load', schedulePlayerLessonsAlignment);
+  window.addEventListener('resize', schedulePlayerLessonsAlignment);
+  document.addEventListener('DOMContentLoaded', schedulePlayerLessonsAlignment);
+
+  const section = document.getElementById('tab-student-player');
+  if(section && 'MutationObserver' in window){
+    const observer = new MutationObserver(schedulePlayerLessonsAlignment);
+    observer.observe(section, { attributes:true, childList:true, subtree:true, attributeFilter:['class','style'] });
+  }
+
+  let checks = 0;
+  const timer = setInterval(function(){
+    checks += 1;
+    schedulePlayerLessonsAlignment();
+    if(checks >= 12) clearInterval(timer);
+  }, 250);
+})();
+</script>
+
 </body>
 </html>
