@@ -8272,6 +8272,52 @@
         border-radius:12px !important;
       }
     }
+
+
+    /* =========================================================
+       AJUSTE SEGURO DESDE BASE 69:
+       Alineación superior entre el reproductor y la lista de lecciones.
+       Solo afecta la sección "Continuar clase" (#tab-student-player).
+       Conserva header, navegación, Firebase, miniaturas y controles.
+    ========================================================= */
+    #tab-student-player .player-shell,
+    #tab-student-player .player-shell.bro-player-visual{
+      align-items:start !important;
+    }
+
+    #tab-student-player .player-main-card,
+    #tab-student-player .player-side-card{
+      margin-top:0 !important;
+      padding-top:0 !important;
+      align-self:start !important;
+    }
+
+    #tab-student-player .player-video-wrap,
+    #tab-student-player .player-side-card{
+      transform:none !important;
+    }
+
+    #tab-student-player .player-side-card{
+      top:158px !important;
+      margin-block-start:0 !important;
+    }
+
+    #tab-student-player .player-video-wrap{
+      margin-block-start:0 !important;
+    }
+
+    #tab-student-player .player-side-header{
+      min-height:72px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      justify-content:center !important;
+    }
+
+    @media (max-width:1180px){
+      #tab-student-player .player-side-card{
+        margin-top:0 !important;
+      }
+    }
 </style>
 </head>
 <body>
