@@ -13242,13 +13242,13 @@ function renderPlayer(courseId){
         const docId = escapeHtml(getFirestoreCoverDocId(thumb));
         const style = inlineData ? buildCoverInlineStyle(inlineData) : '';
         queueHydrateFirestoreCovers();
-        return `<div class="${className} lesson-thumb-has-image" data-firestore-cover-id="${docId}"${style} aria-label="Miniatura de ${escapeHtml(label)}"><span>${escapeHtml(label)}</span></div>`;
+        return `<div class="${className} lesson-thumb-has-image" data-firestore-cover-id="${docId}"${style} aria-label="Miniatura de ${escapeHtml(label)}"></div>`;
       }
       if(hasThumb){
         const finalThumb = thumb || inlineData;
-        return `<div class="${className} lesson-thumb-has-image"${buildCoverInlineStyle(finalThumb)} aria-label="Miniatura de ${escapeHtml(label)}"><span>${escapeHtml(label)}</span></div>`;
+        return `<div class="${className} lesson-thumb-has-image"${buildCoverInlineStyle(finalThumb)} aria-label="Miniatura de ${escapeHtml(label)}"></div>`;
       }
-      const placeholder = getLessonPlaceholderSvg('Clase');
+      const placeholder = getLessonPlaceholderSvg('');
       return `<div class="${className}" style="background-image:url('${placeholder}');background-size:cover;background-position:center;" aria-label="Miniatura de ${escapeHtml(label)}"></div>`;
     }
 
