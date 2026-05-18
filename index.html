@@ -8562,6 +8562,115 @@
       .youtube-progress-range{min-width:0;}
     }
 
+
+    /* === Registro público con aprobación del administrador === */
+    .auth-switch-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:14px;
+      color:var(--bro-muted, #5e6b85);
+      font-size:14px;
+      flex-wrap:wrap;
+    }
+    .auth-link-btn{
+      border:none;
+      background:transparent;
+      color:var(--bro-accent, #ff5a1f);
+      font-weight:900;
+      cursor:pointer;
+      padding:0;
+      text-decoration:none;
+    }
+    .auth-link-btn:hover{color:var(--bro-accent-2, #ff762e)}
+    .register-form{
+      margin-top:18px;
+      padding-top:18px;
+      border-top:1px solid var(--bro-line, #dfe7f3);
+    }
+    .register-form.hidden{display:none!important}
+    .register-form .login-actions{margin-top:16px}
+    .auth-message{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,90,31,.28);
+      background:rgba(255,90,31,.10);
+      color:var(--bro-text, #172033);
+      font-size:14px;
+      line-height:1.55;
+    }
+    .auth-message.success{
+      border-color:rgba(34,197,94,.25);
+      background:rgba(34,197,94,.12);
+      color:#ecfdf5;
+    }
+    .auth-message.error{
+      border-color:rgba(239,68,68,.28);
+      background:rgba(239,68,68,.12);
+      color:#fff1f2;
+    }
+    .registration-requests-panel{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .registration-request-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    .registration-request-card{
+      border:1px solid var(--bro-line, #dfe6f2);
+      background:linear-gradient(180deg,var(--bro-panel,#ffffff) 0%, var(--bro-panel-soft,#f8fbff) 100%);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 14px 28px rgba(23,37,84,.06);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-width:0;
+    }
+    .registration-request-card strong{display:block;color:var(--bro-text,#172033);line-height:1.35}
+    .registration-request-card small{display:block;color:var(--bro-muted,#667892);line-height:1.5;overflow-wrap:anywhere}
+    .registration-request-meta{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--bro-line-soft, #e7ebf5);
+      background:rgba(255,255,255,.045);
+    }
+    .registration-request-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:auto;
+    }
+    .registration-request-actions .btn{min-width:auto;padding:9px 12px}
+    .registration-badge-count{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:20px;
+      height:20px;
+      padding:0 6px;
+      margin-left:6px;
+      border-radius:999px;
+      background:var(--bro-accent,#ff5a1f);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      line-height:1;
+      vertical-align:middle;
+    }
+    .registration-badge-count.hidden{display:none!important}
+    @media (max-width:1100px){.registration-request-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media (max-width:760px){.registration-request-grid{grid-template-columns:1fr}.auth-switch-row{align-items:flex-start}}
+
 </style>
 </head>
 <body>
@@ -8588,13 +8697,48 @@
 <label>Contraseña</label>
 <input id="passwordInput" placeholder="Tu contraseña" type="password"/>
 </div>
-<div class="link-row">
-<span>Acceso privado, sin registro público</span>
+<div class="auth-switch-row">
+<span id="loginModeText">Acceso privado para alumnos autorizados.</span>
+<button class="auth-link-btn" id="btnShowRegister" type="button">Crear cuenta</button>
 </div>
 <div class="login-actions">
 <button class="btn btn-dark" type="submit">Entrar</button>
 </div>
 <div class="error hidden" id="loginError"></div>
+</form>
+<form class="register-form hidden" id="registerForm">
+<div class="login-header" style="margin-bottom:14px">
+<h2 style="font-size:24px">Crear cuenta de alumno</h2>
+<p>Regístrate y el administrador revisará tu solicitud antes de activar el acceso.</p>
+</div>
+<div class="field">
+<label>Nombre completo</label>
+<input id="registerNameInput" placeholder="Tu nombre completo" type="text"/>
+</div>
+<div class="field" style="margin-top:14px">
+<label>Correo electrónico</label>
+<input id="registerEmailInput" placeholder="tucorreo@ejemplo.com" type="email"/>
+</div>
+<div class="field" style="margin-top:14px">
+<label>Contraseña</label>
+<input id="registerPasswordInput" placeholder="Mínimo 6 caracteres" type="password"/>
+</div>
+<div class="field" style="margin-top:14px">
+<label>Confirmar contraseña</label>
+<input id="registerPasswordConfirmInput" placeholder="Repite tu contraseña" type="password"/>
+</div>
+<div class="field" style="margin-top:14px">
+<label>Curso de interés</label>
+<select id="registerCourseField"></select>
+</div>
+<div class="auth-switch-row">
+<span>Tu cuenta quedará pendiente hasta aprobación.</span>
+<button class="auth-link-btn" id="btnShowLogin" type="button">Ya tengo cuenta</button>
+</div>
+<div class="login-actions">
+<button class="btn btn-primary" id="btnSubmitRegister" type="submit">Enviar solicitud</button>
+</div>
+<div class="auth-message hidden" id="registerMessage"></div>
 </form>
 </div>
 </div>
@@ -8626,6 +8770,7 @@
 <button class="active" data-tab="admin-dashboard" onclick="showTab('admin-dashboard', this)" type="button">Resumen</button>
 <button data-tab="admin-courses" onclick="showTab('admin-courses', this)" type="button">Cursos</button>
 <button data-tab="admin-users" onclick="showTab('admin-users', this)" type="button">Usuarios</button>
+<button data-tab="admin-registrations" onclick="showTab('admin-registrations', this)" type="button">Solicitudes <span class="registration-badge-count hidden" id="adminRegistrationBadge">0</span></button>
 <button data-tab="admin-accounting" onclick="showTab('admin-accounting', this)" type="button">Contabilidad</button>
 <button data-tab="admin-create" onclick="showTab('admin-create', this)" type="button">Crear curso</button>
 <button data-tab="admin-config" onclick="showTab('admin-config', this)" type="button">Configuración</button>
@@ -9073,6 +9218,44 @@
 <span class="pill-note" id="userCardsResultCount">0 fichas</span>
 </div>
 <div class="user-cards-grid" id="usersTableBody"></div>
+</div>
+</section>
+<section class="panel section-card tab-section hidden" id="tab-admin-registrations">
+<div class="admin-head-row">
+<div>
+<span class="admin-head-kicker">Autorización de registros</span>
+<h2>Solicitudes de registro</h2>
+<p>Revisa las cuentas creadas desde el login. Puedes aprobarlas, bloquearlas o eliminarlas antes de dar acceso al campus.</p>
+</div>
+<button class="btn btn-soft" id="btnReloadRegistrationRequests" type="button">Actualizar solicitudes</button>
+</div>
+<div class="admin-user-stats">
+<div class="user-kpi kpi-pending">
+<div class="user-kpi-top"><span aria-hidden="true" class="user-kpi-icon">📝</span><small>Pendientes</small></div>
+<div class="user-kpi-main"><strong id="registrationStatPending">0</strong><span>Esperan aprobación</span></div>
+</div>
+<div class="user-kpi kpi-active">
+<div class="user-kpi-top"><span aria-hidden="true" class="user-kpi-icon">✅</span><small>Aprobadas</small></div>
+<div class="user-kpi-main"><strong id="registrationStatApproved">0</strong><span>Ya autorizadas</span></div>
+</div>
+<div class="user-kpi kpi-blocked">
+<div class="user-kpi-top"><span aria-hidden="true" class="user-kpi-icon">🔒</span><small>Bloqueadas</small></div>
+<div class="user-kpi-main"><strong id="registrationStatBlocked">0</strong><span>No pueden ingresar</span></div>
+</div>
+<div class="user-kpi kpi-total">
+<div class="user-kpi-top"><span aria-hidden="true" class="user-kpi-icon">👥</span><small>Total</small></div>
+<div class="user-kpi-main"><strong id="registrationStatTotal">0</strong><span>Solicitudes visibles</span></div>
+</div>
+</div>
+<div class="user-list-shell" style="margin-top:18px">
+<div class="user-list-head">
+<div>
+<h3>Bandeja de solicitudes</h3>
+<p>Al aprobar una solicitud, el alumno queda creado en Usuarios, se mantiene en Firebase Authentication y el estado pasa a Activo.</p>
+</div>
+<span class="pill-note" id="registrationRequestsBadge">0 solicitudes</span>
+</div>
+<div class="registration-request-grid" id="registrationRequestsList"></div>
 </div>
 </section>
 <section class="panel section-card tab-section hidden" id="tab-admin-accounting">
@@ -9708,6 +9891,12 @@
     const loginError = document.getElementById('loginError');
     const emailInput = document.getElementById('emailInput');
     const passwordInput = document.getElementById('passwordInput');
+    const registerForm = document.getElementById('registerForm');
+    const registerMessage = document.getElementById('registerMessage');
+    const registerNameInput = document.getElementById('registerNameInput');
+    const registerEmailInput = document.getElementById('registerEmailInput');
+    const registerPasswordInput = document.getElementById('registerPasswordInput');
+    const registerPasswordConfirmInput = document.getElementById('registerPasswordConfirmInput');
     const modalBackdrop = document.getElementById('modalBackdrop');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
@@ -9729,6 +9918,7 @@
     let firebaseAuth = null;
     let firebaseSecondaryApp = null;
     let firebaseSecondaryAuth = null;
+    let firebaseSecondaryDb = null;
     let firebaseAnalytics = null;
     let firebaseRemoteLoaded = false;
     let firebaseSaveTimer = null;
@@ -9743,6 +9933,7 @@
     }
     const FIREBASE_COLLECTION = 'campus';
     const FIREBASE_STATE_DOC = 'mainState';
+    const REGISTRATION_REQUESTS_COLLECTION = 'campusRegistrationRequests';
     const CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/direct-upload';
     const CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/tus-upload';
     const CLOUDFLARE_STREAM_STATUS_ENDPOINT = window.CLOUDFLARE_STREAM_STATUS_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/video-status';
@@ -9928,7 +10119,8 @@
         { id: 1002, userId: 2, courseId: 2, date: '2026-04-02', amount: 25000, method: 'Nequi', reference: 'NQ-778', registeredBy: 'Admin', type: 'Abono', status: 'Pendiente verificación', note: 'Pendiente de revisar comprobante.' },
         { id: 1003, userId: 3, courseId: 3, date: '2026-03-18', amount: 20000, method: 'Transferencia', reference: 'TRX-IA-31', registeredBy: 'Admin', type: 'Abono', status: 'Confirmado', note: 'Abono inicial aplicado.' }
       ],
-      accessRequests: [{ id: 1, courseId: 4, courseTitle: 'Automatización para WhatsApp', requestedBy: 'alumno@campus.com', status: 'Pendiente', date: 'Hoy' }]
+      accessRequests: [{ id: 1, courseId: 4, courseTitle: 'Automatización para WhatsApp', requestedBy: 'alumno@campus.com', status: 'Pendiente', date: 'Hoy' }],
+      registrationRequests: []
     };
 
     const STORAGE_KEY = 'campus_cursos_admin_premium_v23_state';
@@ -9952,7 +10144,8 @@
           courses: state.courses || [],
           users: state.users || [],
           payments: state.payments || [],
-          accessRequests: state.accessRequests || []
+          accessRequests: state.accessRequests || [],
+          registrationRequests: state.registrationRequests || []
         }),
         currentUser: state.currentUser
           ? { id: state.currentUser.id || 0, name: state.currentUser.name, email: state.currentUser.email, role: state.currentUser.role, courseId: state.currentUser.courseId || 0 }
@@ -10004,7 +10197,8 @@
         courses: Array.isArray(state.courses) ? state.courses.map(sanitizeCourseForSharedState) : [],
         users: state.users || [],
         payments: state.payments || [],
-        accessRequests: state.accessRequests || []
+        accessRequests: state.accessRequests || [],
+        registrationRequests: state.registrationRequests || []
       });
       return shared;
     }
@@ -10071,6 +10265,7 @@
           firebaseSecondaryApp = firebase.apps.find(app => app.name === 'campusAuthCreator')
             || firebase.initializeApp(firebaseConfig, 'campusAuthCreator');
           firebaseSecondaryAuth = firebase.auth(firebaseSecondaryApp);
+          try{ firebaseSecondaryDb = firebase.firestore(firebaseSecondaryApp); }catch(secondaryDbError){ console.warn('No se pudo iniciar Firestore secundario para registros.', secondaryDbError); }
         }
         try{
           if(firebase.analytics && firebaseConfig.measurementId){
@@ -10085,6 +10280,7 @@
         firebaseDb = null;
         firebaseAuth = null;
         firebaseSecondaryAuth = null;
+        firebaseSecondaryDb = null;
         return false;
       }
     }
@@ -10530,6 +10726,79 @@ function normalizeEmail(email){
   return String(email || '').trim().toLowerCase();
 }
 
+function getClientTodayDate(){
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getRegistrationDocId(email){
+  return normalizeEmail(email).replace(/[^a-z0-9_-]/g, '_') || ('request_' + Date.now());
+}
+
+function normalizeRegistrationRequest(request, index = 0){
+  const cleanEmail = normalizeEmail(request && request.email);
+  const cleanStatus = request && request.status ? String(request.status) : 'Pendiente';
+  const courseId = Number(request && request.courseId) || (state.courses[0] ? state.courses[0].id : 0);
+  const createdAt = (request && (request.createdAt || request.date)) || getClientTodayDate();
+  return {
+    id: request && request.id ? request.id : Date.now() + index,
+    docId: (request && request.docId) || getRegistrationDocId(cleanEmail),
+    name: (request && request.name) || 'Alumno sin nombre',
+    email: cleanEmail,
+    password: String((request && (request.password || request.tempPassword)) || ''),
+    courseId,
+    courseTitle: (request && request.courseTitle) || (courseById(courseId)?.title || 'Curso'),
+    status: cleanStatus,
+    createdAt,
+    updatedAt: (request && request.updatedAt) || createdAt,
+    authUid: (request && request.authUid) || '',
+    authSyncStatus: (request && request.authSyncStatus) || '',
+    reviewedAt: (request && request.reviewedAt) || '',
+    reviewedBy: (request && request.reviewedBy) || '',
+    note: (request && request.note) || ''
+  };
+}
+
+function syncRegistrationRequestsState(){
+  const raw = Array.isArray(state.registrationRequests) ? state.registrationRequests : [];
+  const byEmail = new Map();
+  raw.map(normalizeRegistrationRequest).forEach(req => {
+    if(!req.email) return;
+    const current = byEmail.get(req.email);
+    if(!current || String(req.updatedAt || req.createdAt) >= String(current.updatedAt || current.createdAt)){
+      byEmail.set(req.email, req);
+    }
+  });
+  state.registrationRequests = Array.from(byEmail.values()).sort((a, b) => {
+    const order = { Pendiente: 0, Bloqueado: 1, Aprobado: 2 };
+    const statusCompare = (order[a.status] ?? 9) - (order[b.status] ?? 9);
+    if(statusCompare !== 0) return statusCompare;
+    return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  });
+}
+
+function getRegistrationRequests(){
+  syncRegistrationRequestsState();
+  return state.registrationRequests || [];
+}
+
+function getPendingRegistrationRequests(){
+  return getRegistrationRequests().filter(request => request.status === 'Pendiente');
+}
+
+function updateRegistrationBadges(){
+  const pending = getPendingRegistrationRequests().length;
+  const badge = document.getElementById('adminRegistrationBadge');
+  if(badge){
+    badge.textContent = String(pending);
+    badge.classList.toggle('hidden', pending <= 0);
+  }
+  const usersHint = document.getElementById('registrationRequestsBadge');
+  if(usersHint){
+    const total = getRegistrationRequests().length;
+    usersHint.textContent = `${total} solicitud${total === 1 ? '' : 'es'} · ${pending} pendiente${pending === 1 ? '' : 's'}`;
+  }
+}
+
 function findStudentUserByEmail(email){
   const target = normalizeEmail(email);
   if(!target) return null;
@@ -10586,6 +10855,7 @@ function syncUsersState(){
   state.users = (state.users || []).map((user, index) => normalizeUserRecord(user, index));
   ensureDefaultStudentUser();
   ensureDefaultAdminProfile();
+  syncRegistrationRequestsState();
 }
 
 function normalizeCourseVisibility(){
@@ -11230,6 +11500,7 @@ function renderAdminUsersSummary(filteredUsers = getFilteredUsers()){
       ? `${total} usuarios`
       : `${filteredUsers.length} de ${total} usuarios`;
   }
+  updateRegistrationBadges();
 }
 
 function refreshUsersSection(){
@@ -11239,6 +11510,7 @@ function refreshUsersSection(){
   renderAdminUsersSummary();
   renderAccountingSection();
   renderAdminDashboard();
+  renderRegistrationRequests();
   renderAdminProgress();
 }
 
@@ -11563,6 +11835,7 @@ function renderAdminDashboard(){
       const resources = Array.isArray(state.resources) ? state.resources : [];
       const certificates = Array.isArray(state.certificates) ? state.certificates : [];
       const accessRequests = Array.isArray(state.accessRequests) ? state.accessRequests : [];
+      const registrationRequests = Array.isArray(state.registrationRequests) ? state.registrationRequests : [];
       const admins = Array.isArray(state.admins) ? state.admins : [];
       const activity = Array.isArray(state.activityLog) ? state.activityLog : [];
       const favorites = Array.isArray(state.favorites) ? state.favorites : [];
@@ -11579,7 +11852,9 @@ function renderAdminDashboard(){
       const cloudflareVideos = allLessons.filter(item => getVideoProviderLabel(item.url || '') === 'Cloudflare Stream').length;
       const confirmedPaymentsCount = payments.filter(payment => payment.status === 'Confirmado').length;
       const pendingPaymentCount = payments.filter(payment => payment.status !== 'Confirmado').length;
-      const pendingRequestsCount = accessRequests.filter(request => String(request.status || '').toLowerCase().includes('pendiente')).length;
+      const pendingAccessRequestsCount = accessRequests.filter(request => String(request.status || '').toLowerCase().includes('pendiente')).length;
+      const pendingRegistrationRequestsCount = registrationRequests.filter(request => String(request.status || '') === 'Pendiente').length;
+      const pendingRequestsCount = pendingAccessRequestsCount + pendingRegistrationRequestsCount;
       const visibleResources = resources.filter(resource => courseById(resource.courseId)).length;
       const currentCourse = courseById(state.currentCourseId);
 
@@ -11645,7 +11920,7 @@ function renderAdminDashboard(){
       setTextById('adminSummaryPaymentsText', `${confirmedPaymentsCount} confirmado${confirmedPaymentsCount === 1 ? '' : 's'} · ${pendingPaymentCount} por verificar.`);
       setTextById('adminSummaryResourcesText', `${visibleResources} recurso${visibleResources === 1 ? '' : 's'} vinculado${visibleResources === 1 ? '' : 's'} a cursos existentes.`);
       setTextById('adminSummaryCertificatesText', certificates.length ? 'Certificados generados automáticamente por avance.' : 'Aún no hay certificados generados.');
-      setTextById('adminSummaryRequestsText', pendingRequestsCount ? `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} pendiente${pendingRequestsCount === 1 ? '' : 's'} de revisión.` : 'Sin solicitudes pendientes.');
+      setTextById('adminSummaryRequestsText', pendingRequestsCount ? `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} pendiente${pendingRequestsCount === 1 ? '' : 's'} de revisión · ${pendingRegistrationRequestsCount} registro${pendingRegistrationRequestsCount === 1 ? '' : 's'} nuevo${pendingRegistrationRequestsCount === 1 ? '' : 's'}.` : 'Sin solicitudes pendientes.');
       setTextById('adminSummaryAdminsText', `${admins.length} perfil${admins.length === 1 ? '' : 'es'} con acceso administrativo.`);
 
       const collectedHint = document.getElementById('adminFinanceCollectedHint');
@@ -11738,7 +12013,7 @@ function renderAdminDashboard(){
         alerts.push(buildDashboardListItem('Pagos por verificar', `${pendingPaymentCount} movimiento${pendingPaymentCount === 1 ? '' : 's'} financiero${pendingPaymentCount === 1 ? '' : 's'} no está${pendingPaymentCount === 1 ? '' : 'n'} confirmado${pendingPaymentCount === 1 ? '' : 's'}.`, String(pendingPaymentCount), 'pagos', 'warning'));
       }
       if(pendingRequestsCount > 0){
-        alerts.push(buildDashboardListItem('Solicitudes de acceso', `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} espera${pendingRequestsCount === 1 ? '' : 'n'} aprobación o respuesta.`, String(pendingRequestsCount), 'solicitudes', 'info'));
+        alerts.push(buildDashboardListItem('Solicitudes pendientes', `${pendingRequestsCount} solicitud${pendingRequestsCount === 1 ? '' : 'es'} espera${pendingRequestsCount === 1 ? '' : 'n'} aprobación o respuesta. Incluye ${pendingRegistrationRequestsCount} registro${pendingRegistrationRequestsCount === 1 ? '' : 's'} nuevo${pendingRegistrationRequestsCount === 1 ? '' : 's'}.`, String(pendingRequestsCount), 'solicitudes', 'info'));
       }
       if(avgProgress < 40 && users.length){
         alerts.push(buildDashboardListItem('Avance académico bajo', `El promedio general es ${avgProgress}%. Conviene activar seguimiento a alumnos.`, `${avgProgress}%`, 'avance', 'warning'));
@@ -11836,6 +12111,11 @@ function fillCourseSelects(){
   const filterSelect = document.getElementById('userCourseFilter');
   if(filterSelect){
     filterSelect.innerHTML = `<option value="0">Todos los cursos</option>` + state.courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+  }
+  const publicRegisterCourseSelect = document.getElementById('registerCourseField');
+  if(publicRegisterCourseSelect){
+    const visibleCourses = getVisibleCourses().length ? getVisibleCourses() : state.courses;
+    publicRegisterCourseSelect.innerHTML = visibleCourses.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('') || '<option value="0">Sin cursos disponibles</option>';
   }
   const accountingFilterSelect = document.getElementById('accountingCourseFilter');
   if(accountingFilterSelect){
@@ -14494,6 +14774,7 @@ function renderPlayer(courseId){
       if(tabId === 'admin-courses') renderAdminCourses();
       if(tabId === 'admin-accounting') renderAccountingSection();
       if(tabId === 'admin-users') renderUsersTable();
+      if(tabId === 'admin-registrations') renderRegistrationRequests();
       if(tabId === 'student-courses') renderStudentAssignedCourses();
       if(tabId === 'student-discover') renderStudentDiscover();
       if(tabId === 'student-progress') renderStudentProgress();
@@ -14565,9 +14846,11 @@ function renderPlayer(courseId){
         const firstBtn = menuAdmin.querySelector('button[data-tab="admin-dashboard"]');
         if(firstBtn) firstBtn.classList.add('active');
         document.getElementById('tab-admin-dashboard').classList.remove('hidden');
+        await loadRegistrationRequestsFromFirestore({ silent: true });
         renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
+        renderRegistrationRequests();
       }else{
         roleChip.textContent = 'ALUMNO';
         sideRoleBadge.textContent = 'Alumno';
@@ -14601,6 +14884,8 @@ function renderPlayer(courseId){
       passwordInput.value = '';
       loginError.classList.add('hidden');
       loginError.textContent = '';
+      if(registerMessage){ registerMessage.classList.add('hidden'); registerMessage.textContent = ''; registerMessage.classList.remove('success','error'); }
+      setAuthMode('login');
     }
 
     function fillDemo(type){
@@ -14811,6 +15096,362 @@ function renderPlayer(courseId){
         ok: true,
         user: buildStudentSessionUser(user)
       };
+    }
+
+
+    function setAuthMode(mode){
+      const loginVisible = mode !== 'register';
+      if(loginForm) loginForm.classList.toggle('hidden', !loginVisible);
+      if(registerForm) registerForm.classList.toggle('hidden', loginVisible);
+      if(loginError){ loginError.classList.add('hidden'); loginError.textContent = ''; }
+      if(registerMessage){ registerMessage.classList.add('hidden'); registerMessage.textContent = ''; registerMessage.classList.remove('success','error'); }
+      fillCourseSelects();
+      setTimeout(() => {
+        if(loginVisible) emailInput?.focus();
+        else registerNameInput?.focus();
+      }, 50);
+    }
+
+    function setRegisterMessage(message, type = 'success'){
+      if(!registerMessage) return;
+      registerMessage.textContent = message;
+      registerMessage.classList.remove('hidden','success','error');
+      registerMessage.classList.add(type === 'error' ? 'error' : 'success');
+    }
+
+    async function writeRegistrationRequestToFirestore(request, useSecondary = false){
+      if(!initFirebaseConnection()) return { ok: false, reason: 'no_firebase' };
+      const db = useSecondary && firebaseSecondaryDb ? firebaseSecondaryDb : firebaseDb;
+      if(!db) return { ok: false, reason: 'no_db' };
+      try{
+        const payload = { ...request };
+        payload.updatedAtClient = new Date().toISOString();
+        if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+          payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        await db.collection(REGISTRATION_REQUESTS_COLLECTION).doc(request.docId || getRegistrationDocId(request.email)).set(payload, { merge: true });
+        return { ok: true };
+      }catch(error){
+        console.warn('No se pudo guardar la solicitud de registro en Firestore.', error);
+        return { ok: false, error, message: error.message || 'No se pudo guardar en Firestore.' };
+      }
+    }
+
+    async function createAuthAndRegistrationRequest({ name, email, password, courseId }){
+      const cleanEmail = normalizeEmail(email);
+      const selectedCourse = courseById(courseId) || getVisibleCourses()[0] || state.courses[0] || {};
+      const request = normalizeRegistrationRequest({
+        id: Date.now(),
+        docId: getRegistrationDocId(cleanEmail),
+        name,
+        email: cleanEmail,
+        password,
+        courseId: Number(selectedCourse.id) || 0,
+        courseTitle: selectedCourse.title || 'Curso',
+        status: 'Pendiente',
+        createdAt: getClientTodayDate(),
+        updatedAt: getClientTodayDate(),
+        note: 'Solicitud creada desde el login.'
+      });
+
+      if(!firebaseSecondaryAuth){
+        initFirebaseConnection();
+      }
+      let authResult = { ok: false, message: 'Firebase Authentication no está listo.' };
+      if(firebaseSecondaryAuth){
+        await signOutSecondaryAuth();
+        try{
+          const credential = await firebaseSecondaryAuth.createUserWithEmailAndPassword(cleanEmail, password);
+          if(credential.user && credential.user.updateProfile){
+            await credential.user.updateProfile({ displayName: name || cleanEmail });
+          }
+          request.authUid = credential.user ? credential.user.uid : '';
+          request.authSyncStatus = 'Creado en Firebase Authentication desde registro público.';
+          authResult = { ok: true, created: true };
+          await writeRegistrationRequestToFirestore(request, true);
+          await signOutSecondaryAuth();
+        }catch(error){
+          if(error && error.code === 'auth/email-already-in-use'){
+            request.authSyncStatus = 'El correo ya existía en Firebase Authentication. Se envió para revisión del administrador.';
+            authResult = { ok: true, exists: true };
+            try{
+              const credential = await firebaseSecondaryAuth.signInWithEmailAndPassword(cleanEmail, password);
+              request.authUid = credential.user ? credential.user.uid : '';
+              await writeRegistrationRequestToFirestore(request, true);
+              await signOutSecondaryAuth();
+            }catch(signInError){
+              await signOutSecondaryAuth();
+              await writeRegistrationRequestToFirestore(request, false);
+            }
+          }else{
+            await signOutSecondaryAuth();
+            authResult = { ok: false, message: getFirebaseAuthMessage(error), error };
+          }
+        }
+      }
+
+      const existingIndex = (state.registrationRequests || []).findIndex(item => normalizeEmail(item.email) === cleanEmail);
+      if(existingIndex >= 0) state.registrationRequests.splice(existingIndex, 1, request);
+      else state.registrationRequests.unshift(request);
+      syncRegistrationRequestsState();
+      saveState({ localOnly: true });
+      updateRegistrationBadges();
+      return { request, authResult };
+    }
+
+    async function handlePublicRegistration(e){
+      e.preventDefault();
+      const name = (registerNameInput?.value || '').trim();
+      const email = normalizeEmail(registerEmailInput?.value || '');
+      const password = (registerPasswordInput?.value || '').trim();
+      const passwordConfirm = (registerPasswordConfirmInput?.value || '').trim();
+      const courseId = Number(document.getElementById('registerCourseField')?.value || 0);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!name){ setRegisterMessage('Escribe tu nombre completo.', 'error'); return; }
+      if(!emailRegex.test(email)){ setRegisterMessage('Ingresa un correo válido.', 'error'); return; }
+      if(password.length < 6){ setRegisterMessage('La contraseña debe tener mínimo 6 caracteres.', 'error'); return; }
+      if(password !== passwordConfirm){ setRegisterMessage('Las contraseñas no coinciden.', 'error'); return; }
+      if(findStudentUserByEmail(email)){
+        setRegisterMessage('Este correo ya tiene una ficha dentro del campus. Intenta iniciar sesión o contacta al administrador.', 'error');
+        return;
+      }
+      const submitBtn = document.getElementById('btnSubmitRegister');
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Enviando solicitud...'; }
+      try{
+        const result = await createAuthAndRegistrationRequest({ name, email, password, courseId });
+        if(result.authResult && result.authResult.ok){
+          setRegisterMessage('Solicitud enviada. Tu cuenta ya quedó registrada y ahora espera aprobación del administrador.', 'success');
+        }else{
+          setRegisterMessage('Solicitud guardada para revisión. Revisa Firebase Authentication porque la cuenta no se pudo crear automáticamente: ' + (result.authResult?.message || 'sin detalle'), 'error');
+        }
+        if(registerForm) registerForm.reset();
+        fillCourseSelects();
+      }catch(error){
+        console.error('Error creando solicitud de registro.', error);
+        setRegisterMessage(error.message || 'No se pudo enviar la solicitud. Intenta nuevamente.', 'error');
+      }finally{
+        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Enviar solicitud'; }
+      }
+    }
+
+    async function loadRegistrationRequestsFromFirestore(options = {}){
+      const silent = Boolean(options.silent);
+      if(!initFirebaseConnection() || !firebaseDb) return false;
+      try{
+        const snapshot = await firebaseDb.collection(REGISTRATION_REQUESTS_COLLECTION).get();
+        const remoteRequests = [];
+        snapshot.forEach(doc => remoteRequests.push(normalizeRegistrationRequest({ ...doc.data(), docId: doc.id })));
+        if(remoteRequests.length){
+          const merged = new Map((state.registrationRequests || []).map(req => [normalizeEmail(req.email), normalizeRegistrationRequest(req)]));
+          remoteRequests.forEach(req => merged.set(normalizeEmail(req.email), req));
+          state.registrationRequests = Array.from(merged.values());
+          syncRegistrationRequestsState();
+          saveState({ localOnly: true });
+        }
+        updateRegistrationBadges();
+        renderRegistrationRequests();
+        return true;
+      }catch(error){
+        console.warn('No se pudieron cargar solicitudes de registro desde Firestore.', error);
+        if(!silent) toast('No se pudieron cargar solicitudes desde Firestore. Revisa reglas de lectura.');
+        updateRegistrationBadges();
+        return false;
+      }
+    }
+
+    async function saveRegistrationRequestReview(request){
+      if(!request) return false;
+      const saved = await writeRegistrationRequestToFirestore(request, false);
+      return saved.ok;
+    }
+
+    function registrationStatusClass(status){
+      if(status === 'Aprobado') return 'status-ok';
+      if(status === 'Bloqueado') return 'status-lock';
+      return 'status-pending';
+    }
+
+    function renderRegistrationRequests(){
+      const list = document.getElementById('registrationRequestsList');
+      const requests = getRegistrationRequests();
+      const pending = requests.filter(r => r.status === 'Pendiente').length;
+      const approved = requests.filter(r => r.status === 'Aprobado').length;
+      const blocked = requests.filter(r => r.status === 'Bloqueado').length;
+      const total = requests.length;
+      const stats = { registrationStatPending: pending, registrationStatApproved: approved, registrationStatBlocked: blocked, registrationStatTotal: total };
+      Object.entries(stats).forEach(([id, value]) => { const el = document.getElementById(id); if(el) el.textContent = value; });
+      updateRegistrationBadges();
+      if(!list) return;
+      if(!requests.length){
+        list.innerHTML = '<div class="empty-state">No hay solicitudes de registro pendientes. Cuando alguien cree una cuenta desde el login, aparecerá aquí.</div>';
+        return;
+      }
+      list.innerHTML = requests.map(request => {
+        const course = courseById(request.courseId) || { title: request.courseTitle || 'Curso' };
+        const alreadyUser = findStudentUserByEmail(request.email);
+        const approveDisabled = request.status === 'Aprobado' ? 'disabled' : '';
+        const blockDisabled = request.status === 'Bloqueado' ? 'disabled' : '';
+        return `
+          <article class="registration-request-card">
+            <div>
+              <strong>${escapeHtml(request.name)}</strong>
+              <small>${escapeHtml(request.email)}</small>
+            </div>
+            <div class="registration-request-meta">
+              <small>Curso solicitado: <strong>${escapeHtml(course.title || request.courseTitle || 'Curso')}</strong></small>
+              <small>Fecha: ${escapeHtml(formatDateLabel(request.createdAt))}</small>
+              <small>Authentication: ${escapeHtml(request.authSyncStatus || (request.authUid ? 'Creado' : 'Pendiente de validar'))}</small>
+              ${alreadyUser ? '<small>Ya existe ficha de usuario en el campus.</small>' : ''}
+            </div>
+            <div class="user-chip-row">
+              <span class="status ${registrationStatusClass(request.status)}">${escapeHtml(request.status)}</span>
+            </div>
+            <div class="registration-request-actions">
+              <button class="btn btn-primary btn-sm" type="button" onclick="approveRegistrationRequest('${escapeHtml(request.docId)}')" ${approveDisabled}>Aprobar</button>
+              <button class="btn btn-soft btn-sm" type="button" onclick="blockRegistrationRequest('${escapeHtml(request.docId)}')" ${blockDisabled}>Bloquear</button>
+              <button class="btn btn-danger btn-sm" type="button" onclick="deleteRegistrationRequest('${escapeHtml(request.docId)}')">Eliminar</button>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function findRegistrationRequestByDocId(docId){
+      const cleanId = String(docId || '');
+      return getRegistrationRequests().find(request => String(request.docId) === cleanId || getRegistrationDocId(request.email) === cleanId) || null;
+    }
+
+    async function approveRegistrationRequest(docId){
+      const request = findRegistrationRequestByDocId(docId);
+      if(!request) return;
+      const course = courseById(request.courseId) || getVisibleCourses()[0] || state.courses[0] || {};
+      let user = findStudentUserByEmail(request.email);
+      const password = String(request.password || DEMO_USERS.student.password || '123456');
+      if(!user){
+        user = normalizeUserRecord({
+          id: Date.now(),
+          name: request.name,
+          email: request.email,
+          password,
+          courseId: Number(course.id) || 0,
+          assignedCourseIds: Number(course.id) ? [Number(course.id)] : [],
+          status: 'Activo',
+          accessStatus: 'Activo',
+          accessLockedByAdmin: false,
+          financialStatus: 'Sin cobrar',
+          lastAccess: 'Cuenta aprobada por admin',
+          progress: 0,
+          lastLesson: 'Sin avance',
+          joinedAt: getClientTodayDate(),
+          dueDate: addDays(getClientTodayDate(), 7),
+          totalToPay: estimateCoursePrice(course),
+          paymentPlan: course.paymentType || 'Único',
+          accessPolicy: 'inmediato',
+          collectorNote: 'Registro aprobado desde solicitudes.'
+        });
+        state.users.unshift(user);
+      }else{
+        user.name = request.name || user.name;
+        user.password = password || user.password;
+        user.courseId = Number(course.id) || user.courseId;
+        user.assignedCourseIds = Array.from(new Set([...(user.assignedCourseIds || []), Number(course.id)].filter(Boolean)));
+        user.status = 'Activo';
+        user.accessStatus = 'Activo';
+        user.accessEnabled = true;
+        user.accessLockedByAdmin = false;
+        user.accessPolicy = user.accessPolicy || 'inmediato';
+        user.lastAccess = 'Cuenta aprobada por admin';
+      }
+      const authResult = await ensureFirebaseAuthUserForAccount({ email: request.email, password, name: request.name, role: 'student' }, { email: request.email, password });
+      if(authResult && authResult.ok){
+        user.authUid = authResult.uid || request.authUid || user.authUid || '';
+        user.authSyncedAt = new Date().toISOString();
+        user.authSyncStatus = authResult.message || 'Sincronizado con Authentication.';
+      }
+      request.status = 'Aprobado';
+      request.reviewedAt = getClientTodayDate();
+      request.reviewedBy = state.currentUser?.email || 'admin';
+      request.updatedAt = getClientTodayDate();
+      request.note = 'Solicitud aprobada y usuario autorizado.';
+      request.authUid = user.authUid || request.authUid || '';
+      request.authSyncStatus = user.authSyncStatus || request.authSyncStatus || 'Aprobado.';
+      syncUsersState();
+      saveState();
+      await saveSharedStateToFirebaseNow();
+      await saveRegistrationRequestReview(request);
+      refreshUsersSection();
+      renderRegistrationRequests();
+      addActivity('Se aprobó el registro de ' + request.name);
+      toast('Registro aprobado y alumno activado.');
+    }
+
+    async function blockRegistrationRequest(docId){
+      const request = findRegistrationRequestByDocId(docId);
+      if(!request) return;
+      const course = courseById(request.courseId) || state.courses[0] || {};
+      let user = findStudentUserByEmail(request.email);
+      if(!user){
+        user = normalizeUserRecord({
+          id: Date.now(),
+          name: request.name,
+          email: request.email,
+          password: request.password || DEMO_USERS.student.password || '123456',
+          courseId: Number(course.id) || 0,
+          assignedCourseIds: Number(course.id) ? [Number(course.id)] : [],
+          status: 'Bloqueado',
+          accessStatus: 'Bloqueado',
+          accessLockedByAdmin: true,
+          financialStatus: 'Cancelado',
+          lastAccess: 'Registro bloqueado por admin',
+          progress: 0,
+          lastLesson: 'Sin avance',
+          joinedAt: getClientTodayDate(),
+          dueDate: addDays(getClientTodayDate(), 7),
+          totalToPay: estimateCoursePrice(course),
+          paymentPlan: course.paymentType || 'Único',
+          accessPolicy: 'pago_completo',
+          collectorNote: 'Registro bloqueado antes de aprobación.'
+        });
+        state.users.unshift(user);
+      }else{
+        user.status = 'Bloqueado';
+        user.accessStatus = 'Bloqueado';
+        user.accessEnabled = false;
+        user.accessLockedByAdmin = true;
+        user.lastAccess = 'Registro bloqueado por admin';
+      }
+      request.status = 'Bloqueado';
+      request.reviewedAt = getClientTodayDate();
+      request.reviewedBy = state.currentUser?.email || 'admin';
+      request.updatedAt = getClientTodayDate();
+      request.note = 'Solicitud bloqueada por el administrador.';
+      syncUsersState();
+      saveState();
+      await saveSharedStateToFirebaseNow();
+      await saveRegistrationRequestReview(request);
+      refreshUsersSection();
+      renderRegistrationRequests();
+      addActivity('Se bloqueó el registro de ' + request.name);
+      toast('Registro bloqueado.');
+    }
+
+    async function deleteRegistrationRequest(docId){
+      const request = findRegistrationRequestByDocId(docId);
+      if(!request) return;
+      const ok = window.confirm(`¿Eliminar la solicitud de ${request.name}? Se quitará de la bandeja de revisión.`);
+      if(!ok) return;
+      state.registrationRequests = (state.registrationRequests || []).filter(item => String(item.docId) !== String(docId));
+      saveState();
+      try{
+        if(initFirebaseConnection() && firebaseDb){
+          await firebaseDb.collection(REGISTRATION_REQUESTS_COLLECTION).doc(request.docId || getRegistrationDocId(request.email)).delete();
+        }
+      }catch(error){
+        console.warn('No se pudo eliminar la solicitud en Firestore.', error);
+        toast('Se eliminó localmente, pero Firestore no permitió borrar la solicitud.');
+      }
+      renderRegistrationRequests();
+      renderAdminDashboard();
+      toast('Solicitud eliminada de la bandeja.');
     }
 
     loginForm.addEventListener('submit', async function(e){
@@ -15686,6 +16327,7 @@ function renderPlayer(courseId){
       renderAdminDashboard();
       renderUsersTable();
       renderAdminUsersSummary();
+      renderRegistrationRequests();
       renderAccountingSection();
       renderStudentDiscover();
       renderStudentAssignedCourses();
@@ -16587,6 +17229,14 @@ function bindButtons(){
       byId('btnQuickEditCover')?.addEventListener('click', quickEditCover);
       byId('btnNewCourseTop')?.addEventListener('click', () => showTab('admin-create'));
       byId('btnCreateUserTop')?.addEventListener('click', () => openUserFormModal());
+      byId('btnShowRegister')?.addEventListener('click', () => setAuthMode('register'));
+      byId('btnShowLogin')?.addEventListener('click', () => setAuthMode('login'));
+      byId('registerForm')?.addEventListener('submit', handlePublicRegistration);
+      byId('btnReloadRegistrationRequests')?.addEventListener('click', async () => {
+        await loadRegistrationRequestsFromFirestore({ silent: false });
+        renderRegistrationRequests();
+        toast('Solicitudes actualizadas.');
+      });
 
       byId('courseSearchInput')?.addEventListener('input', renderAdminCourses);
       byId('courseFilterStatus')?.addEventListener('change', renderAdminCourses);
@@ -16981,6 +17631,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     renderAdminCourses();
     renderUsersTable();
     renderAdminUsersSummary();
+    renderRegistrationRequests();
     renderAccountingSection();
     renderStudentAssignedCourses();
     renderStudentDiscover();
@@ -17010,6 +17661,9 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.toggleUserStatus = toggleUserStatus;
     window.copyUserPassword = copyUserPassword;
     window.deleteUser = deleteUser;
+    window.approveRegistrationRequest = approveRegistrationRequest;
+    window.blockRegistrationRequest = blockRegistrationRequest;
+    window.deleteRegistrationRequest = deleteRegistrationRequest;
     window.requestAccess = requestAccess;
     window.prepareCourseCheckout = prepareCourseCheckout;
     window.openCoursePurchaseModal = openCoursePurchaseModal;
