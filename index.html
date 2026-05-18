@@ -12158,7 +12158,8 @@ function toggleUserCard(userId, event){
       shadingCleared: false,
       activeUrl: '',
       lessonTitle: '',
-      courseTitle: ''
+      courseTitle: '',
+      stateListenerBound: false
     };
 
     function isLocalFileMode(){
@@ -12951,6 +12952,80 @@ function toggleUserCard(userId, event){
       iframe.contentWindow.postMessage(payload, '*');
     }
 
+    function parseYoutubeMessageData(data){
+      if(!data) return null;
+      if(typeof data === 'string'){
+        try{ return JSON.parse(data); } catch(err){ return null; }
+      }
+      return typeof data === 'object' ? data : null;
+    }
+
+    function syncYoutubeStateFromPlayerState(playerState){
+      const stateValue = Number(playerState);
+      if(!Number.isFinite(stateValue)) return;
+
+      // YouTube: -1 sin iniciar, 0 finalizado, 1 reproduciendo, 2 pausado, 5 listo.
+      if(stateValue === 1){
+        youtubeCustomState.playing = true;
+        startYoutubeClock();
+        setYoutubePlayButtonState(true);
+        return;
+      }
+
+      if(stateValue === 0){
+        youtubeCustomState.playing = false;
+        stopYoutubeClock();
+        clearLessonAutoCompleteTimer();
+        setYoutubePlayButtonState(false);
+        completeCurrentLessonFromViewing('youtube-ended');
+        return;
+      }
+
+      if(stateValue === 2 || stateValue === -1 || stateValue === 5){
+        youtubeCustomState.playing = false;
+        stopYoutubeClock();
+        clearLessonAutoCompleteTimer();
+        setYoutubePlayButtonState(false);
+      }
+    }
+
+    function handleYoutubePlayerMessage(event){
+      const iframe = youtubeCustomState.iframe;
+      if(!iframe || event.source !== iframe.contentWindow) return;
+      const payload = parseYoutubeMessageData(event.data);
+      if(!payload) return;
+
+      if(payload.info && typeof payload.info.currentTime !== 'undefined'){
+        const current = Number(payload.info.currentTime);
+        if(Number.isFinite(current)) youtubeCustomState.currentTime = Math.max(0, current);
+      }
+
+      if(payload.event === 'onStateChange'){
+        syncYoutubeStateFromPlayerState(payload.info);
+        return;
+      }
+
+      if(payload.event === 'infoDelivery' && payload.info && typeof payload.info.playerState !== 'undefined'){
+        syncYoutubeStateFromPlayerState(payload.info.playerState);
+      }
+    }
+
+    function bindYoutubePlayerStateListener(){
+      if(youtubeCustomState.stateListenerBound) return;
+      youtubeCustomState.stateListenerBound = true;
+      window.addEventListener('message', handleYoutubePlayerMessage);
+    }
+
+    function sendYoutubeListeningHandshake(iframe){
+      const target = iframe || youtubeCustomState.iframe || document.getElementById('playerIframe');
+      if(!target || !target.contentWindow) return;
+      const playerId = target.id || 'playerIframe';
+      try{
+        target.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: playerId }), '*');
+        target.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+      } catch(err){}
+    }
+
     function startYoutubeClock(){
       stopYoutubeClock();
       youtubeCustomState.lastTick = Date.now();
@@ -12983,6 +13058,7 @@ function toggleUserCard(userId, event){
 
     function prepareYoutubeCustomControls(iframe, url){
       stopYoutubeClock();
+      bindYoutubePlayerStateListener();
       youtubeCustomState.iframe = iframe || document.getElementById('playerIframe');
       youtubeCustomState.playing = false;
       youtubeCustomState.currentTime = 0;
@@ -13000,8 +13076,10 @@ function toggleUserCard(userId, event){
         showYoutubeUiTemporarily({ showTitle: true, titleDelay: 4000, controlsDelay: 5200 });
       }
       window.setTimeout(() => {
+        sendYoutubeListeningHandshake(iframe);
         sendYoutubePlayerCommand('pauseVideo');
       }, 450);
+      window.setTimeout(() => sendYoutubeListeningHandshake(iframe), 1100);
     }
 
     function toggleYoutubePlayPause(){
@@ -13017,7 +13095,7 @@ function toggleUserCard(userId, event){
         sendYoutubePlayerCommand('playVideo');
         youtubeCustomState.playing = true;
         startYoutubeClock();
-        scheduleCurrentLessonAutoComplete(9000, 'youtube');
+        // No se marca la clase por tiempo. El check se hace solo al finalizar el video.
         setYoutubePlayButtonState(true);
       }
     }
@@ -13052,25 +13130,18 @@ function toggleUserCard(userId, event){
       if(!video || video.dataset.lessonProgressBound === 'true') return;
       video.dataset.lessonProgressBound = 'true';
 
-      const shouldMarkByWatchTime = () => {
-        const current = Number(video.currentTime) || 0;
-        const duration = Number(video.duration) || 0;
-        return current >= 8 || (duration > 0 && current / duration >= 0.72);
-      };
-
       video.addEventListener('play', () => {
-        scheduleCurrentLessonAutoComplete(9000, 'video');
+        clearLessonAutoCompleteTimer();
       });
       video.addEventListener('pause', () => {
         clearLessonAutoCompleteTimer();
       });
       video.addEventListener('timeupdate', () => {
-        if(shouldMarkByWatchTime()){
-          completeCurrentLessonFromViewing('video');
-        }
+        // Se eliminó el marcado por porcentaje o segundos vistos.
+        // La clase solo se chulea cuando el navegador dispara el evento ended.
       });
       video.addEventListener('ended', () => {
-        completeCurrentLessonFromViewing('video');
+        completeCurrentLessonFromViewing('video-ended');
       });
     }
 
