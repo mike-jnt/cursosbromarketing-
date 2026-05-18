@@ -9515,6 +9515,14 @@
     let firebaseRemoteLoaded = false;
     let firebaseSaveTimer = null;
     let firebaseAuthSyncStarted = false;
+    let lessonAutoCompleteTimer = null;
+
+    function clearLessonAutoCompleteTimer(){
+      if(lessonAutoCompleteTimer){
+        window.clearTimeout(lessonAutoCompleteTimer);
+        lessonAutoCompleteTimer = null;
+      }
+    }
     const FIREBASE_COLLECTION = 'campus';
     const FIREBASE_STATE_DOC = 'mainState';
     const CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/direct-upload';
@@ -9829,7 +9837,7 @@
         // Si el SDK ya fue usado por otra función, se omite sin romper la conexión.
         try{
           if(!window.__campusFirestoreSettingsApplied){
-            firebaseDb.settings({ ignoreUndefinedProperties: true });
+            firebaseDb.settings({ ignoreUndefinedProperties: true, merge: true });
             window.__campusFirestoreSettingsApplied = true;
           }
         }catch(settingsError){
