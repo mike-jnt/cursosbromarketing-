@@ -8650,6 +8650,61 @@
       background:rgba(239,68,68,.12);
       color:#fff1f2;
     }
+
+    .registration-pending-screen{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      margin-top:18px;
+      padding:20px;
+      border-radius:18px;
+      border:1px solid rgba(255,90,31,.24);
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.13), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.035) 100%);
+      box-shadow:0 18px 34px rgba(0,0,0,.18);
+    }
+    .registration-pending-screen.hidden{display:none!important}
+    .registration-pending-icon{
+      width:48px;
+      height:48px;
+      display:grid;
+      place-items:center;
+      border-radius:16px;
+      background:rgba(255,90,31,.16);
+      border:1px solid rgba(255,90,31,.30);
+      color:#ff8a46;
+      font-size:22px;
+      font-weight:900;
+    }
+    .registration-pending-screen h2{
+      margin:0;
+      color:#ffffff;
+      font-size:24px;
+      line-height:1.15;
+      letter-spacing:-.02em;
+    }
+    .registration-pending-screen p{
+      margin:0;
+      color:var(--bro-muted, #d8d4dc);
+      line-height:1.6;
+      font-size:14px;
+    }
+    .registration-pending-screen .pending-email{
+      color:#ffffff;
+      font-weight:800;
+      overflow-wrap:anywhere;
+    }
+    .registration-pending-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    .registration-pending-actions .btn{
+      width:100%;
+      justify-content:center;
+    }
     .registration-requests-panel{
       display:flex;
       flex-direction:column;
@@ -9155,6 +9210,15 @@
 </div>
 <div class="auth-message hidden" id="registerMessage"></div>
 </form>
+<div class="registration-pending-screen hidden" id="registrationPendingScreen">
+<div class="registration-pending-icon" aria-hidden="true">✓</div>
+<h2>Tu cuenta quedó pendiente por aprobación</h2>
+<p>La solicitud fue enviada correctamente. El administrador revisará tu registro y activará tu acceso cuando sea aprobado.</p>
+<p id="registrationPendingEmail" class="pending-email"></p>
+<div class="registration-pending-actions">
+<button class="btn btn-primary" id="btnBackToLoginAfterRegister" type="button">Regresar al inicio de sesión</button>
+</div>
+</div>
 </div>
 </div>
 </section>
@@ -10320,6 +10384,8 @@
     const passwordInput = document.getElementById('passwordInput');
     const registerForm = document.getElementById('registerForm');
     const registerMessage = document.getElementById('registerMessage');
+    const registrationPendingScreen = document.getElementById('registrationPendingScreen');
+    const registrationPendingEmail = document.getElementById('registrationPendingEmail');
     const registerNameInput = document.getElementById('registerNameInput');
     const registerEmailInput = document.getElementById('registerEmailInput');
     const registerPasswordInput = document.getElementById('registerPasswordInput');
@@ -15809,6 +15875,7 @@ function renderPlayer(courseId){
 
     function setAuthMode(mode){
       const loginVisible = mode !== 'register';
+      if(registrationPendingScreen) registrationPendingScreen.classList.add('hidden');
       if(loginForm) loginForm.classList.toggle('hidden', !loginVisible);
       if(registerForm) registerForm.classList.toggle('hidden', loginVisible);
       if(loginError){ loginError.classList.add('hidden'); loginError.textContent = ''; }
@@ -15818,6 +15885,15 @@ function renderPlayer(courseId){
         if(loginVisible) emailInput?.focus();
         else registerNameInput?.focus();
       }, 50);
+    }
+
+    function showRegistrationPendingScreen(email){
+      if(loginForm) loginForm.classList.add('hidden');
+      if(registerForm) registerForm.classList.add('hidden');
+      if(loginError){ loginError.classList.add('hidden'); loginError.textContent = ''; }
+      if(registerMessage){ registerMessage.classList.add('hidden'); registerMessage.textContent = ''; registerMessage.classList.remove('success','error'); }
+      if(registrationPendingEmail) registrationPendingEmail.textContent = email ? `Correo registrado: ${email}` : '';
+      if(registrationPendingScreen) registrationPendingScreen.classList.remove('hidden');
     }
 
     function setRegisterMessage(message, type = 'success'){
@@ -15928,12 +16004,14 @@ function renderPlayer(courseId){
       try{
         const result = await createAuthAndRegistrationRequest({ name, email, password, courseId });
         if(result.authResult && result.authResult.ok){
-          setRegisterMessage('Solicitud enviada. Tu cuenta ya quedó registrada y ahora espera aprobación del administrador.', 'success');
+          if(registerForm) registerForm.reset();
+          fillCourseSelects();
+          showRegistrationPendingScreen(email);
         }else{
           setRegisterMessage('Solicitud guardada para revisión. Revisa Firebase Authentication porque la cuenta no se pudo crear automáticamente: ' + (result.authResult?.message || 'sin detalle'), 'error');
+          if(registerForm) registerForm.reset();
+          fillCourseSelects();
         }
-        if(registerForm) registerForm.reset();
-        fillCourseSelects();
       }catch(error){
         console.error('Error creando solicitud de registro.', error);
         setRegisterMessage(error.message || 'No se pudo enviar la solicitud. Intenta nuevamente.', 'error');
@@ -18087,6 +18165,7 @@ function bindButtons(){
       byId('btnCreateUserTop')?.addEventListener('click', () => openUserFormModal());
       byId('btnShowRegister')?.addEventListener('click', () => setAuthMode('register'));
       byId('btnShowLogin')?.addEventListener('click', () => setAuthMode('login'));
+      byId('btnBackToLoginAfterRegister')?.addEventListener('click', () => setAuthMode('login'));
       byId('registerForm')?.addEventListener('submit', handlePublicRegistration);
       byId('btnReloadRegistrationRequests')?.addEventListener('click', async () => {
         await loadRegistrationRequestsFromFirestore({ silent: false });
