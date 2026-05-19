@@ -4169,6 +4169,34 @@
       border-radius:18px;
       background:#f8fafc;
     }
+    .lesson-resource-box{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:12px;
+      border:1px solid #dfe6f2;
+      border-radius:16px;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+    }
+    .lesson-resource-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+    .lesson-resource-item{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border:1px solid #dfe6f2;
+      border-radius:14px;
+      background:#ffffff;
+    }
+    .lesson-resource-item strong{display:block;color:#172033;font-size:13px;line-height:1.35}
+    .lesson-resource-item small{display:block;color:#667892;font-size:12px;line-height:1.45;margin-top:3px}
+    .lesson-resource-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     @media (max-width:760px){
       .modal{width:min(94vw,94vw);padding:18px}
       .course-edit-modal .course-edit-grid,
@@ -9033,6 +9061,31 @@
       #tab-admin-registrations .registration-request-actions{grid-template-columns:1fr;}
     }
 
+
+
+    /* === Recursos descargables por clase === */
+    .lesson-resource-box,
+    .lesson-resource-item{
+      background:linear-gradient(180deg,var(--bro-panel) 0%, var(--bro-panel-soft) 100%) !important;
+      border-color:var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      box-shadow:0 12px 24px rgba(0,0,0,.20) !important;
+    }
+    .lesson-resource-item strong{color:var(--bro-text) !important;}
+    .lesson-resource-item small{color:var(--bro-muted) !important;}
+    .lesson-resource-box > input{
+      background:#0f0d14 !important;
+      border:1px solid var(--bro-line) !important;
+      color:var(--bro-text) !important;
+      padding:13px 14px;
+      border-radius:12px;
+      outline:none;
+    }
+    .lesson-resource-box > input:focus{
+      border-color:var(--bro-accent) !important;
+      box-shadow:0 0 0 4px rgba(255,90,31,.16) !important;
+    }
+
 </style>
 </head>
 <body>
@@ -9908,6 +9961,18 @@
 </label>
 <div class="cover-upload-file-name" id="lessonVideoUploadStatus">No has seleccionado ningún video.</div>
 </div>
+<div class="field course-edit-full">
+<label>Recurso descargable de esta clase</label>
+<div class="lesson-resource-box">
+<input id="lessonResourceTitleField" placeholder="Nombre del recurso, ejemplo: Guía de trabajo" type="text"/>
+<label class="cover-upload-drop" for="lessonResourceUploadField">
+<input accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,image/*" id="lessonResourceUploadField" type="file"/>
+<span class="cover-upload-title">Subir recurso descargable</span>
+<span class="cover-upload-meta">PDF, plantilla, documento o imagen liviana · se guarda en Firestore y aparece en el reproductor.</span>
+</label>
+<div class="cover-upload-file-name" id="lessonResourceUploadStatus">No has seleccionado ningún recurso.</div>
+</div>
+</div>
 </div>
 <div class="mini-note" id="lessonsPreviewBox">Aún no has agregado clases para este curso.</div>
 <div class="admin-inline-actions">
@@ -10313,6 +10378,9 @@
     const FIRESTORE_COVER_MAX_WIDTH = 1280;
     const FIRESTORE_COVER_MAX_HEIGHT = 720;
     const FIRESTORE_COVER_MAX_BYTES = 850 * 1024;
+    const FIRESTORE_RESOURCE_REF_PREFIX = `firestore-resource://${FIREBASE_COLLECTION}/`;
+    const FIRESTORE_RESOURCE_DOC_PREFIX = 'resourceAsset_';
+    const FIRESTORE_RESOURCE_MAX_BYTES = 740 * 1024;
     const firestoreCoverCache = {};
     let firestoreCoverHydrateTimer = null;
     let firestoreCoverFallbackHydrationRunning = false;
@@ -11923,27 +11991,56 @@ syncUsersState();
       return (state.courses || []).find(c => Number(c.id) === courseId);
     }
 
-    function downloadResource(id){
-      const resource = state.resources.find(r => r.id === id);
+    async function downloadResource(id){
+      const resource = (state.resources || []).find(r => Number(r.id) === Number(id));
       if(!resource){
         toast('No se encontró el recurso.');
         return;
       }
-      const content = `Recurso demo: ${resource.title}
+      try{
+        if(isFirestoreResourceRef(resource.ref || '')){
+          const file = await resolveFirestoreResourceData(resource);
+          if(!file || !file.dataUrl) throw new Error('El recurso no tiene archivo descargable en Firestore.');
+          const link = document.createElement('a');
+          link.href = file.dataUrl;
+          link.download = file.fileName || sanitizeDownloadFilename(resource.fileName || resource.title || 'recurso');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          toast('Descarga iniciada desde Firestore.');
+          return;
+        }
+        if(resource.url || resource.href){
+          const link = document.createElement('a');
+          link.href = resource.url || resource.href;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.download = sanitizeDownloadFilename(resource.fileName || resource.title || 'recurso');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          toast('Recurso abierto.');
+          return;
+        }
+        const content = `Recurso demo: ${resource.title}
 Tipo: ${resource.type}
 Curso: ${(courseById(resource.courseId) || {}).title || 'Curso'}
 
 Este es un archivo de demostración generado desde el campus.`;
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${resource.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'recurso'}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1200);
-      toast('Descarga iniciada');
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${sanitizeDownloadFilename(resource.title || 'recurso')}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1200);
+        toast('Descarga iniciada');
+      }catch(error){
+        console.warn('No se pudo descargar el recurso.', error);
+        toast(error.message || 'No se pudo descargar el recurso.');
+      }
     }
 
     function addActivity(text){
@@ -13112,9 +13209,19 @@ function toggleUserCard(userId, event){
     function getLessonResources(course, lesson, lessonIndex){
       if(!course) return [];
       const courseId = Number(course.id) || 0;
-      return (state.resources || []).filter(resource => {
+      const fromGlobal = (state.resources || []).filter(resource => {
         if(normalizeResourceCourseId(resource) !== courseId) return false;
         return resourceMatchesLesson(resource, lesson, lessonIndex);
+      });
+      const fromLesson = (lesson && Array.isArray(lesson.resources))
+        ? lesson.resources.map(resource => normalizeLessonResourceMeta(resource, courseId, lesson, lessonIndex)).filter(Boolean)
+        : [];
+      const seen = new Set();
+      return [...fromGlobal, ...fromLesson].filter(resource => {
+        const key = `${resource.ref || ''}|${resource.id || ''}|${resource.title || ''}`;
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
     }
 
@@ -13146,12 +13253,12 @@ function toggleUserCard(userId, event){
         <div class="player-class-resources-list">
           ${resources.map(resource => {
             const id = Number(resource.id) || 0;
-            const type = escapeHtml(resource.type || 'Recurso');
+            const type = escapeHtml(getResourceLabel(resource));
             const title = escapeHtml(resource.title || 'Material de apoyo');
             return `<div class="player-class-resource-item">
               <div>
                 <strong>${title}</strong>
-                <small>${type} · enlace protegido</small>
+                <small>${type} · descarga protegida</small>
               </div>
               <button class="player-resource-action" onclick="downloadResource(${id})">Descargar</button>
             </div>`;
@@ -14610,13 +14717,69 @@ function renderPlayer(courseId){
       applyLessonThumbnailPreview(document.getElementById('lessonThumbPreview'), {});
     }
 
+    function bindCreateLessonResourceUpload(){
+      const input = document.getElementById('lessonResourceUploadField');
+      if(!input || input.dataset.boundLessonResource === 'true') return;
+      input.dataset.boundLessonResource = 'true';
+      input.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        const status = document.getElementById('lessonResourceUploadStatus');
+        const titleField = document.getElementById('lessonResourceTitleField');
+        if(!file){
+          delete event.target.dataset.resourceMeta;
+          if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ningún recurso.'; }
+          return;
+        }
+        const module = document.getElementById('lessonModuleField')?.value?.trim() || '';
+        const lessonTitle = document.getElementById('lessonTitleField')?.value?.trim() || '';
+        try{
+          if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo recurso a Firestore...'; }
+          const uploaded = await uploadLessonResourceFileToFirestore(file, {
+            courseTitle: document.getElementById('courseTitleField')?.value?.trim() || 'Curso nuevo',
+            lessonIndex: (state.pendingLessons || []).length,
+            lessonTitle,
+            module,
+            title: titleField?.value?.trim() || getFileBaseName(file.name)
+          });
+          event.target.dataset.resourceMeta = JSON.stringify(uploaded);
+          if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${uploaded.title} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+          toast('Recurso descargable guardado en Firestore.');
+        }catch(error){
+          console.error('No se pudo subir el recurso de la clase.', error);
+          delete event.target.dataset.resourceMeta;
+          event.target.value = '';
+          if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir el recurso.'; }
+          toast(error.message || 'No se pudo subir el recurso a Firestore.');
+        }
+      });
+    }
+
+    function getCreateLessonUploadedResource(){
+      const input = document.getElementById('lessonResourceUploadField');
+      const raw = input?.dataset?.resourceMeta || '';
+      if(!raw) return null;
+      try{ return JSON.parse(raw); }catch(error){ return null; }
+    }
+
+    function resetCreateLessonResourceInput(){
+      const input = document.getElementById('lessonResourceUploadField');
+      const status = document.getElementById('lessonResourceUploadStatus');
+      const title = document.getElementById('lessonResourceTitleField');
+      if(input){ input.value = ''; delete input.dataset.resourceMeta; }
+      if(title) title.value = '';
+      if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ningún recurso.'; }
+    }
+
     function renderLessonsPreview(){
       const box = document.getElementById('lessonsPreviewBox');
       if(!box) return;
       if(state.pendingLessons.length === 0){
         box.innerHTML = 'Aún no has agregado clases para este curso.';
       } else {
-        box.innerHTML = state.pendingLessons.map((ls, idx) => `<div style="display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center;margin-bottom:10px">${renderLessonThumbnailBox(ls, idx, 'player-lesson-thumb')}<div><strong>${idx+1}. ${escapeHtml(ls.title)}</strong> · <span class="muted-text">${escapeHtml(ls.module)}</span> · <span class="pill-note" style="padding:4px 8px;font-size:11px">${getVideoProviderLabel(ls.url)}</span>${getLessonThumbnailRef(ls) || getLessonThumbnailInlineData(ls) ? ' · <span class="pill-note" style="padding:4px 8px;font-size:11px">Miniatura</span>' : ''}</div></div>`).join('');
+        box.innerHTML = state.pendingLessons.map((ls, idx) => {
+          const resourceCount = Array.isArray(ls.resources) ? ls.resources.length : 0;
+          return `<div style="display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center;margin-bottom:10px">${renderLessonThumbnailBox(ls, idx, 'player-lesson-thumb')}<div><strong>${idx+1}. ${escapeHtml(ls.title)}</strong> · <span class="muted-text">${escapeHtml(ls.module)}</span> · <span class="pill-note" style="padding:4px 8px;font-size:11px">${getVideoProviderLabel(ls.url)}</span>${getLessonThumbnailRef(ls) || getLessonThumbnailInlineData(ls) ? ' · <span class="pill-note" style="padding:4px 8px;font-size:11px">Miniatura</span>' : ''}${resourceCount ? ` · <span class="pill-note" style="padding:4px 8px;font-size:11px">${resourceCount} recurso${resourceCount === 1 ? '' : 's'}</span>` : ''}</div></div>`;
+        }).join('');
       }
     }
 
@@ -14773,6 +14936,189 @@ function renderPlayer(courseId){
       const commaIndex = raw.indexOf(',');
       const base64 = commaIndex >= 0 ? raw.slice(commaIndex + 1) : raw;
       return Math.ceil((base64.length * 3) / 4);
+    }
+
+    function isFirestoreResourceRef(src){
+      return String(src || '').trim().startsWith(FIRESTORE_RESOURCE_REF_PREFIX);
+    }
+
+    function getFirestoreResourceDocId(src){
+      const value = String(src || '').trim();
+      return isFirestoreResourceRef(value) ? value.slice(FIRESTORE_RESOURCE_REF_PREFIX.length) : '';
+    }
+
+    function buildFirestoreResourceRef(docId){
+      return `${FIRESTORE_RESOURCE_REF_PREFIX}${docId}`;
+    }
+
+    function getFileBaseName(name){
+      return String(name || 'recurso').replace(/\.[^/.]+$/, '').trim() || 'Recurso descargable';
+    }
+
+    function getFileExtension(name){
+      const match = String(name || '').match(/\.([a-z0-9]{1,8})$/i);
+      return match ? match[1].toUpperCase() : 'Archivo';
+    }
+
+    function sanitizeDownloadFilename(name){
+      const fallback = 'recurso-descargable';
+      const clean = String(name || fallback)
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9._-]+/gi, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 90);
+      return clean || fallback;
+    }
+
+    function readFileAsDataUrl(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('No se pudo leer el archivo seleccionado.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadLessonResourceFileToFirestore(file, context = {}){
+      if(!file){ throw new Error('Selecciona un recurso descargable.'); }
+      if((file.size || 0) > FIRESTORE_RESOURCE_MAX_BYTES){
+        throw new Error(`El recurso es muy pesado para Firestore. Usa un archivo máximo de ${formatFileSize(FIRESTORE_RESOURCE_MAX_BYTES)}.`);
+      }
+      const connected = firebaseDb || initFirebaseConnection();
+      if(!connected || !firebaseDb){
+        throw new Error('Firestore no está disponible. Revisa Firebase antes de subir recursos.');
+      }
+      if(!hasFirebaseAuthSession() || !isAdminEmail(getFirebaseSignedEmail())){
+        throw new Error('Debes iniciar sesión como administrador real de Firebase para subir recursos a Firestore.');
+      }
+      const dataUrl = await readFileAsDataUrl(file);
+      const sizeBytes = estimateDataUrlBytes(dataUrl);
+      if(sizeBytes > FIRESTORE_RESOURCE_MAX_BYTES){
+        throw new Error(`El recurso convertido supera el límite seguro de Firestore (${formatFileSize(FIRESTORE_RESOURCE_MAX_BYTES)}).`);
+      }
+      const safeName = sanitizeDownloadFilename(file.name || 'recurso');
+      const title = String(context.title || getFileBaseName(file.name)).trim() || 'Recurso descargable';
+      const docId = `${FIRESTORE_RESOURCE_DOC_PREFIX}${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const payload = {
+        kind: 'lesson-resource',
+        courseId: context.courseId || null,
+        courseTitle: context.courseTitle || '',
+        lessonIndex: context.lessonIndex ?? null,
+        lessonTitle: context.lessonTitle || '',
+        module: context.module || '',
+        title,
+        fileName: safeName,
+        originalName: file.name || safeName,
+        originalType: file.type || 'application/octet-stream',
+        originalSizeBytes: file.size || 0,
+        storedMime: file.type || 'application/octet-stream',
+        storedSizeBytes: sizeBytes,
+        dataUrl,
+        createdAtText: new Date().toISOString(),
+        updatedAtText: new Date().toISOString()
+      };
+      if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).set(payload, { merge: true });
+      return {
+        id: Date.now() + Math.floor(Math.random() * 999),
+        title,
+        type: getFileExtension(file.name),
+        courseId: Number(context.courseId) || 0,
+        courseTitle: context.courseTitle || '',
+        lessonIndex: Number.isFinite(Number(context.lessonIndex)) ? Number(context.lessonIndex) : null,
+        lessonTitle: context.lessonTitle || '',
+        module: context.module || '',
+        fileName: safeName,
+        originalName: file.name || safeName,
+        mime: file.type || 'application/octet-stream',
+        sizeBytes,
+        ref: buildFirestoreResourceRef(docId),
+        storage: 'firestore',
+        managedByLesson: true,
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function getResourceLabel(resource){
+      const type = String(resource?.type || getFileExtension(resource?.fileName || resource?.originalName || '') || 'Archivo').trim();
+      const size = resource?.sizeBytes ? ` · ${formatFileSize(resource.sizeBytes)}` : '';
+      return `${type}${size}`;
+    }
+
+    function normalizeLessonResourceMeta(resource, courseId, lesson, lessonIndex){
+      if(!resource) return null;
+      const normalized = {
+        ...clonePlain(resource),
+        id: Number(resource.id) || Date.now() + Math.floor(Math.random() * 999),
+        title: String(resource.title || getFileBaseName(resource.fileName || resource.originalName || '') || 'Recurso descargable').trim(),
+        type: String(resource.type || getFileExtension(resource.fileName || resource.originalName || '') || 'Archivo').trim(),
+        courseId: Number(courseId) || Number(resource.courseId) || 0,
+        lessonIndex: Number.isFinite(Number(lessonIndex)) ? Number(lessonIndex) : Number(resource.lessonIndex ?? resource.lessonIdx),
+        lessonTitle: String((lesson && lesson.title) || resource.lessonTitle || '').trim(),
+        module: String((lesson && lesson.module) || resource.module || '').trim(),
+        ref: String(resource.ref || resource.url || resource.href || '').trim(),
+        storage: resource.storage || (isFirestoreResourceRef(resource.ref || '') ? 'firestore' : ''),
+        managedByLesson: true
+      };
+      return normalized;
+    }
+
+    function syncCourseLessonResourcesToGlobal(courseId, lessons){
+      const id = Number(courseId) || 0;
+      const keep = (state.resources || []).filter(resource => !(Number(resource.courseId) === id && resource.managedByLesson === true));
+      const managed = [];
+      (lessons || []).forEach((lesson, idx) => {
+        (lesson.resources || []).forEach(resource => {
+          const normalized = normalizeLessonResourceMeta(resource, id, lesson, idx);
+          if(normalized && (normalized.ref || normalized.url || normalized.href)) managed.push(normalized);
+        });
+      });
+      const seen = new Set();
+      state.resources = [...keep, ...managed].filter(resource => {
+        const key = `${resource.courseId || 0}|${resource.lessonIndex ?? ''}|${resource.ref || resource.id}`;
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    async function resolveFirestoreResourceData(resource){
+      const ref = String(resource?.ref || '').trim();
+      const docId = getFirestoreResourceDocId(ref);
+      if(!docId) return null;
+      const connected = firebaseDb || initFirebaseConnection();
+      if(!connected || !firebaseDb) throw new Error('Firestore no está disponible para descargar el recurso.');
+      const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(docId).get();
+      if(!doc.exists) throw new Error('No se encontró el archivo del recurso en Firestore.');
+      const data = doc.data() || {};
+      return {
+        dataUrl: data.dataUrl || '',
+        mime: data.storedMime || data.originalType || resource.mime || 'application/octet-stream',
+        fileName: sanitizeDownloadFilename(data.fileName || data.originalName || resource.fileName || resource.originalName || resource.title || 'recurso-descargable')
+      };
+    }
+
+    function resourceMetaToInputData(resource){
+      try{ return JSON.stringify(resource || {}).replace(/'/g, '&apos;'); }
+      catch(error){ return '{}'; }
+    }
+
+    function renderLessonResourceList(resources = [], lessonIndex = null){
+      const list = Array.isArray(resources) ? resources : [];
+      if(!list.length) return '<div class="cover-upload-file-name">Esta clase todavía no tiene recursos descargables.</div>';
+      return `<div class="lesson-resource-list">${list.map((resource, index) => `
+        <div class="lesson-resource-item">
+          <div>
+            <strong>${escapeHtml(resource.title || 'Recurso descargable')}</strong>
+            <small>${escapeHtml(getResourceLabel(resource))} · Firestore</small>
+          </div>
+          <div class="lesson-resource-actions">
+            ${lessonIndex !== null ? `<button class="btn btn-danger btn-sm" type="button" onclick="removeCourseEditLessonResource(${Number(lessonIndex)}, ${Number(index)})">Quitar</button>` : ''}
+          </div>
+        </div>`).join('')}</div>`;
     }
 
     function loadImageFromFile(file){
@@ -16019,6 +16365,18 @@ function renderPlayer(courseId){
                   </label>
                   <div class="cover-upload-file-name" id="editNewLessonVideoUploadStatus">No has seleccionado ningún video.</div>
                 </div>
+                <div class="field course-edit-full">
+                  <label>Recurso descargable de esta clase</label>
+                  <div class="lesson-resource-box">
+                    <input type="text" id="editNewLessonResourceTitleField" placeholder="Nombre del recurso, ejemplo: Guía de trabajo">
+                    <label class="cover-upload-drop" for="editNewLessonResourceUploadField">
+                      <input type="file" id="editNewLessonResourceUploadField" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,image/*" data-resource-upload-kind="edit-new">
+                      <span class="cover-upload-title">Subir recurso descargable</span>
+                      <span class="cover-upload-meta">Se guarda en Firestore y aparecerá en esta clase.</span>
+                    </label>
+                    <div class="cover-upload-file-name" id="editNewLessonResourceUploadStatus">No has seleccionado ningún recurso.</div>
+                  </div>
+                </div>
               </div>
               <div class="admin-inline-actions">
                 <button class="btn btn-dark" type="button" onclick="addCourseEditLesson()">+ Agregar y guardar clase</button>
@@ -16046,7 +16404,14 @@ function renderPlayer(courseId){
     function bindCourseEditModal(courseId){
       const course = courseById(courseId);
       if(!course) return;
-      courseEditDraft = { courseId: Number(courseId), lessons: clonePlain(course.lessons || []), coverData: getCourseCoverInlineData(course) };
+      courseEditDraft = {
+        courseId: Number(courseId),
+        lessons: clonePlain((course.lessons || []).map((lesson, idx) => ({
+          ...lesson,
+          resources: getLessonResources(course, lesson, idx)
+        }))),
+        coverData: getCourseCoverInlineData(course)
+      };
       renderCourseEditLessonsDraft();
       updateCourseEditCoverPreview(course.cover || getCourseCoverInlineData(course) || '', getCourseCoverInlineData(course));
 
@@ -16095,6 +16460,7 @@ function renderPlayer(courseId){
       });
       bindVideoUploadInput('editNewLessonVideoUploadField', 'editNewLessonUrlField', 'editNewLessonVideoUploadStatus', () => ({ courseId, lessonIndex: 'nueva' }));
       bindCourseEditLessonThumbnailUploadInputs();
+      bindCourseEditLessonResourceUploadInputs();
       bindCourseEditLessonVideoUploadInputs();
     }
 
@@ -16136,7 +16502,8 @@ function renderPlayer(courseId){
           title: titleField ? titleField.value.trim() : (lesson.title || ''),
           url: normalizeVideoUrl(rawVideoValue),
           thumbnail: thumbField ? thumbField.value.trim() : getLessonThumbnailRef(currentLesson),
-          thumbnailData: getLessonThumbnailInlineData(currentLesson)
+          thumbnailData: getLessonThumbnailInlineData(currentLesson),
+          resources: Array.isArray(currentLesson.resources) ? currentLesson.resources : []
         };
       });
     }
@@ -16198,12 +16565,26 @@ function renderPlayer(courseId){
                 </label>
                 <div class="cover-upload-file-name" id="editLessonUploadStatus_${idx}">No has seleccionado ningún video.</div>
               </div>
+              <div class="field course-edit-full">
+                <label>Recursos descargables de esta clase</label>
+                <div class="lesson-resource-box">
+                  <input type="text" id="editLessonResourceTitle_${idx}" placeholder="Nombre del recurso, ejemplo: Guía de trabajo">
+                  <label class="cover-upload-drop" for="editLessonResourceUpload_${idx}">
+                    <input type="file" id="editLessonResourceUpload_${idx}" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,image/*" data-lesson-resource-index="${idx}">
+                    <span class="cover-upload-title">Subir recurso para esta clase</span>
+                    <span class="cover-upload-meta">PDF, plantilla o documento liviano · se guarda en Firestore.</span>
+                  </label>
+                  <div class="cover-upload-file-name" id="editLessonResourceUploadStatus_${idx}">No has seleccionado ningún recurso.</div>
+                  ${renderLessonResourceList(lesson.resources || [], idx)}
+                </div>
+              </div>
             </div>
           </div>
         `;
       }).join('');
       hydrateCourseEditLessonThumbnailPreviews();
       bindCourseEditLessonThumbnailUploadInputs();
+      bindCourseEditLessonResourceUploadInputs();
       bindCourseEditLessonVideoUploadInputs();
     }
 
@@ -16304,6 +16685,109 @@ function renderPlayer(courseId){
       }
     }
 
+    function bindCourseEditLessonResourceUploadInputs(){
+      document.querySelectorAll('[id^="editLessonResourceUpload_"]').forEach(input => {
+        if(input.dataset.boundLessonResource === 'true') return;
+        input.dataset.boundLessonResource = 'true';
+        input.addEventListener('change', async (event) => {
+          const file = event.target.files?.[0];
+          const idx = Number(event.target.dataset.lessonResourceIndex);
+          const status = document.getElementById(`editLessonResourceUploadStatus_${idx}`);
+          if(!Number.isFinite(idx) || !courseEditDraft?.lessons?.[idx]) return;
+          if(!file){
+            if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ningún recurso.'; }
+            return;
+          }
+          syncAllCourseEditLessonsFromDom();
+          try{
+            if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo recurso a Firestore...'; }
+            const lesson = courseEditDraft.lessons[idx] || {};
+            const uploaded = await uploadLessonResourceFileToFirestore(file, {
+              courseId: courseEditDraft.courseId,
+              courseTitle: document.getElementById('editCourseTitleField')?.value?.trim() || '',
+              lessonIndex: idx,
+              lessonTitle: document.getElementById(`editLessonTitle_${idx}`)?.value?.trim() || lesson.title || '',
+              module: document.getElementById(`editLessonModule_${idx}`)?.value?.trim() || lesson.module || '',
+              title: document.getElementById(`editLessonResourceTitle_${idx}`)?.value?.trim() || getFileBaseName(file.name)
+            });
+            courseEditDraft.lessons[idx].resources = Array.isArray(courseEditDraft.lessons[idx].resources) ? courseEditDraft.lessons[idx].resources : [];
+            courseEditDraft.lessons[idx].resources.push(uploaded);
+            if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${uploaded.title} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+            event.target.value = '';
+            const titleInput = document.getElementById(`editLessonResourceTitle_${idx}`);
+            if(titleInput) titleInput.value = '';
+            renderCourseEditLessonsDraft();
+            toast('Recurso de clase guardado en Firestore.');
+          }catch(error){
+            console.error('No se pudo subir el recurso de la clase.', error);
+            event.target.value = '';
+            if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir el recurso.'; }
+            toast(error.message || 'No se pudo subir el recurso a Firestore.');
+          }
+        });
+      });
+
+      const newInput = document.getElementById('editNewLessonResourceUploadField');
+      if(newInput && newInput.dataset.boundLessonResource !== 'true'){
+        newInput.dataset.boundLessonResource = 'true';
+        newInput.addEventListener('change', async (event) => {
+          const file = event.target.files?.[0];
+          const status = document.getElementById('editNewLessonResourceUploadStatus');
+          if(!file){
+            delete event.target.dataset.resourceMeta;
+            if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ningún recurso.'; }
+            return;
+          }
+          try{
+            if(status){ status.dataset.uploadKind = 'uploading'; status.textContent = 'Subiendo recurso a Firestore...'; }
+            const uploaded = await uploadLessonResourceFileToFirestore(file, {
+              courseId: courseEditDraft.courseId,
+              courseTitle: document.getElementById('editCourseTitleField')?.value?.trim() || '',
+              lessonIndex: (courseEditDraft.lessons || []).length,
+              lessonTitle: document.getElementById('editNewLessonTitleField')?.value?.trim() || '',
+              module: document.getElementById('editNewLessonModuleField')?.value?.trim() || '',
+              title: document.getElementById('editNewLessonResourceTitleField')?.value?.trim() || getFileBaseName(file.name)
+            });
+            event.target.dataset.resourceMeta = JSON.stringify(uploaded);
+            if(status){ status.dataset.uploadKind = 'done'; status.textContent = `${uploaded.title} · Firestore · ${formatFileSize(uploaded.sizeBytes)}`; }
+            toast('Recurso de la nueva clase guardado en Firestore.');
+          }catch(error){
+            console.error('No se pudo subir el recurso de la nueva clase.', error);
+            delete event.target.dataset.resourceMeta;
+            event.target.value = '';
+            if(status){ status.dataset.uploadKind = 'error'; status.textContent = error.message || 'No se pudo subir el recurso.'; }
+            toast(error.message || 'No se pudo subir el recurso a Firestore.');
+          }
+        });
+      }
+    }
+
+    function getEditNewLessonUploadedResource(){
+      const input = document.getElementById('editNewLessonResourceUploadField');
+      const raw = input?.dataset?.resourceMeta || '';
+      if(!raw) return null;
+      try{ return JSON.parse(raw); }catch(error){ return null; }
+    }
+
+    function resetEditNewLessonResourceInput(){
+      const input = document.getElementById('editNewLessonResourceUploadField');
+      const status = document.getElementById('editNewLessonResourceUploadStatus');
+      const title = document.getElementById('editNewLessonResourceTitleField');
+      if(input){ input.value = ''; delete input.dataset.resourceMeta; }
+      if(title) title.value = '';
+      if(status){ delete status.dataset.uploadKind; status.textContent = 'No has seleccionado ningún recurso.'; }
+    }
+
+    function removeCourseEditLessonResource(lessonIndex, resourceIndex){
+      syncAllCourseEditLessonsFromDom();
+      const idx = Number(lessonIndex);
+      const rIdx = Number(resourceIndex);
+      if(!Number.isFinite(idx) || !Number.isFinite(rIdx) || !courseEditDraft?.lessons?.[idx]) return;
+      courseEditDraft.lessons[idx].resources = (courseEditDraft.lessons[idx].resources || []).filter((_, index) => index !== rIdx);
+      renderCourseEditLessonsDraft();
+      toast('Recurso quitado de la clase. Guarda cambios para confirmar.');
+    }
+
     async function addCourseEditLesson(){
       syncAllCourseEditLessonsFromDom();
       const module = document.getElementById('editNewLessonModuleField')?.value.trim() || '';
@@ -16312,8 +16796,10 @@ function renderPlayer(courseId){
       const thumbInput = document.getElementById('editNewLessonThumbUploadField');
       const thumbnail = thumbInput?.dataset?.thumbnail || '';
       const thumbnailData = thumbInput?.dataset?.thumbnailData || '';
+      const uploadedResource = getEditNewLessonUploadedResource();
+      const resources = uploadedResource ? [uploadedResource] : [];
       if(!module || !title){ toast('Agrega módulo y título de la nueva clase.'); return; }
-      courseEditDraft.lessons.push({ module, title, url: normalizeVideoUrl(url), thumbnail, thumbnailData });
+      courseEditDraft.lessons.push({ module, title, url: normalizeVideoUrl(url), thumbnail, thumbnailData, resources });
       document.getElementById('editNewLessonModuleField').value = '';
       document.getElementById('editNewLessonTitleField').value = '';
       document.getElementById('editNewLessonUrlField').value = '';
@@ -16326,6 +16812,7 @@ function renderPlayer(courseId){
       if(newThumbField){ newThumbField.value = ''; delete newThumbField.dataset.thumbnail; delete newThumbField.dataset.thumbnailData; }
       const newThumbStatus = document.getElementById('editNewLessonThumbUploadStatus');
       if(newThumbStatus){ delete newThumbStatus.dataset.uploadKind; newThumbStatus.textContent = 'No has seleccionado ninguna miniatura.'; }
+      resetEditNewLessonResourceInput();
       applyLessonThumbnailPreview(document.getElementById('editNewLessonThumbPreview'), {});
       renderCourseEditLessonsDraft();
       let saveResult = { remoteSaved: true };
@@ -16406,9 +16893,10 @@ function renderPlayer(courseId){
           title: (lesson.title || '').trim(),
           url: normalizeVideoUrl(lesson.url || ''),
           thumbnail: getLessonThumbnailRef(lesson),
-          thumbnailData: getLessonThumbnailInlineData(lesson)
+          thumbnailData: getLessonThumbnailInlineData(lesson),
+          resources: Array.isArray(lesson.resources) ? lesson.resources : []
         }))
-        .filter(lesson => lesson.module || lesson.title || lesson.url || lesson.thumbnail || lesson.thumbnailData);
+        .filter(lesson => lesson.module || lesson.title || lesson.url || lesson.thumbnail || lesson.thumbnailData || (lesson.resources && lesson.resources.length));
 
       if(!title){ toast('El curso necesita un título.'); return; }
       if(!description){ toast('Agrega una descripción del curso.'); return; }
@@ -16431,6 +16919,7 @@ function renderPlayer(courseId){
       course.allowPartial = allowPartial;
       course.installments = installments;
       course.lessons = lessons;
+      syncCourseLessonResourcesToGlobal(id, lessons);
       course.updatedAt = new Date().toISOString();
       reconcileCourseProgressAfterEdit(id);
 
@@ -17368,9 +17857,9 @@ function openPaymentHistoryModal(id){
         const course = courseById(r.courseId);
         return `<div class="history-item">
           <div class="student-list-content">
-            <div class="student-list-eyebrow">Material de apoyo · ${r.type}</div>
-            <strong>${r.title}</strong>
-            <small>${course ? course.title : 'Curso'} · Disponible para descargar cuando lo necesites.</small>
+            <div class="student-list-eyebrow">Material de apoyo · ${escapeHtml(getResourceLabel(r))}</div>
+            <strong>${escapeHtml(r.title || 'Recurso descargable')}</strong>
+            <small>${course ? escapeHtml(course.title) : 'Curso'} · Disponible para descargar cuando lo necesites.</small>
           </div>
           <div class="student-list-actions">
             <span class="resource-chip">Disponible</span>
@@ -17689,6 +18178,7 @@ function bindButtons(){
 
       bindCreateLessonVideoUpload();
       bindCreateLessonThumbnailUpload();
+      bindCreateLessonResourceUpload();
 
       byId('btnCreateCourseNext')?.addEventListener('click', () => {
         const title = byId('courseTitleField')?.value.trim() || '';
@@ -17708,8 +18198,10 @@ function bindButtons(){
         const thumbInput = byId('lessonThumbUploadField');
         const thumbnail = thumbInput?.dataset?.thumbnail || '';
         const thumbnailData = thumbInput?.dataset?.thumbnailData || '';
+        const uploadedResource = getCreateLessonUploadedResource();
+        const resources = uploadedResource ? [uploadedResource] : [];
         if(!module || !title){ toast('Agrega módulo y título.'); return; }
-        state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), thumbnail, thumbnailData });
+        state.pendingLessons.push({ module, title, url: normalizedUrl || buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), thumbnail, thumbnailData, resources });
         if (typeof saveState === 'function') saveState();
         byId('lessonModuleField').value = ''; byId('lessonTitleField').value = ''; byId('lessonUrlField').value = '';
         const lessonIframeField = byId('lessonIframeField');
@@ -17718,7 +18210,8 @@ function bindButtons(){
         if(lessonUploadField) lessonUploadField.value = '';
         setUploadStatus('lessonVideoUploadStatus', 'No has seleccionado ningún video.', '', null);
         resetCreateLessonThumbnailInput();
-        renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}${thumbnail ? ' · Miniatura' : ''}`);
+        resetCreateLessonResourceInput();
+        renderLessonsPreview(); toast(`Clase agregada${normalizedUrl ? ' · ' + getVideoProviderLabel(normalizedUrl) : ''}${thumbnail ? ' · Miniatura' : ''}${resources.length ? ' · Recurso' : ''}`);
       });
 
       byId('btnSaveCourseInline')?.addEventListener('click', async () => {
@@ -17735,12 +18228,15 @@ function bindButtons(){
         const installments = Math.max(1, Number(byId('courseInstallmentsField')?.value || 1));
         if(!title || !description){ toast('Completa título y descripción.'); return; }
         if(price <= 0){ toast('Define un precio válido para el curso.'); return; }
-        const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }];
+        const lessons = state.pendingLessons.length ? [...state.pendingLessons] : [{ module: 'Módulo 1', title: 'Clase de bienvenida', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), resources: [] }];
         const createdAt = new Date().toISOString();
-        state.courses.unshift({
-          id: Date.now(), title, category, status, visible, description, cover, coverData, createdAt,
+        const newCourseId = Date.now();
+        const courseRecord = {
+          id: newCourseId, title, category, status, visible, description, cover, coverData, createdAt,
           updatedAt: createdAt, progress: 0, assigned: false, lessons, completedLessons: [], price, paymentType, allowPartial, installments
-        });
+        };
+        state.courses.unshift(courseRecord);
+        syncCourseLessonResourcesToGlobal(newCourseId, lessons);
         state.pendingLessons = [];
         addActivity('Se creó el curso ' + title + ' con precio definido.');
         if (typeof saveState === 'function') saveState({ localOnly: true });
@@ -17754,6 +18250,7 @@ function bindButtons(){
         if(byId('courseInstallmentsField')) byId('courseInstallmentsField').value = '1';
         resetCourseCoverInputs();
         resetCreateLessonThumbnailInput();
+        resetCreateLessonResourceInput();
         setCreateCourseStep('info');
         renderLessonsPreview(); renderAdminCourses(); renderStudentDiscover(); fillCourseSelects(); renderAdminDashboard();
         if(remoteSaved){
