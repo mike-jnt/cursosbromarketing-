@@ -8671,6 +8671,357 @@
     @media (max-width:1100px){.registration-request-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media (max-width:760px){.registration-request-grid{grid-template-columns:1fr}.auth-switch-row{align-items:flex-start}}
 
+
+
+    /* === Solicitudes admin v2: sección más limpia, simétrica y premium === */
+    #tab-admin-registrations{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      padding:24px;
+      border-radius:26px;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.14), transparent 28%),
+        linear-gradient(180deg, rgba(25,24,32,.96) 0%, rgba(13,10,19,.96) 100%) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      box-shadow:0 26px 70px rgba(0,0,0,.34) !important;
+    }
+    #tab-admin-registrations.hidden{display:none!important}
+    #tab-admin-registrations .admin-head-row{
+      position:relative;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:18px;
+      padding:20px;
+      margin:0;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.11);
+      background:
+        radial-gradient(circle at top left, rgba(255,90,31,.18), transparent 34%),
+        linear-gradient(135deg, rgba(32,31,39,.96) 0%, rgba(15,13,20,.96) 100%);
+      box-shadow:0 18px 42px rgba(0,0,0,.26);
+    }
+    #tab-admin-registrations .admin-head-row::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background:linear-gradient(90deg, var(--bro-accent,#ff5a1f) 0%, var(--bro-accent-2,#ff762e) 48%, rgba(255,255,255,.55) 100%);
+    }
+    #tab-admin-registrations .admin-head-row h2{
+      margin:4px 0 8px;
+      font-size:clamp(25px,3vw,34px);
+      letter-spacing:-.04em;
+    }
+    #tab-admin-registrations .admin-head-row p{
+      max-width:760px;
+      line-height:1.7;
+    }
+    #tab-admin-registrations #btnReloadRegistrationRequests{
+      min-width:190px;
+      min-height:46px;
+      border-radius:14px !important;
+      background:#ffffff !important;
+      color:#111827 !important;
+      border-color:#ffffff !important;
+      box-shadow:0 14px 26px rgba(0,0,0,.24) !important;
+    }
+    #tab-admin-registrations #btnReloadRegistrationRequests:hover{
+      background:#fff3ec !important;
+      border-color:#fff3ec !important;
+      transform:translateY(-1px);
+    }
+    #tab-admin-registrations .admin-user-stats{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+      margin:0;
+    }
+    #tab-admin-registrations .user-kpi{
+      min-height:112px;
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at right center, rgba(255,90,31,.10), transparent 38%),
+        linear-gradient(180deg, rgba(32,31,39,.94) 0%, rgba(20,18,26,.94) 100%);
+      box-shadow:0 18px 38px rgba(0,0,0,.24);
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:14px;
+    }
+    #tab-admin-registrations .user-kpi::before{
+      height:4px;
+      width:100%;
+      inset:0 0 auto 0;
+      background:linear-gradient(90deg,rgba(255,90,31,.95),rgba(255,118,46,.72));
+    }
+    #tab-admin-registrations .user-kpi.kpi-active::before{background:linear-gradient(90deg,#18c27e,#55d99f)}
+    #tab-admin-registrations .user-kpi.kpi-pending::before{background:linear-gradient(90deg,#ffb34d,#ff762e)}
+    #tab-admin-registrations .user-kpi.kpi-blocked::before{background:linear-gradient(90deg,#ff6378,#d84e67)}
+    #tab-admin-registrations .user-kpi-top{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    #tab-admin-registrations .user-kpi-icon{
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      border-radius:15px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.11);
+      display:grid;
+      place-items:center;
+    }
+    #tab-admin-registrations .user-kpi small{
+      color:var(--bro-muted,#d8d4dc) !important;
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-weight:900;
+    }
+    #tab-admin-registrations .user-kpi-main{
+      position:relative;
+      z-index:1;
+      align-items:flex-end;
+      text-align:right;
+    }
+    #tab-admin-registrations .user-kpi strong{
+      color:#ffffff !important;
+      font-size:32px;
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+    #tab-admin-registrations .user-kpi span{
+      color:rgba(216,212,220,.76) !important;
+      font-size:12px;
+      line-height:1.35;
+      max-width:120px;
+    }
+    #tab-admin-registrations .registration-inbox-card,
+    #tab-admin-registrations .user-list-shell{
+      margin-top:0 !important;
+      padding:20px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.10) !important;
+      background:linear-gradient(180deg, rgba(25,24,32,.95) 0%, rgba(15,13,20,.95) 100%) !important;
+      box-shadow:0 22px 54px rgba(0,0,0,.28) !important;
+    }
+    #tab-admin-registrations .user-list-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      padding-bottom:16px;
+      margin-bottom:18px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    #tab-admin-registrations .user-list-head h3{
+      margin:0 0 7px;
+      font-size:22px;
+      letter-spacing:-.03em;
+    }
+    #tab-admin-registrations .user-list-head p{
+      max-width:780px;
+      line-height:1.65;
+    }
+    #tab-admin-registrations #registrationRequestsBadge{
+      min-height:36px;
+      padding:9px 13px;
+      border-radius:999px;
+      border:1px solid rgba(255,90,31,.30);
+      background:rgba(255,90,31,.12) !important;
+      color:#ffffff !important;
+      box-shadow:none !important;
+    }
+    #tab-admin-registrations .registration-request-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin:0;
+      align-items:stretch;
+    }
+    #tab-admin-registrations .registration-request-card{
+      position:relative;
+      overflow:hidden;
+      min-height:100%;
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10) !important;
+      background:
+        radial-gradient(circle at top right, rgba(255,90,31,.10), transparent 35%),
+        linear-gradient(180deg, rgba(32,31,39,.98) 0%, rgba(18,16,24,.98) 100%) !important;
+      box-shadow:0 16px 34px rgba(0,0,0,.22) !important;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+    #tab-admin-registrations .registration-request-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background:linear-gradient(90deg,#ffb34d,var(--bro-accent,#ff5a1f));
+    }
+    #tab-admin-registrations .registration-request-card.is-approved::before{background:linear-gradient(90deg,#18c27e,#62dda8)}
+    #tab-admin-registrations .registration-request-card.is-blocked::before{background:linear-gradient(90deg,#ff6378,#d84e67)}
+    #tab-admin-registrations .registration-request-card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(255,90,31,.36) !important;
+      box-shadow:0 24px 48px rgba(0,0,0,.34) !important;
+    }
+    #tab-admin-registrations .registration-request-top{
+      display:grid;
+      grid-template-columns:48px minmax(0,1fr) auto;
+      align-items:center;
+      gap:12px;
+    }
+    #tab-admin-registrations .registration-request-avatar{
+      width:48px;
+      height:48px;
+      border-radius:17px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(255,90,31,.95),rgba(255,118,46,.78));
+      border:1px solid rgba(255,255,255,.14);
+      color:#ffffff;
+      font-weight:900;
+      letter-spacing:.02em;
+      box-shadow:0 12px 22px rgba(255,90,31,.16);
+    }
+    #tab-admin-registrations .registration-request-identity{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    #tab-admin-registrations .registration-request-identity strong{
+      color:#ffffff !important;
+      font-size:16px;
+      line-height:1.3;
+      overflow-wrap:anywhere;
+    }
+    #tab-admin-registrations .registration-request-identity small{
+      color:rgba(216,212,220,.78) !important;
+      overflow-wrap:anywhere;
+      line-height:1.35;
+    }
+    #tab-admin-registrations .registration-request-top .status{
+      align-self:start;
+      white-space:nowrap;
+      box-shadow:none !important;
+    }
+    #tab-admin-registrations .registration-request-meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      padding:0;
+      border:0;
+      background:transparent;
+    }
+    #tab-admin-registrations .registration-meta-item{
+      min-width:0;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.09);
+      background:rgba(255,255,255,.045);
+    }
+    #tab-admin-registrations .registration-meta-item small{
+      display:block;
+      margin-bottom:5px;
+      color:rgba(216,212,220,.62) !important;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+    #tab-admin-registrations .registration-meta-item strong{
+      display:block;
+      color:#ffffff !important;
+      font-size:13px;
+      line-height:1.45;
+      overflow-wrap:anywhere;
+    }
+    #tab-admin-registrations .registration-alert-note{
+      padding:11px 12px;
+      border-radius:15px;
+      border:1px solid rgba(24,194,126,.24);
+      background:rgba(24,194,126,.10);
+      color:#d1fae5;
+      font-size:12px;
+      line-height:1.5;
+      font-weight:700;
+    }
+    #tab-admin-registrations .registration-request-actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:9px;
+      margin-top:auto;
+      padding-top:2px;
+    }
+    #tab-admin-registrations .registration-request-actions .btn{
+      width:100%;
+      min-width:0;
+      min-height:40px;
+      padding:9px 10px !important;
+      border-radius:13px !important;
+      font-size:12px;
+      line-height:1;
+      box-shadow:none !important;
+    }
+    #tab-admin-registrations .registration-request-actions .btn-primary{
+      background:linear-gradient(90deg,var(--bro-accent,#ff5a1f),var(--bro-accent-2,#ff762e)) !important;
+      border-color:rgba(255,90,31,.64) !important;
+    }
+    #tab-admin-registrations .registration-request-actions .btn-danger{
+      background:rgba(239,68,68,.12) !important;
+      color:#fecdd3 !important;
+      border-color:rgba(239,68,68,.28) !important;
+    }
+    #tab-admin-registrations .registration-request-actions .btn-soft{
+      background:rgba(255,255,255,.07) !important;
+      color:#ffffff !important;
+      border-color:rgba(255,255,255,.12) !important;
+    }
+    #tab-admin-registrations .registration-request-actions .btn:disabled{
+      opacity:.48;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+    #tab-admin-registrations #registrationRequestsList .empty-state{
+      grid-column:1 / -1;
+      min-height:180px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      border-radius:22px;
+      border:1px dashed rgba(255,255,255,.16) !important;
+      background:rgba(255,255,255,.045) !important;
+      box-shadow:none !important;
+    }
+    @media (max-width:1180px){
+      #tab-admin-registrations .registration-request-grid,
+      #tab-admin-registrations .admin-user-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media (max-width:760px){
+      #tab-admin-registrations{padding:18px;border-radius:22px;}
+      #tab-admin-registrations .admin-head-row{grid-template-columns:1fr;padding:18px;}
+      #tab-admin-registrations #btnReloadRegistrationRequests{width:100%;}
+      #tab-admin-registrations .registration-request-grid,
+      #tab-admin-registrations .admin-user-stats{grid-template-columns:1fr;}
+      #tab-admin-registrations .registration-request-top{grid-template-columns:44px minmax(0,1fr);}
+      #tab-admin-registrations .registration-request-top .status{grid-column:1 / -1;justify-self:start;}
+      #tab-admin-registrations .registration-request-meta{grid-template-columns:1fr;}
+      #tab-admin-registrations .registration-request-actions{grid-template-columns:1fr;}
+    }
+
 </style>
 </head>
 <body>
@@ -9247,7 +9598,7 @@
 <div class="user-kpi-main"><strong id="registrationStatTotal">0</strong><span>Solicitudes visibles</span></div>
 </div>
 </div>
-<div class="user-list-shell" style="margin-top:18px">
+<div class="user-list-shell registration-inbox-card">
 <div class="user-list-head">
 <div>
 <h3>Bandeja de solicitudes</h3>
@@ -15291,21 +15642,26 @@ function renderPlayer(courseId){
         const alreadyUser = findStudentUserByEmail(request.email);
         const approveDisabled = request.status === 'Aprobado' ? 'disabled' : '';
         const blockDisabled = request.status === 'Bloqueado' ? 'disabled' : '';
+        const initials = (String(request.name || request.email || 'A').trim().split(/\s+/).slice(0,2).map(part => part.charAt(0)).join('') || 'A').toUpperCase();
+        const cardStateClass = request.status === 'Aprobado' ? 'is-approved' : (request.status === 'Bloqueado' ? 'is-blocked' : 'is-pending');
+        const authText = request.authSyncStatus || (request.authUid ? 'Creado' : 'Pendiente de validar');
         return `
-          <article class="registration-request-card">
-            <div>
-              <strong>${escapeHtml(request.name)}</strong>
-              <small>${escapeHtml(request.email)}</small>
-            </div>
-            <div class="registration-request-meta">
-              <small>Curso solicitado: <strong>${escapeHtml(course.title || request.courseTitle || 'Curso')}</strong></small>
-              <small>Fecha: ${escapeHtml(formatDateLabel(request.createdAt))}</small>
-              <small>Authentication: ${escapeHtml(request.authSyncStatus || (request.authUid ? 'Creado' : 'Pendiente de validar'))}</small>
-              ${alreadyUser ? '<small>Ya existe ficha de usuario en el campus.</small>' : ''}
-            </div>
-            <div class="user-chip-row">
+          <article class="registration-request-card ${cardStateClass}">
+            <div class="registration-request-top">
+              <div class="registration-request-avatar" aria-hidden="true">${escapeHtml(initials)}</div>
+              <div class="registration-request-identity">
+                <strong>${escapeHtml(request.name)}</strong>
+                <small>${escapeHtml(request.email)}</small>
+              </div>
               <span class="status ${registrationStatusClass(request.status)}">${escapeHtml(request.status)}</span>
             </div>
+            <div class="registration-request-meta">
+              <div class="registration-meta-item"><small>Curso solicitado</small><strong>${escapeHtml(course.title || request.courseTitle || 'Curso')}</strong></div>
+              <div class="registration-meta-item"><small>Fecha de solicitud</small><strong>${escapeHtml(formatDateLabel(request.createdAt))}</strong></div>
+              <div class="registration-meta-item"><small>Authentication</small><strong>${escapeHtml(authText)}</strong></div>
+              <div class="registration-meta-item"><small>Estado interno</small><strong>${alreadyUser ? 'Ficha creada en usuarios' : 'Pendiente de autorización'}</strong></div>
+            </div>
+            ${alreadyUser ? '<div class="registration-alert-note">Ya existe una ficha de usuario vinculada a este correo dentro del campus.</div>' : ''}
             <div class="registration-request-actions">
               <button class="btn btn-primary btn-sm" type="button" onclick="approveRegistrationRequest('${escapeHtml(request.docId)}')" ${approveDisabled}>Aprobar</button>
               <button class="btn btn-soft btn-sm" type="button" onclick="blockRegistrationRequest('${escapeHtml(request.docId)}')" ${blockDisabled}>Bloquear</button>
