@@ -11427,10 +11427,6 @@
         return false;
       }
       if(!canWriteSharedFirebaseState()){
-        console.warn('No se pudo guardar en Firestore: sesión de administrador no válida.', {
-          currentUserRole: state.currentUser?.role || '',
-          firebaseEmail: getFirebaseSignedEmail()
-        });
         return false;
       }
       try{
@@ -11595,16 +11591,16 @@ function buildUserFinancialSnapshot(userLike, extraPayments = []){
   const totalToPay = Math.max(0, Number(userLike.totalToPay) || 0);
   const basePaid = getConfirmedPaidAmount(userLike.id || 0);
   const extraConfirmed = (Array.isArray(extraPayments) ? extraPayments : [])
-    .filter(payment => payment && payment.status === 'Confirmado')
+    .filter(payment => payment && isConfirmedPaymentStatus(payment.status))
     .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
   const totalPaid = Math.max(0, basePaid + extraConfirmed);
   const balance = Math.max(0, totalToPay - totalPaid);
   const financialStatus = deriveFinancialStatus(userLike, balance, totalPaid);
   const accessStatus = deriveAccessStatus(userLike, financialStatus, balance, totalPaid);
   return {
-    totalToPay: finalTotalToPay,
-    totalPaid: finalTotalPaid,
-    balance: finalBalance,
+    totalToPay,
+    totalPaid,
+    balance,
     financialStatus,
     accessStatus,
     status: accessStatus,
@@ -11647,7 +11643,8 @@ function normalizeUserRecord(user, index = 0){
       : requestedStatus === 'Bloqueado'
         ? 18
         : 0;
-  const totalToPay = Math.max(0, Number(user.totalToPay) || defaults.price || 0);
+  const hasStoredTotalToPay = user.totalToPay !== undefined && user.totalToPay !== null && user.totalToPay !== '';
+  let totalToPay = Math.max(0, hasStoredTotalToPay ? (Number(user.totalToPay) || 0) : (defaults.price || 0));
   const totalPaid = Math.max(0, Number(user.totalPaid) || getConfirmedPaidAmount(user.id || 0));
   const balance = Math.max(0, totalToPay - totalPaid);
   const accessPolicy = user.accessPolicy || (defaults.allowPartial ? 'abono' : 'pago_completo');
@@ -11655,6 +11652,9 @@ function normalizeUserRecord(user, index = 0){
   const accessStatus = deriveAccessStatus({ ...user, accessPolicy }, financialStatus, balance, totalPaid);
   const latestPayment = getLatestUserPayment(user.id || 0);
   const revokedCourseIds = Array.from(new Set((Array.isArray(user.revokedCourseIds) ? user.revokedCourseIds : [])
+    .map(Number)
+    .filter(Boolean)));
+  const adminFreeCourseIds = Array.from(new Set((Array.isArray(user.adminFreeCourseIds) ? user.adminFreeCourseIds : [])
     .map(Number)
     .filter(Boolean)));
   const revokedSet = new Set(revokedCourseIds);
@@ -11691,6 +11691,7 @@ function normalizeUserRecord(user, index = 0){
     courseId: finalCourseId,
     assignedCourseIds,
     revokedCourseIds,
+    adminFreeCourseIds,
     status: finalAccessStatus,
     accessStatus: finalAccessStatus,
     financialStatus: finalFinancialStatus,
@@ -13300,6 +13301,15 @@ function renderUserCourseOptions(user){
   }).join('');
 }
 
+function getUserCourseAssignmentSelectId(userId){
+  return `userCourseAssignSelect-${Number(userId) || 0}`;
+}
+
+function getSelectedCourseForUserAction(userId){
+  const field = document.getElementById(getUserCourseAssignmentSelectId(userId));
+  return Number(field?.value || 0);
+}
+
 
 function isConfirmedPaymentStatus(status){
   return ['confirmado','pagado','aprobado'].includes(String(status || '').trim().toLowerCase());
@@ -13362,15 +13372,29 @@ function grantCourseAccessToUser(user, courseId, options = {}){
   if(!Array.isArray(user.completedLessonsByCourse[targetCourseId])) user.completedLessonsByCourse[targetCourseId] = [];
   if(user.progressByCourse[targetCourseId] === undefined) user.progressByCourse[targetCourseId] = 0;
 
-  const assignedTotal = user.assignedCourseIds.reduce((sum, id) => sum + estimateCoursePrice(courseById(id)), 0);
+  const freeAssigned = new Set((Array.isArray(user.adminFreeCourseIds) ? user.adminFreeCourseIds : [])
+    .map(Number)
+    .filter(Boolean));
+  if(options.skipFinancialCharge){
+    freeAssigned.add(targetCourseId);
+  }else{
+    freeAssigned.delete(targetCourseId);
+  }
+  user.adminFreeCourseIds = Array.from(freeAssigned);
+
+  const assignedTotal = user.assignedCourseIds.reduce((sum, id) => {
+    const numericId = Number(id);
+    return freeAssigned.has(numericId) ? sum : sum + estimateCoursePrice(courseById(numericId));
+  }, 0);
   user.totalToPay = Math.max(0, assignedTotal);
+  user.totalPaid = Math.max(0, getConfirmedPaidAmount(user.id || 0));
+  user.balance = Math.max(0, user.totalToPay - user.totalPaid);
   user.accessPolicy = options.accessPolicy || user.accessPolicy || 'inmediato';
   user.accessLockedByAdmin = false;
   user.status = 'Activo';
   user.accessStatus = 'Activo';
   user.accessEnabled = true;
-  user.financialStatus = options.financialStatus || user.financialStatus || 'Acceso admin';
-  user.balance = Math.max(0, Number(user.balance) || 0);
+  user.financialStatus = options.financialStatus || (user.balance <= 0 ? 'Pagado' : user.financialStatus || 'Acceso admin');
   user.progress = Number(user.progressByCourse[user.courseId] || 0);
   user.lastLesson = user.progress > 0 ? (user.lastLesson || 'Clase en progreso') : 'Sin avance';
   user.lastAccess = options.lastAccess || `Acceso activo: ${course.title}`;
@@ -13485,17 +13509,38 @@ async function assignCourseToExistingUser(userId, courseId, event){
   grantCourseAccessToUser(user, course.id, {
     source: 'admin',
     setPrimary: true,
+    skipFinancialCharge: true,
     accessPolicy: 'inmediato',
     financialStatus: user.financialStatus === 'Pagado' ? 'Pagado' : 'Acceso admin',
-    lastAccess: 'Curso activado por admin',
-    note: `El administrador activó el acceso al curso ${course.title}.`
+    lastAccess: 'Curso activado por admin sin registrar pago',
+    note: `El administrador activó sin pago el acceso al curso ${course.title}.`
   });
 
-  addActivity(`Se activó el acceso al curso ${course.title} para ${user.name}`);
+  addActivity(`Se activó sin pago el acceso al curso ${course.title} para ${user.name}`);
   if (typeof saveState === 'function') saveState();
   refreshUsersSection();
   refreshStudentCourseViews();
-  toast('Curso activado para ' + user.name);
+  toast('Curso asignado sin pago a ' + user.name);
+}
+
+function assignSelectedCourseWithoutPayment(userId, event){
+  event?.stopPropagation?.();
+  const courseId = getSelectedCourseForUserAction(userId);
+  if(!courseId){
+    toast('Selecciona un curso para asignar.');
+    return;
+  }
+  assignCourseToExistingUser(userId, courseId, event);
+}
+
+function openRegisterPaymentModalForSelectedCourse(userId, event){
+  event?.stopPropagation?.();
+  const courseId = getSelectedCourseForUserAction(userId);
+  if(!courseId){
+    toast('Selecciona un curso para registrar el pago.');
+    return;
+  }
+  openRegisterPaymentModal(userId, courseId);
 }
 
 async function revokeCourseAccessFromUser(userId, courseId, event){
@@ -13521,6 +13566,9 @@ async function revokeCourseAccessFromUser(userId, courseId, event){
     ...(Array.isArray(user.revokedCourseIds) ? user.revokedCourseIds : []),
     targetCourseId
   ].map(Number).filter(Boolean)));
+  user.adminFreeCourseIds = (Array.isArray(user.adminFreeCourseIds) ? user.adminFreeCourseIds : [])
+    .map(Number)
+    .filter(id => id && id !== targetCourseId);
 
   if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
     delete user.completedLessonsByCourse[targetCourseId];
@@ -13541,7 +13589,8 @@ async function revokeCourseAccessFromUser(userId, courseId, event){
     }
   });
 
-  const remainingTotal = remainingAssigned.reduce((sum, id) => sum + estimateCoursePrice(courseById(id)), 0);
+  const freeAfterRevoke = new Set((Array.isArray(user.adminFreeCourseIds) ? user.adminFreeCourseIds : []).map(Number).filter(Boolean));
+  const remainingTotal = remainingAssigned.reduce((sum, id) => freeAfterRevoke.has(Number(id)) ? sum : sum + estimateCoursePrice(courseById(id)), 0);
   user.totalToPay = remainingTotal;
   user.progress = user.courseId && user.progressByCourse ? Number(user.progressByCourse[user.courseId] || 0) : 0;
   user.lastLesson = user.courseId ? (user.progress > 0 ? 'Clase en progreso' : 'Sin avance') : 'Sin curso asignado';
@@ -13770,9 +13819,13 @@ function renderUsersTable(){
                 <small>Selecciona un curso y quedará como principal. También aparecerá en el panel del alumno.</small>
               </div>
             </div>
-            <select class="user-course-assign-select" onchange="assignCourseToExistingUser(${user.id}, this.value, event)">
+            <select class="user-course-assign-select" id="${getUserCourseAssignmentSelectId(user.id)}">
               ${renderUserCourseOptions(user)}
             </select>
+            <div class="user-actions" style="margin-top:10px">
+              <button class="btn btn-soft btn-sm" type="button" onclick="assignSelectedCourseWithoutPayment(${user.id}, event)">Asignar sin pago</button>
+              <button class="btn btn-primary btn-sm" type="button" onclick="openRegisterPaymentModalForSelectedCourse(${user.id}, event)">Asignar registrando pago</button>
+            </div>
             <div class="assigned-course-list">${renderAssignedCourseChips(user)}</div>
           </div>
 
@@ -18202,21 +18255,26 @@ function deleteUser(id){
   if(getUserFormEditingId() === id) resetUserForm();
 }
 
-function openRegisterPaymentModal(id){
-  const user = state.users.find(u => u.id === id);
+function openRegisterPaymentModal(id, forcedCourseId = 0){
+  const user = state.users.find(u => Number(u.id) === Number(id));
   if(!user) return;
-  const course = courseById(user.courseId) || {};
+  const selectedCourseId = Number(forcedCourseId) || Number(user.courseId) || Number(getUserAssignedCourseIds(user)[0]) || 0;
+  const course = courseById(selectedCourseId) || {};
+  const coursePrice = estimateCoursePrice(course);
+  const userBalance = Number(user.balance || 0);
+  const defaultAmount = coursePrice > 0 ? coursePrice : (userBalance > 0 ? userBalance : Number(user.totalToPay || 0));
   openModal('Registrar pago del alumno', `
     <div class="stack">
-      <div class="mini-note"><strong>${user.name}</strong> · ${course.title || 'Sin curso'} · Saldo actual: <strong>${formatCurrencyCOP(user.balance)}</strong></div>
+      <div class="mini-note"><strong>${user.name}</strong> · ${course.title || 'Sin curso seleccionado'} · Valor del curso: <strong>${formatCurrencyCOP(coursePrice || user.totalToPay || 0)}</strong></div>
+      <input type="hidden" id="paymentCourseField" value="${selectedCourseId || ''}">
       <div class="modal-payment-grid">
         <div class="field">
           <label>Monto</label>
-          <input type="number" id="paymentAmountField" min="0" step="1000" placeholder="30000" value="${user.balance > 0 ? user.balance : user.totalToPay || ''}">
+          <input type="number" id="paymentAmountField" min="0" step="1000" placeholder="30000" value="${defaultAmount || ''}">
         </div>
         <div class="field">
           <label>Fecha</label>
-          <input type="date" id="paymentDateField" value="2026-04-06">
+          <input type="date" id="paymentDateField" value="${getClientTodayDate()}">
         </div>
         <div class="field">
           <label>Método</label>
@@ -18224,7 +18282,7 @@ function openRegisterPaymentModal(id){
         </div>
         <div class="field">
           <label>Tipo</label>
-          <select id="paymentTypeField"><option>Abono</option><option>Pago completo</option><option>Matrícula</option><option>Cuota</option><option>Ajuste</option></select>
+          <select id="paymentTypeField"><option>Pago completo</option><option>Abono</option><option>Matrícula</option><option>Cuota</option><option>Ajuste</option></select>
         </div>
         <div class="field">
           <label>Referencia</label>
@@ -18240,7 +18298,7 @@ function openRegisterPaymentModal(id){
         <textarea id="paymentNoteField" placeholder="Ej: comprobante enviado por WhatsApp o pago recibido en caja."></textarea>
       </div>
       <div class="admin-inline-actions">
-        <button class="btn btn-primary" onclick="savePaymentFromModal(${user.id})">Guardar pago</button>
+        <button class="btn btn-primary" onclick="savePaymentFromModal(${user.id})">Guardar pago y asignar curso</button>
         <button class="btn btn-soft" onclick="closeModal()">Cancelar</button>
       </div>
     </div>
@@ -18248,15 +18306,21 @@ function openRegisterPaymentModal(id){
 }
 
 function savePaymentFromModal(userId){
-  const user = state.users.find(u => u.id === userId);
+  const user = state.users.find(u => Number(u.id) === Number(userId));
   if(!user) return;
   const amount = Number(document.getElementById('paymentAmountField')?.value || 0);
-  const date = document.getElementById('paymentDateField')?.value || '2026-04-06';
+  const date = document.getElementById('paymentDateField')?.value || getClientTodayDate();
   const method = document.getElementById('paymentMethodField')?.value || 'Transferencia';
-  const type = document.getElementById('paymentTypeField')?.value || 'Abono';
+  const type = document.getElementById('paymentTypeField')?.value || 'Pago completo';
   const reference = document.getElementById('paymentReferenceField')?.value?.trim() || '';
   const status = document.getElementById('paymentStatusField')?.value || 'Confirmado';
   const note = document.getElementById('paymentNoteField')?.value?.trim() || '';
+  const courseId = Number(document.getElementById('paymentCourseField')?.value || user.courseId || 0);
+  const paidCourse = courseById(courseId);
+  if(!paidCourse){
+    toast('Selecciona un curso válido para registrar el pago.');
+    return;
+  }
   if(amount <= 0){
     toast('Ingresa un monto válido.');
     return;
@@ -18264,7 +18328,7 @@ function savePaymentFromModal(userId){
   const paymentRecord = {
     id: Date.now(),
     userId,
-    courseId: user.courseId,
+    courseId,
     date,
     amount,
     method,
@@ -18277,26 +18341,23 @@ function savePaymentFromModal(userId){
   state.payments.unshift(paymentRecord);
 
   if(status === 'Confirmado'){
-    const paidCourse = courseById(paymentRecord.courseId);
-    if(paidCourse){
-      grantCourseAccessToUser(user, paidCourse.id, {
-        source: 'payment',
-        setPrimary: true,
-        accessPolicy: 'inmediato',
-        financialStatus: 'Pagado',
-        lastAccess: 'Pago confirmado y acceso activado',
-        note: `Pago aplicado para el curso ${paidCourse.title}. El alumno ya puede verlo en su panel.`
-      });
-    }else{
-      const snapshot = buildUserFinancialSnapshot(user, [paymentRecord]);
-      applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: true, paymentRegistered: true });
-      user.collectorNote = snapshot.balance > 0
-        ? `Pago aplicado. Saldo pendiente ${formatCurrencyCOP(snapshot.balance)}.`
-        : 'Pago aplicado y cuenta al día.';
-    }
+    grantCourseAccessToUser(user, paidCourse.id, {
+      source: 'payment',
+      setPrimary: true,
+      accessPolicy: 'inmediato',
+      financialStatus: 'Pagado',
+      lastAccess: 'Pago confirmado y acceso activado',
+      note: `Pago aplicado para el curso ${paidCourse.title}. El alumno ya puede verlo en su panel.`
+    });
+    const snapshot = buildUserFinancialSnapshot(user);
+    applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: true, paymentRegistered: true });
+    user.financialStatus = snapshot.balance > 0 ? snapshot.financialStatus : 'Pagado';
+    user.collectorNote = snapshot.balance > 0
+      ? `Pago aplicado para ${paidCourse.title}. Saldo pendiente ${formatCurrencyCOP(snapshot.balance)}.`
+      : `Pago completo registrado para ${paidCourse.title}.`;
   } else if(status === 'Pendiente verificación'){
     user.lastAccess = 'Pago pendiente de validación';
-    user.collectorNote = note || 'Hay un pago pendiente de verificación antes de habilitar acceso.';
+    user.collectorNote = note || `Pago pendiente de verificación para ${paidCourse.title}.`;
   }
 
   if (typeof saveState === 'function') saveState();
@@ -18305,7 +18366,7 @@ function savePaymentFromModal(userId){
   refreshStudentCourseViews();
   addActivity(`Se registró un pago de ${formatCurrencyCOP(amount)} para ${user.name}`);
   toast(status === 'Confirmado'
-    ? (user.status === 'Activo' ? 'Pago registrado y acceso activado.' : 'Pago registrado correctamente.')
+    ? 'Pago registrado y curso asignado.'
     : 'Pago registrado. Quedó pendiente de validación.');
 }
 
@@ -19528,6 +19589,8 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.openCoursePurchaseModal = openCoursePurchaseModal;
     window.openWompiCheckout = openWompiCheckout;
     window.grantCourseAccessToUser = grantCourseAccessToUser;
+    window.assignSelectedCourseWithoutPayment = assignSelectedCourseWithoutPayment;
+    window.openRegisterPaymentModalForSelectedCourse = openRegisterPaymentModalForSelectedCourse;
     window.copyText = copyText;
     window.openCoursePlayer = openCoursePlayer;
     window.selectLesson = selectLesson;
