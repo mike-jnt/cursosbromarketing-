@@ -9269,6 +9269,126 @@
       box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 14px 30px rgba(0,0,0,.22) !important;
     }
 
+    #studentSignalsBox{
+      gap:12px !important;
+    }
+
+    .student-signal-card{
+      position:relative;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr);
+      gap:12px;
+      align-items:flex-start;
+      padding:14px;
+      border-radius:18px;
+      background:linear-gradient(135deg, rgba(15,24,35,.96) 0%, rgba(13,21,16,.98) 56%, rgba(8,122,50,.24) 100%);
+      border:1px solid rgba(125,255,165,.18);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 14px 28px rgba(0,0,0,.18);
+      animation:studentSignalIn .55s cubic-bezier(.2,.8,.2,1) both;
+      animation-delay:var(--signal-delay,0s);
+    }
+
+    .student-signal-card::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.08) 42%, transparent 70%);
+      transform:translateX(-120%);
+      animation:studentSignalSheen 4.6s ease-in-out infinite;
+      pointer-events:none;
+    }
+
+    .student-signal-icon{
+      width:38px;
+      height:38px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:rgba(125,255,165,.12);
+      border:1px solid rgba(125,255,165,.20);
+      color:#d9ffe5;
+      box-shadow:0 0 0 0 rgba(125,255,165,.18);
+      animation:studentSignalPulse 2.2s ease-in-out infinite;
+    }
+
+    .student-signal-content strong{
+      display:block;
+      color:#f2fff6;
+      font-size:14px;
+      line-height:1.35;
+      letter-spacing:-.01em;
+    }
+
+    .student-signal-content small{
+      display:block;
+      color:#bed6c8 !important;
+      line-height:1.55;
+      margin-top:5px;
+    }
+
+    .student-signal-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .student-signal-btn{
+      min-height:34px !important;
+      padding:8px 11px !important;
+      border-radius:999px !important;
+      font-size:12px !important;
+      font-weight:900 !important;
+      background:#ecfff2 !important;
+      color:#0d3b1e !important;
+      border:1px solid rgba(125,255,165,.36) !important;
+      box-shadow:0 12px 20px rgba(8,122,50,.16) !important;
+      animation:studentSignalButtonBreath 2.7s ease-in-out infinite;
+    }
+
+    .student-signal-btn.secondary{
+      background:rgba(255,255,255,.08) !important;
+      color:#d9ffe5 !important;
+      border-color:rgba(125,255,165,.22) !important;
+      box-shadow:none !important;
+      animation:none;
+    }
+
+    .student-signal-btn:hover{
+      transform:translateY(-2px) !important;
+      filter:brightness(1.04);
+    }
+
+    @keyframes studentSignalIn{
+      from{opacity:0;transform:translateY(14px) scale(.98)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+
+    @keyframes studentSignalPulse{
+      0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(125,255,165,.14)}
+      50%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(125,255,165,0)}
+    }
+
+    @keyframes studentSignalSheen{
+      0%,64%{transform:translateX(-120%)}
+      100%{transform:translateX(120%)}
+    }
+
+    @keyframes studentSignalButtonBreath{
+      0%,100%{transform:translateY(0);box-shadow:0 12px 20px rgba(8,122,50,.14)}
+      50%{transform:translateY(-1px);box-shadow:0 16px 26px rgba(8,122,50,.24)}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      .student-signal-card,
+      .student-signal-card::before,
+      .student-signal-icon,
+      .student-signal-btn{
+        animation:none !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -18015,10 +18135,40 @@ function openPaymentHistoryModal(id){
       if(note) note.textContent = completed ? `Llevas ${completed} curso(s) completado(s).` : 'Tu progreso te está esperando';
       if(signals){
         const reqs = state.accessRequests.filter(r => r.requestedBy === getStudentIdentifier()).length;
+        const favoriteCount = Array.isArray(state.favorites) ? state.favorites.length : 0;
+        const nextId = next ? Number(next.id) : null;
+        const nextTitle = next ? escapeHtml(next.title || 'tu curso') : 'tu primer curso';
+        const primaryAction = next && next.progress < 100
+          ? `<button class="btn student-signal-btn" type="button" onclick="openCoursePlayer(${nextId})">Seguir ahora</button>`
+          : `<button class="btn student-signal-btn" type="button" onclick="showTab('student-discover')">Ver cursos</button>`;
+        const favoriteAction = next
+          ? `<button class="btn student-signal-btn secondary" type="button" onclick="toggleFavorite(${nextId})">${favoriteCount ? 'Gestionar favorito' : 'Guardar ruta'}</button>`
+          : `<button class="btn student-signal-btn secondary" type="button" onclick="showTab('student-discover')">Explorar</button>`;
         signals.innerHTML = `
-          <small>${completed ? 'Ya tienes resultados visibles dentro de la plataforma.' : 'Tu primer logro está más cerca de lo que parece.'}</small>
-          <small>${reqs ? `Tienes ${reqs} solicitud(es) de acceso registrada(s).` : 'Explora nuevos cursos para ampliar tu ruta de aprendizaje.'}</small>
-          <small>${state.favorites.length ? `Has guardado ${state.favorites.length} curso(s) como favoritos.` : 'Guarda cursos favoritos para volver más rápido a ellos.'}</small>
+          <div class="student-signal-card" style="--signal-delay:.02s">
+            <div class="student-signal-icon">↗</div>
+            <div class="student-signal-content">
+              <strong>${completed ? 'Ya tienes resultados visibles.' : 'Tu primer logro está muy cerca.'}</strong>
+              <small>${next ? `Continúa con ${nextTitle} mientras todavía tienes el impulso activo.` : 'Elige un curso para activar tu primera ruta de avance.'}</small>
+              <div class="student-signal-actions">${primaryAction}</div>
+            </div>
+          </div>
+          <div class="student-signal-card" style="--signal-delay:.10s">
+            <div class="student-signal-icon">◆</div>
+            <div class="student-signal-content">
+              <strong>${reqs ? `${reqs} solicitud(es) registradas.` : 'Hay una nueva ruta que puedes abrir.'}</strong>
+              <small>${reqs ? 'Tu acceso queda visible para que no sientas que empezaste desde cero.' : 'Explorar más cursos aumenta la sensación de avance y elección.'}</small>
+              <div class="student-signal-actions"><button class="btn student-signal-btn secondary" type="button" onclick="showTab('student-discover')">Explorar ruta</button></div>
+            </div>
+          </div>
+          <div class="student-signal-card" style="--signal-delay:.18s">
+            <div class="student-signal-icon">★</div>
+            <div class="student-signal-content">
+              <strong>${favoriteCount ? `${favoriteCount} curso(s) guardado(s).` : 'Marca una ruta para volver más fácil.'}</strong>
+              <small>${favoriteCount ? 'Tus favoritos funcionan como un recordatorio visual para regresar y continuar.' : 'Guardar un curso reduce la fricción y hace más fácil volver al aprendizaje.'}</small>
+              <div class="student-signal-actions">${favoriteAction}<button class="btn student-signal-btn secondary" type="button" onclick="showTab('student-courses')">Mis cursos</button></div>
+            </div>
+          </div>
         `;
       }
       if(profileStats){
