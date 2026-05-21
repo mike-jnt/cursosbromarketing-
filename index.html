@@ -10250,6 +10250,139 @@
       .student-certificate-course{font-size:20px}
     }
 
+
+
+    /* === Controles de volumen + final de clase === */
+    .youtube-volume-control{
+      display:inline-flex !important;
+      align-items:center !important;
+      gap:8px !important;
+      min-width:132px !important;
+      max-width:160px !important;
+      padding:6px 8px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(255,255,255,.12) !important;
+      background:rgba(255,255,255,.07) !important;
+      position:relative !important;
+      z-index:2 !important;
+    }
+    .youtube-volume-control .youtube-control-btn{
+      width:34px !important;
+      height:34px !important;
+      min-width:34px !important;
+      font-size:14px !important;
+      box-shadow:none !important;
+    }
+    .youtube-volume-range{
+      width:86px !important;
+      min-width:72px !important;
+      height:4px !important;
+      cursor:pointer !important;
+      accent-color:#0a8438 !important;
+      background:linear-gradient(90deg,#0a8438 var(--yt-volume,80%), rgba(255,255,255,.20) var(--yt-volume,80%)) !important;
+      border-radius:999px !important;
+      appearance:none;
+      -webkit-appearance:none;
+      outline:none;
+    }
+    .youtube-volume-range::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      background:#ffffff;
+      border:2px solid #0a8438;
+      box-shadow:0 3px 9px rgba(0,0,0,.35);
+    }
+    .youtube-volume-range::-moz-range-thumb{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      background:#ffffff;
+      border:2px solid #0a8438;
+      box-shadow:0 3px 9px rgba(0,0,0,.35);
+    }
+    .lesson-end-overlay{
+      position:absolute;
+      inset:0;
+      z-index:60;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:radial-gradient(circle at top, rgba(10,132,56,.30), rgba(0,0,0,.82) 48%, rgba(0,0,0,.92) 100%);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+    .lesson-end-overlay.hidden{display:none !important;}
+    .lesson-end-card{
+      width:min(560px,94%);
+      border-radius:26px;
+      border:1px solid rgba(127,243,165,.26);
+      background:linear-gradient(180deg, rgba(18,24,28,.94), rgba(5,8,7,.96));
+      box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+      padding:26px;
+      text-align:center;
+      color:#ffffff;
+      animation:modalIn .28s ease both;
+    }
+    .lesson-end-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:8px 13px;
+      border-radius:999px;
+      border:1px solid rgba(127,243,165,.28);
+      background:rgba(10,132,56,.20);
+      color:#b9ffd0;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:14px;
+    }
+    .lesson-end-card h3{
+      margin:0 0 10px;
+      font-size:clamp(24px,3vw,34px);
+      line-height:1.08;
+      letter-spacing:-.04em;
+      color:#ffffff;
+    }
+    .lesson-end-card p{
+      margin:0 auto 20px;
+      max-width:440px;
+      color:#d7e7dc;
+      line-height:1.65;
+    }
+    .lesson-end-actions{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .lesson-end-actions .btn{
+      border-radius:14px !important;
+      min-width:150px;
+    }
+    @media (max-width:860px){
+      .youtube-custom-controls.has-timebar{
+        grid-template-columns:42px 48px 42px 42px 1fr 86px !important;
+      }
+      .youtube-custom-controls.has-timebar .youtube-volume-control{
+        grid-column:1 / -1 !important;
+        grid-row:3 !important;
+        width:100% !important;
+        max-width:none !important;
+        justify-content:center !important;
+      }
+      .youtube-custom-controls.has-timebar .youtube-volume-range{
+        width:min(220px,65vw) !important;
+      }
+      .youtube-custom-controls.has-timebar #btnYoutubeFullscreen{grid-column:4 !important;grid-row:1 !important;}
+      .youtube-custom-controls.has-timebar .youtube-quality-control{grid-column:6 !important;grid-row:1 !important;}
+    }
+
 </style>
 </head>
 <body>
@@ -11265,6 +11398,10 @@
   <input aria-label="Barra de tiempo del video" class="youtube-progress-range" id="youtubeProgressRange" max="1000" min="0" step="1" type="range" value="0"/>
   <span class="youtube-time-label" id="youtubeDuration">0:00</span>
 </div>
+<div class="youtube-volume-control" aria-label="Volumen del video">
+  <button aria-label="Silenciar o activar volumen" class="youtube-control-btn" id="btnYoutubeMute" type="button">🔊</button>
+  <input aria-label="Controlar volumen del video" class="youtube-volume-range" id="youtubeVolumeRange" max="100" min="0" step="1" type="range" value="80"/>
+</div>
 <div class="youtube-quality-control" aria-label="Calidad del video">
   <span>Calidad</span>
   <select id="youtubeQualitySelect" aria-label="Elegir calidad del video">
@@ -11279,6 +11416,17 @@
 </div>
 <span class="youtube-control-label">Clase privada</span>
 <button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
+</div>
+<div class="lesson-end-overlay hidden" id="lessonEndOverlay" aria-live="polite">
+  <div class="lesson-end-card">
+    <div class="lesson-end-badge">Clase finalizada</div>
+    <h3 id="lessonEndTitle">Muy bien, terminaste esta clase</h3>
+    <p id="lessonEndText">Puedes repetirla para reforzar la idea principal o continuar con la siguiente clase.</p>
+    <div class="lesson-end-actions">
+      <button class="btn btn-soft" id="btnReplayLesson" type="button">Repetir clase</button>
+      <button class="btn btn-primary" id="btnContinueAfterEnd" type="button">Continuar a la siguiente clase</button>
+    </div>
+  </div>
 </div>
 <div class="placeholder" id="playerPlaceholder">
 <div>
@@ -14611,7 +14759,11 @@ function getStudentPaidCourses(){
       playbackQuality: 'default',
       availableQualities: [],
       pendingQuality: '',
-      qualityReloading: false
+      qualityReloading: false,
+      volume: 80,
+      previousVolume: 80,
+      muted: false,
+      volumeBound: false
     };
 
     function isLocalFileMode(){
@@ -15633,6 +15785,73 @@ function getStudentPaidCourses(){
       });
     }
 
+
+
+    function updateYoutubeVolumeControls(){
+      const range = document.getElementById('youtubeVolumeRange');
+      const btn = document.getElementById('btnYoutubeMute');
+      const volume = Math.max(0, Math.min(100, Math.round(Number(youtubeCustomState.volume) || 0)));
+      const visibleVolume = youtubeCustomState.muted ? 0 : volume;
+      if(range){
+        range.value = String(visibleVolume);
+        range.style.setProperty('--yt-volume', visibleVolume + '%');
+        range.setAttribute('aria-valuetext', visibleVolume + '%');
+        range.disabled = !youtubeCustomState.iframe;
+      }
+      if(btn){
+        const muted = youtubeCustomState.muted || visibleVolume <= 0;
+        btn.textContent = muted ? '🔇' : '🔊';
+        btn.setAttribute('aria-label', muted ? 'Activar volumen' : 'Silenciar video');
+        btn.title = muted ? 'Activar volumen' : 'Silenciar video';
+      }
+    }
+
+    function applyYoutubeVolume(value, options = {}){
+      const nextVolume = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+      if(nextVolume > 0) youtubeCustomState.previousVolume = nextVolume;
+      youtubeCustomState.volume = nextVolume;
+      youtubeCustomState.muted = nextVolume <= 0;
+      updateYoutubeVolumeControls();
+      if(youtubeCustomState.iframe){
+        sendYoutubePlayerCommand('setVolume', [nextVolume]);
+        sendYoutubePlayerCommand(nextVolume <= 0 ? 'mute' : 'unMute');
+      }
+      if(!options.silent) showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
+    }
+
+    function toggleYoutubeMute(){
+      if(youtubeCustomState.muted || Number(youtubeCustomState.volume) <= 0){
+        const restored = Math.max(10, Math.min(100, Number(youtubeCustomState.previousVolume) || 80));
+        youtubeCustomState.muted = false;
+        youtubeCustomState.volume = restored;
+        updateYoutubeVolumeControls();
+        if(youtubeCustomState.iframe){
+          sendYoutubePlayerCommand('setVolume', [restored]);
+          sendYoutubePlayerCommand('unMute');
+        }
+      }else{
+        youtubeCustomState.previousVolume = Math.max(10, Number(youtubeCustomState.volume) || 80);
+        youtubeCustomState.muted = true;
+        updateYoutubeVolumeControls();
+        if(youtubeCustomState.iframe) sendYoutubePlayerCommand('mute');
+      }
+      showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
+    }
+
+    function bindYoutubeVolumeControls(){
+      if(youtubeCustomState.volumeBound) return;
+      const range = document.getElementById('youtubeVolumeRange');
+      const btn = document.getElementById('btnYoutubeMute');
+      if(!range && !btn) return;
+      youtubeCustomState.volumeBound = true;
+      if(range){
+        range.addEventListener('input', () => applyYoutubeVolume(range.value));
+        range.addEventListener('change', () => applyYoutubeVolume(range.value));
+      }
+      if(btn) btn.addEventListener('click', toggleYoutubeMute);
+      updateYoutubeVolumeControls();
+    }
+
     function syncYoutubeApproximateTime(){
       if(!youtubeCustomState.playing || !youtubeCustomState.lastTick){
         updateYoutubeTimeControls();
@@ -15684,7 +15903,7 @@ function getStudentPaidCourses(){
         clearLessonAutoCompleteTimer();
         setYoutubePlayButtonState(false);
         updateYoutubeTimeControls();
-        completeCurrentLessonFromViewing('youtube-ended');
+        handleCurrentLessonVideoEnded('youtube-ended');
         return;
       }
 
@@ -15731,6 +15950,18 @@ function getStudentPaidCourses(){
           }
           updateYoutubeQualitySelect();
         }
+      }
+      if(payload.info && typeof payload.info.volume !== 'undefined'){
+        const volume = Number(payload.info.volume);
+        if(Number.isFinite(volume)){
+          youtubeCustomState.volume = Math.max(0, Math.min(100, Math.round(volume)));
+          if(youtubeCustomState.volume > 0) youtubeCustomState.previousVolume = youtubeCustomState.volume;
+          updateYoutubeVolumeControls();
+        }
+      }
+      if(payload.info && typeof payload.info.muted !== 'undefined'){
+        youtubeCustomState.muted = !!payload.info.muted;
+        updateYoutubeVolumeControls();
       }
       if(timeInfoChanged) updateYoutubeTimeControls();
 
@@ -15804,6 +16035,7 @@ function getStudentPaidCourses(){
       youtubeCustomState.lastTick = 0;
       youtubeCustomState.activeUrl = '';
       updateYoutubeQualitySelect();
+      updateYoutubeVolumeControls();
       setYoutubePlayButtonState(false);
       updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
@@ -15833,7 +16065,9 @@ function getStudentPaidCourses(){
       youtubeCustomState.activeUrl = url || '';
       bindYoutubeTimebarControls();
       bindYoutubeQualityControls();
+      bindYoutubeVolumeControls();
       updateYoutubeQualitySelect();
+      updateYoutubeVolumeControls();
       setYoutubePlayButtonState(false);
       updateYoutubeTimeControls();
       const controls = getYoutubeCustomControlsNode();
@@ -15851,6 +16085,10 @@ function getStudentPaidCourses(){
       window.setTimeout(() => {
         sendYoutubeListeningHandshake(iframe);
         sendYoutubePlayerCommand('pauseVideo');
+        sendYoutubePlayerCommand('setVolume', [Math.max(0, Math.min(100, Number(youtubeCustomState.volume) || 80))]);
+        if(youtubeCustomState.muted) sendYoutubePlayerCommand('mute');
+        else sendYoutubePlayerCommand('unMute');
+        updateYoutubeVolumeControls();
         requestYoutubeTimeInfo();
       }, 450);
       window.setTimeout(() => {
@@ -15978,11 +16216,12 @@ function getStudentPaidCourses(){
         // La clase solo se chulea cuando el navegador dispara el evento ended.
       });
       video.addEventListener('ended', () => {
-        completeCurrentLessonFromViewing('video-ended');
+        handleCurrentLessonVideoEnded('video-ended');
       });
     }
 
     function resetPlayerMedia(iframe, video){
+      hideLessonEndOverlay();
       clearLessonAutoCompleteTimer();
       if(activeHlsPlayer){
         try{ activeHlsPlayer.destroy(); } catch(err){}
@@ -19674,6 +19913,126 @@ function openSelectedStudentCourseInClasses(courseId){
       return true;
     }
 
+
+
+    function hideLessonEndOverlay(){
+      const overlay = document.getElementById('lessonEndOverlay');
+      if(overlay) overlay.classList.add('hidden');
+    }
+
+    function getCurrentPlayerCourseView(){
+      return getStudentCourseForDisplay(state.currentCourseId) || courseById(state.currentCourseId);
+    }
+
+    function refreshPlayerProgressLabels(course){
+      const view = course || getCurrentPlayerCourseView();
+      if(!view) return;
+      const completedLessons = getCompletedLessonsForCurrentContext(view.id);
+      const total = Math.max(1, (view.lessons || []).length);
+      const progress = Math.max(0, Math.min(100, Math.round((completedLessons.length / total) * 100)));
+      const progressPercent = document.getElementById('playerProgressPercent');
+      const progressFill = document.getElementById('playerProgressFill');
+      const completedCount = document.getElementById('playerCompletedCount');
+      const remainingCount = document.getElementById('playerRemainingCount');
+      const markBtn = document.getElementById('btnMarkCurrentLesson');
+      const progressBadge = document.getElementById('playerProgressBadge');
+      const courseStatusLabel = document.getElementById('playerCourseStatusLabel');
+      if(progressPercent) progressPercent.textContent = progress + '%';
+      if(progressFill) progressFill.style.width = progress + '%';
+      if(completedCount) completedCount.textContent = completedLessons.length + '/' + total;
+      if(remainingCount) remainingCount.textContent = Math.max(total - completedLessons.length, 0);
+      if(markBtn){
+        markBtn.textContent = 'Clase vista ✓';
+        markBtn.classList.add('is-completed');
+        markBtn.setAttribute('aria-pressed', 'true');
+      }
+      if(progressBadge){
+        progressBadge.textContent = progress >= 100 ? 'Curso completado' : 'Clase en progreso';
+        progressBadge.dataset.state = progress >= 100 ? 'completed' : 'started';
+      }
+      if(courseStatusLabel) courseStatusLabel.textContent = progress >= 100 ? 'Completado' : 'En progreso';
+      const activeRow = document.querySelector('.player-lesson-row.active');
+      if(activeRow){
+        activeRow.classList.add('done');
+        const check = activeRow.querySelector('.player-lesson-check');
+        if(check) check.textContent = '✓';
+      }
+    }
+
+    function showLessonEndOverlay(){
+      const overlay = document.getElementById('lessonEndOverlay');
+      if(!overlay) return;
+      const course = getCurrentPlayerCourseView();
+      const total = Math.max(0, (course?.lessons || []).length);
+      const isLastLesson = total > 0 && Number(state.currentLessonIndex) >= total - 1;
+      const title = document.getElementById('lessonEndTitle');
+      const text = document.getElementById('lessonEndText');
+      const continueBtn = document.getElementById('btnContinueAfterEnd');
+      if(title) title.textContent = isLastLesson ? 'Curso finalizado' : 'Muy bien, terminaste esta clase';
+      if(text) text.textContent = isLastLesson
+        ? 'Puedes repetir esta clase o ir a tus certificados para revisar el logro desbloqueado.'
+        : 'Puedes repetirla para reforzar la idea principal o continuar con la siguiente clase.';
+      if(continueBtn) continueBtn.textContent = isLastLesson ? 'Ver certificado' : 'Continuar a la siguiente clase';
+      overlay.classList.remove('hidden');
+    }
+
+    function handleCurrentLessonVideoEnded(source = 'video-ended'){
+      const courseId = Number(state.currentCourseId) || 0;
+      const course = getCurrentPlayerCourseView();
+      if(!courseId || !course) return;
+      const alreadyVisible = !document.getElementById('lessonEndOverlay')?.classList.contains('hidden');
+      setLessonCompleted(courseId, state.currentLessonIndex, { source, silent:true, render:false });
+      refreshPlayerProgressLabels(course);
+      renderStudentAssignedCourses();
+      renderStudentDiscover();
+      renderStudentCertificates();
+      updateStudentDesire();
+      showLessonEndOverlay();
+      if(!alreadyVisible) toast('Clase finalizada ✓');
+    }
+
+    function replayCurrentLesson(){
+      hideLessonEndOverlay();
+      const video = document.getElementById('playerVideo');
+      const iframe = youtubeCustomState.iframe || document.getElementById('playerIframe');
+      if(video && video.style.display !== 'none' && video.src){
+        try{
+          video.currentTime = 0;
+          const playPromise = video.play();
+          if(playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
+        }catch(err){ renderPlayer(state.currentCourseId); }
+        return;
+      }
+      if(iframe && iframe.style.display !== 'none' && iframe.src){
+        youtubeCustomState.currentTime = 0;
+        youtubeCustomState.lastTick = Date.now();
+        updateYoutubeTimeControls();
+        sendYoutubePlayerCommand('seekTo', [0, true]);
+        sendYoutubePlayerCommand('playVideo');
+        youtubeCustomState.playing = true;
+        startYoutubeClock();
+        setYoutubePlayButtonState(true);
+        showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
+        return;
+      }
+      renderPlayer(state.currentCourseId);
+    }
+
+    function continueAfterLessonEnd(){
+      hideLessonEndOverlay();
+      const course = getCurrentPlayerCourseView();
+      const total = Math.max(0, (course?.lessons || []).length);
+      if(!course || !total) return;
+      if(Number(state.currentLessonIndex) < total - 1){
+        clearLessonAutoCompleteTimer();
+        state.currentLessonIndex = Math.min(Number(state.currentLessonIndex) + 1, total - 1);
+        saveState({ localOnly:true });
+        renderPlayer(course.id);
+      }else{
+        showTab('student-certificates');
+      }
+    }
+
     function completeCurrentLessonFromViewing(source = 'auto'){
       if(!state.currentCourseId && state.currentCourseId !== 0) return false;
       return setLessonCompleted(state.currentCourseId, state.currentLessonIndex, { source, silent: source === 'silent' });
@@ -20143,6 +20502,9 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
           btn.classList.toggle('is-favorite', isFavorite);
         }
       });
+
+      byId('btnReplayLesson')?.addEventListener('click', replayCurrentLesson);
+      byId('btnContinueAfterEnd')?.addEventListener('click', continueAfterLessonEnd);
 
       byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
       byId('btnYoutubeCenterPlay')?.addEventListener('click', toggleYoutubePlayPause);
