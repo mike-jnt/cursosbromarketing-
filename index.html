@@ -11602,9 +11602,9 @@ function buildUserFinancialSnapshot(userLike, extraPayments = []){
   const financialStatus = deriveFinancialStatus(userLike, balance, totalPaid);
   const accessStatus = deriveAccessStatus(userLike, financialStatus, balance, totalPaid);
   return {
-    totalToPay,
-    totalPaid,
-    balance,
+    totalToPay: finalTotalToPay,
+    totalPaid: finalTotalPaid,
+    balance: finalBalance,
     financialStatus,
     accessStatus,
     status: accessStatus,
@@ -11654,10 +11654,15 @@ function normalizeUserRecord(user, index = 0){
   const financialStatus = deriveFinancialStatus(user, balance, totalPaid);
   const accessStatus = deriveAccessStatus({ ...user, accessPolicy }, financialStatus, balance, totalPaid);
   const latestPayment = getLatestUserPayment(user.id || 0);
+  const revokedCourseIds = Array.from(new Set((Array.isArray(user.revokedCourseIds) ? user.revokedCourseIds : [])
+    .map(Number)
+    .filter(Boolean)));
+  const revokedSet = new Set(revokedCourseIds);
   const assignedCourseIds = Array.from(new Set([
     selectedCourseId,
     ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : [])
-  ].map(Number).filter(Boolean)));
+  ].map(Number).filter(id => id && !revokedSet.has(id))));
+  const finalCourseId = assignedCourseIds.includes(selectedCourseId) ? selectedCourseId : (assignedCourseIds[0] || 0);
   const completedLessonsByCourse = user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'
     ? { ...user.completedLessonsByCourse }
     : {};
@@ -11668,19 +11673,29 @@ function normalizeUserRecord(user, index = 0){
     if(!Array.isArray(completedLessonsByCourse[id])) completedLessonsByCourse[id] = [];
     if(progressByCourse[id] === undefined) progressByCourse[id] = id === selectedCourseId ? defaultProgress : 0;
   });
+  const finalAccessStatus = assignedCourseIds.length
+    ? accessStatus
+    : (user.accessLockedByAdmin || requestedStatus === 'Bloqueado' ? 'Bloqueado' : 'Pendiente');
+  const finalFinancialStatus = assignedCourseIds.length
+    ? financialStatus
+    : (String(user.financialStatus || '').trim() === 'Cancelado' ? 'Cancelado' : 'Sin cobrar');
+  const finalTotalToPay = assignedCourseIds.length ? totalToPay : 0;
+  const finalBalance = assignedCourseIds.length ? balance : 0;
+  const finalTotalPaid = assignedCourseIds.length ? totalPaid : 0;
   return {
     id: user.id || Date.now() + index,
     role: 'student',
     name: user.name || 'Alumno sin nombre',
     email: normalizeEmail(user.email || ''),
     password: String(user.password || user.tempPassword || DEMO_USERS.student.password || '123456'),
-    courseId: selectedCourseId,
+    courseId: finalCourseId,
     assignedCourseIds,
-    status: accessStatus,
-    accessStatus,
-    financialStatus,
+    revokedCourseIds,
+    status: finalAccessStatus,
+    accessStatus: finalAccessStatus,
+    financialStatus: finalFinancialStatus,
     lastAccess: user.lastAccess || 'Aún no ingresa',
-    progress: Number(progressByCourse[selectedCourseId]) || defaultProgress,
+    progress: Number(progressByCourse[finalCourseId]) || (finalCourseId ? defaultProgress : 0),
     progressByCourse,
     completedLessonsByCourse,
     lastLesson: user.lastLesson || (defaultProgress > 0 ? 'Clase en progreso' : 'Sin avance'),
@@ -11695,7 +11710,7 @@ function normalizeUserRecord(user, index = 0){
     latestPaymentDate: latestPayment?.date || '',
     latestPaymentMethod: latestPayment?.method || '',
     latestPaymentStatus: latestPayment?.status || '',
-    accessEnabled: accessStatus === 'Activo',
+    accessEnabled: assignedCourseIds.length > 0 && finalAccessStatus === 'Activo',
     accessLockedByAdmin: Boolean(user.accessLockedByAdmin),
     authUid: user.authUid || '',
     authSyncedAt: user.authSyncedAt || '',
@@ -11826,10 +11841,16 @@ function ensureDefaultStudentUser(){
     user.role = 'student';
     user.name = user.name || DEMO_USERS.student.name;
     user.courseId = Number(user.courseId) || defaultCourseIds[0] || (state.courses[0] ? state.courses[0].id : 0);
-    user.assignedCourseIds = Array.from(new Set([
-      ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
-      ...(defaultCourseIds.length ? defaultCourseIds : [user.courseId])
-    ].map(Number).filter(Boolean)));
+    const revoked = getUserRevokedCourseIds(user);
+    const baseAssigned = Array.isArray(user.assignedCourseIds)
+      ? user.assignedCourseIds
+      : (defaultCourseIds.length ? defaultCourseIds : [user.courseId]);
+    user.assignedCourseIds = Array.from(new Set(baseAssigned
+      .map(Number)
+      .filter(id => id && !revoked.has(id))));
+    if(user.courseId && revoked.has(Number(user.courseId))){
+      user.courseId = user.assignedCourseIds[0] || 0;
+    }
     if(!user.completedLessonsByCourse) user.completedLessonsByCourse = {};
     if(!user.progressByCourse) user.progressByCourse = {};
     user.assignedCourseIds.forEach(id => {
@@ -11911,10 +11932,13 @@ function getCurrentStudentRecord(){
 
 function getStudentCourseIds(user = getCurrentStudentRecord()){
   if(!user) return [];
+  const revoked = new Set((Array.isArray(user.revokedCourseIds) ? user.revokedCourseIds : [])
+    .map(Number)
+    .filter(Boolean));
   return Array.from(new Set([
     ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
     Number(user.courseId) || 0
-  ].map(Number).filter(Boolean)));
+  ].map(Number).filter(id => id && !revoked.has(id))));
 }
 
 function getStudentCompletedLessons(courseId, user = getCurrentStudentRecord()){
@@ -11958,6 +11982,7 @@ function getStudentCourseForDisplay(courseId){
   if(!course) return null;
   if(state.currentUser && state.currentUser.role === 'student'){
     if(!isCourseVisible(course)) return null;
+    if(!isCourseAssignedToCurrentStudent(courseId)) return null;
     return buildStudentCourseView(course, getCurrentStudentRecord());
   }
   return course;
@@ -11973,7 +11998,8 @@ function canCurrentStudentOpenCourse(courseId){
   const course = courseById(courseId);
   if(!isCourseVisible(course)) return false;
   if(!isCourseAssignedToCurrentStudent(courseId)) return false;
-  return user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo';
+  if(isUserBlockedForCourses(user)) return false;
+  return true;
 }
 
 function updateStudentCourseProgress(courseId, completedLessons){
@@ -13171,6 +13197,168 @@ function renderUserCourseOptions(user){
   }).join('');
 }
 
+
+function isConfirmedPaymentStatus(status){
+  return ['confirmado','pagado','aprobado'].includes(String(status || '').trim().toLowerCase());
+}
+
+function getUserRevokedCourseIds(user){
+  return new Set((Array.isArray(user?.revokedCourseIds) ? user.revokedCourseIds : [])
+    .map(Number)
+    .filter(Boolean));
+}
+
+function isUserBlockedForCourses(user){
+  const status = String(user?.status || '').trim().toLowerCase();
+  const accessStatus = String(user?.accessStatus || '').trim().toLowerCase();
+  const financialStatus = String(user?.financialStatus || '').trim().toLowerCase();
+  return Boolean(user?.accessLockedByAdmin)
+    || status === 'bloqueado'
+    || accessStatus === 'bloqueado'
+    || financialStatus === 'cancelado';
+}
+
+function getConfirmedCoursePaymentIdsForUser(user){
+  if(!user) return new Set();
+  const revoked = getUserRevokedCourseIds(user);
+  return new Set((state.payments || [])
+    .filter(payment => {
+      const courseId = Number(payment.courseId);
+      return Number(payment.userId) === Number(user.id)
+        && courseId
+        && !revoked.has(courseId)
+        && isConfirmedPaymentStatus(payment.status);
+    })
+    .map(payment => Number(payment.courseId))
+    .filter(Boolean));
+}
+
+function refreshStudentCourseViews(){
+  if(typeof renderStudentAssignedCourses === 'function') renderStudentAssignedCourses();
+  if(typeof renderStudentDiscover === 'function') renderStudentDiscover();
+  if(typeof renderStudentProgress === 'function') renderStudentProgress();
+  if(typeof renderStudentCertificates === 'function') renderStudentCertificates();
+  if(typeof updateStudentDesire === 'function') updateStudentDesire();
+}
+
+function grantCourseAccessToUser(user, courseId, options = {}){
+  const course = courseById(Number(courseId));
+  if(!user || !course) return null;
+  const targetCourseId = Number(course.id);
+  const assigned = new Set(getUserAssignedCourseIds(user));
+  assigned.add(targetCourseId);
+  user.assignedCourseIds = Array.from(assigned).filter(Boolean);
+  user.revokedCourseIds = Array.from(getUserRevokedCourseIds(user)).filter(id => Number(id) !== targetCourseId);
+
+  if(options.setPrimary !== false || !Number(user.courseId)){
+    user.courseId = targetCourseId;
+  }
+
+  if(!user.completedLessonsByCourse || typeof user.completedLessonsByCourse !== 'object') user.completedLessonsByCourse = {};
+  if(!user.progressByCourse || typeof user.progressByCourse !== 'object') user.progressByCourse = {};
+  if(!Array.isArray(user.completedLessonsByCourse[targetCourseId])) user.completedLessonsByCourse[targetCourseId] = [];
+  if(user.progressByCourse[targetCourseId] === undefined) user.progressByCourse[targetCourseId] = 0;
+
+  const assignedTotal = user.assignedCourseIds.reduce((sum, id) => sum + estimateCoursePrice(courseById(id)), 0);
+  user.totalToPay = Math.max(0, assignedTotal);
+  user.accessPolicy = options.accessPolicy || user.accessPolicy || 'inmediato';
+  user.accessLockedByAdmin = false;
+  user.status = 'Activo';
+  user.accessStatus = 'Activo';
+  user.accessEnabled = true;
+  user.financialStatus = options.financialStatus || user.financialStatus || 'Acceso admin';
+  user.balance = Math.max(0, Number(user.balance) || 0);
+  user.progress = Number(user.progressByCourse[user.courseId] || 0);
+  user.lastLesson = user.progress > 0 ? (user.lastLesson || 'Clase en progreso') : 'Sin avance';
+  user.lastAccess = options.lastAccess || `Acceso activo: ${course.title}`;
+  user.collectorNote = options.note || `Acceso activo al curso ${course.title}.`;
+
+  if(state.currentUser && normalizeEmail(state.currentUser.email) === normalizeEmail(user.email)){
+    state.currentUser.courseId = Number(user.courseId) || targetCourseId;
+  }
+  return user;
+}
+
+function completeCoursePurchaseForUser(user, course, checkoutConfig = {}, options = {}){
+  if(!user || !course) return null;
+  const courseId = Number(course.id);
+  const price = estimateCoursePrice(course);
+  const reference = checkoutConfig.reference || options.reference || `COMPRA-${courseId}-${Date.now()}`;
+  const existingPayment = (state.payments || []).find(payment =>
+    Number(payment.userId) === Number(user.id)
+    && Number(payment.courseId) === courseId
+    && isConfirmedPaymentStatus(payment.status)
+  );
+
+  if(!existingPayment){
+    state.payments.unshift({
+      id: Date.now(),
+      userId: user.id,
+      courseId,
+      date: getClientTodayDate(),
+      amount: price,
+      method: options.method || 'Wompi',
+      reference,
+      registeredBy: options.registeredBy || 'Sistema',
+      type: 'Compra de curso',
+      status: 'Confirmado',
+      note: options.note || 'Compra confirmada y acceso activado automáticamente.'
+    });
+  }
+
+  (state.accessRequests || []).forEach(request => {
+    const sameCourse = Number(request.courseId) === courseId;
+    const sameUser = normalizeEmail(request.requestedBy) === normalizeEmail(user.email);
+    const sameReference = !reference || request.reference === reference || request.checkoutConfig?.reference === reference;
+    if(sameCourse && sameUser && sameReference){
+      request.status = 'Pagado';
+      request.paidAt = new Date().toISOString();
+      request.paymentReference = reference;
+    }
+  });
+
+  grantCourseAccessToUser(user, courseId, {
+    source: 'purchase',
+    financialStatus: 'Pagado',
+    accessPolicy: 'inmediato',
+    lastAccess: `Compra confirmada: ${course.title}`,
+    note: `Compra confirmada del curso ${course.title}. El alumno ya puede iniciar o continuar sus clases.`
+  });
+  return user;
+}
+
+function handleCoursePurchaseReturnFromUrl(){
+  try{
+    const params = new URLSearchParams(window.location.search || '');
+    const reference = params.get('reference') || params.get('ref') || params.get('transaction_reference') || '';
+    const status = String(params.get('status') || params.get('transaction_status') || params.get('payment_status') || '').trim().toUpperCase();
+    const approvedStatuses = ['APPROVED','APROBADA','PAID','PAGADO','SUCCESS','EXITOSA','COMPLETED','COMPLETADO'];
+    if(!reference || (status && !approvedStatuses.includes(status))) return false;
+
+    const request = (state.accessRequests || []).find(item =>
+      item.type === 'Compra'
+      && (item.reference === reference || item.checkoutConfig?.reference === reference)
+      && !['Pagado','Cancelado','Anulado'].includes(item.status)
+    );
+    if(!request) return false;
+
+    const user = findStudentUserByEmail(request.requestedBy || state.currentUser?.email);
+    const course = courseById(request.courseId);
+    if(!user || !course) return false;
+
+    completeCoursePurchaseForUser(user, course, { reference }, { method: 'Wompi', registeredBy: 'Wompi', note: 'Pago aprobado desde retorno de Wompi.' });
+    saveState();
+    if(window.history && window.history.replaceState){
+      window.history.replaceState({}, document.title, `${window.location.origin}${window.location.pathname}`);
+    }
+    toast('Compra confirmada. El curso ya aparece en tu panel.');
+    return true;
+  }catch(error){
+    console.warn('No se pudo validar el retorno de compra.', error);
+    return false;
+  }
+}
+
 function renderAssignedCourseChips(user){
   const ids = getUserAssignedCourseIds(user);
   if(!ids.length) return '<span class="assigned-course-chip">Sin cursos visibles</span>';
@@ -13191,37 +13379,20 @@ async function assignCourseToExistingUser(userId, courseId, event){
     return;
   }
 
-  const previousCourseId = Number(user.courseId) || 0;
-  user.courseId = Number(course.id);
-  user.assignedCourseIds = Array.from(new Set([
-    ...getUserAssignedCourseIds(user),
-    Number(course.id)
-  ].map(Number).filter(Boolean)));
-  user.revokedCourseIds = Array.isArray(user.revokedCourseIds)
-    ? user.revokedCourseIds.map(Number).filter(id => id !== Number(course.id))
-    : [];
+  grantCourseAccessToUser(user, course.id, {
+    source: 'admin',
+    setPrimary: true,
+    accessPolicy: 'inmediato',
+    financialStatus: user.financialStatus === 'Pagado' ? 'Pagado' : 'Acceso admin',
+    lastAccess: 'Curso activado por admin',
+    note: `El administrador activó el acceso al curso ${course.title}.`
+  });
 
-  if(!user.completedLessonsByCourse || typeof user.completedLessonsByCourse !== 'object') user.completedLessonsByCourse = {};
-  if(!user.progressByCourse || typeof user.progressByCourse !== 'object') user.progressByCourse = {};
-  if(!Array.isArray(user.completedLessonsByCourse[course.id])) user.completedLessonsByCourse[course.id] = [];
-  if(user.progressByCourse[course.id] === undefined) user.progressByCourse[course.id] = 0;
-  user.progress = Number(user.progressByCourse[course.id]) || 0;
-  user.lastLesson = user.progress > 0 ? (user.lastLesson || 'Clase en progreso') : 'Sin avance';
-
-  const defaults = getCourseFinancialDefaults(course);
-  if(!Number(user.totalToPay)) user.totalToPay = defaults.price || 0;
-  user.paymentPlan = user.paymentPlan || (defaults.installments > 1 ? `${defaults.installments} cuotas` : (defaults.paymentType || 'Único'));
-  user.accessPolicy = user.accessPolicy || (defaults.allowPartial ? 'abono' : 'pago_completo');
-  user.lastAccess = previousCourseId === Number(course.id)
-    ? (user.lastAccess || 'Curso actualizado por admin')
-    : 'Curso asignado por admin';
-
-  const snapshot = buildUserFinancialSnapshot(user);
-  applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: false });
-  addActivity(`Se asignó el curso ${course.title} a ${user.name}`);
-  if (typeof saveState === 'function') await saveState();
+  addActivity(`Se activó el acceso al curso ${course.title} para ${user.name}`);
+  if (typeof saveState === 'function') saveState();
   refreshUsersSection();
-  toast('Curso asignado a ' + user.name);
+  refreshStudentCourseViews();
+  toast('Curso activado para ' + user.name);
 }
 
 async function revokeCourseAccessFromUser(userId, courseId, event){
@@ -13274,15 +13445,20 @@ async function revokeCourseAccessFromUser(userId, courseId, event){
   user.lastAccess = `Acceso retirado: ${course.title}`;
   user.collectorNote = `Se retiró el acceso al curso ${course.title}. El alumno podrá verlo nuevamente en Explorar cursos para comprarlo.`;
 
-  const snapshot = buildUserFinancialSnapshot(user);
-  applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: false });
-  if(!remainingAssigned.length){
+  if(remainingAssigned.length){
+    user.status = 'Activo';
+    user.accessStatus = 'Activo';
+    user.accessEnabled = true;
+    user.accessLockedByAdmin = false;
+  }else{
     user.status = 'Pendiente';
     user.accessStatus = 'Pendiente';
     user.accessEnabled = false;
+    user.accessLockedByAdmin = false;
     user.financialStatus = 'Sin cobrar';
     user.balance = 0;
     user.totalPaid = 0;
+    user.accessPolicy = 'pago_completo';
   }
 
   if(state.currentUser && normalizeEmail(state.currentUser.email) === normalizeEmail(user.email)){
@@ -13290,10 +13466,9 @@ async function revokeCourseAccessFromUser(userId, courseId, event){
   }
 
   addActivity(`Se retiró el acceso al curso ${course.title} para ${user.name}`);
-  if (typeof saveState === 'function') await saveState();
+  if (typeof saveState === 'function') saveState();
   refreshUsersSection();
-  if(typeof renderStudentAssignedCourses === 'function') renderStudentAssignedCourses();
-  if(typeof renderStudentDiscover === 'function') renderStudentDiscover();
+  refreshStudentCourseViews();
   toast(affectedPayments ? 'Acceso quitado y curso disponible para nueva compra.' : 'Acceso quitado. El curso queda disponible para comprar.');
 }
 
@@ -13600,15 +13775,15 @@ function toggleUserCard(userId, event){
 
 function getStudentPaidCourses(){
   const user = getCurrentStudentRecord();
-  if(!user) return [];
-  const paidCourseIds = new Set(
-    (state.payments || [])
-      .filter(payment => Number(payment.userId) === Number(user.id) && payment.status === 'Confirmado')
-      .map(payment => Number(payment.courseId))
-      .filter(Boolean)
-  );
-  const globalAccessEnabled = user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo' || user.accessPolicy === 'inmediato' || user.financialStatus === 'Pagado' || Number(user.balance || 0) <= 0;
-  return getStudentCourses().filter(course => paidCourseIds.has(Number(course.id)) || globalAccessEnabled);
+  if(!user || isUserBlockedForCourses(user)) return [];
+  const activeIds = new Set([
+    ...getStudentCourseIds(user),
+    ...Array.from(getConfirmedCoursePaymentIdsForUser(user))
+  ].map(Number).filter(Boolean));
+  return getVisibleCourses()
+    .filter(course => activeIds.has(Number(course.id)))
+    .map(course => buildStudentCourseView(course, user))
+    .filter(Boolean);
 }
 
     function renderStudentAssignedCourses(){
@@ -13666,19 +13841,8 @@ function getStudentPaidCourses(){
       const note = document.getElementById('studentDiscoverCoursesNote');
       const user = getCurrentStudentRecord();
       const assignedIds = new Set(getStudentCourseIds(user).map(Number).filter(Boolean));
-      const revokedIds = new Set((Array.isArray(user?.revokedCourseIds) ? user.revokedCourseIds : []).map(Number).filter(Boolean));
-      const paidIds = new Set(
-        (state.payments || [])
-          .filter(payment => {
-            const sameUser = user && Number(payment.userId) === Number(user.id);
-            const status = String(payment.status || '').trim().toLowerCase();
-            const courseId = Number(payment.courseId);
-            return sameUser && !revokedIds.has(courseId) && ['confirmado','pagado','aprobado'].includes(status);
-          })
-          .map(payment => Number(payment.courseId))
-          .filter(Boolean)
-      );
-      const unavailableIds = new Set([...assignedIds, ...paidIds]);
+      const paidIds = getConfirmedCoursePaymentIdsForUser(user);
+      const unavailableIds = new Set([...assignedIds, ...Array.from(paidIds)]);
       const availableCourses = getVisibleCourses()
         .filter(course => !unavailableIds.has(Number(course.id)))
         .sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')) || Number(b.id || 0) - Number(a.id || 0));
@@ -16262,6 +16426,10 @@ function renderPlayer(courseId){
       if(user.financialStatus === 'Cancelado' || user.status === 'Bloqueado' || user.accessStatus === 'Bloqueado'){
         return { ok: false, reason: 'blocked', user };
       }
+      const assignedIds = getStudentCourseIds(user);
+      if(!assignedIds.length){
+        return { ok: true, user };
+      }
       if(!(user.accessEnabled === true || user.status === 'Activo' || user.accessStatus === 'Activo')){
         return { ok: false, reason: 'pending', user };
       }
@@ -18006,11 +18174,23 @@ function savePaymentFromModal(userId){
   state.payments.unshift(paymentRecord);
 
   if(status === 'Confirmado'){
-    const snapshot = buildUserFinancialSnapshot(user, [paymentRecord]);
-    applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: true, paymentRegistered: true });
-    user.collectorNote = snapshot.balance > 0
-      ? `Pago aplicado. Saldo pendiente ${formatCurrencyCOP(snapshot.balance)}.`
-      : 'Pago aplicado y cuenta al día.';
+    const paidCourse = courseById(paymentRecord.courseId);
+    if(paidCourse){
+      grantCourseAccessToUser(user, paidCourse.id, {
+        source: 'payment',
+        setPrimary: true,
+        accessPolicy: 'inmediato',
+        financialStatus: 'Pagado',
+        lastAccess: 'Pago confirmado y acceso activado',
+        note: `Pago aplicado para el curso ${paidCourse.title}. El alumno ya puede verlo en su panel.`
+      });
+    }else{
+      const snapshot = buildUserFinancialSnapshot(user, [paymentRecord]);
+      applyFinancialSnapshotToUser(user, snapshot, { touchLastAccess: true, paymentRegistered: true });
+      user.collectorNote = snapshot.balance > 0
+        ? `Pago aplicado. Saldo pendiente ${formatCurrencyCOP(snapshot.balance)}.`
+        : 'Pago aplicado y cuenta al día.';
+    }
   } else if(status === 'Pendiente verificación'){
     user.lastAccess = 'Pago pendiente de validación';
     user.collectorNote = note || 'Hay un pago pendiente de verificación antes de habilitar acceso.';
@@ -18019,6 +18199,7 @@ function savePaymentFromModal(userId){
   if (typeof saveState === 'function') saveState();
   closeModal();
   refreshUsersSection();
+  refreshStudentCourseViews();
   addActivity(`Se registró un pago de ${formatCurrencyCOP(amount)} para ${user.name}`);
   toast(status === 'Confirmado'
     ? (user.status === 'Activo' ? 'Pago registrado y acceso activado.' : 'Pago registrado correctamente.')
@@ -18239,6 +18420,13 @@ function openPaymentHistoryModal(id){
         closeModal();
         return;
       }
+      if(state.currentUser && state.currentUser.role === 'student' && isCourseAssignedToCurrentStudent(course.id)){
+        toast('Este curso ya está activo en tu panel.');
+        closeModal();
+        showTab('student-home');
+        renderStudentAssignedCourses();
+        return;
+      }
       const existingPurchase = findOpenCoursePurchase(course.id);
       const checkoutConfig = buildWompiCheckoutConfig(course, existingPurchase);
       const button = document.querySelector(`button[data-wompi-course="${courseId}"]`);
@@ -18271,6 +18459,12 @@ function openPaymentHistoryModal(id){
       if(state.currentUser && state.currentUser.role === 'student' && !isCourseVisible(course)){
         toast('Este curso no está visible para compra en este momento.');
         renderStudentDiscover();
+        return;
+      }
+      if(state.currentUser && state.currentUser.role === 'student' && isCourseAssignedToCurrentStudent(course.id)){
+        toast('Este curso ya está activo en tu panel.');
+        showTab('student-home');
+        renderStudentAssignedCourses();
         return;
       }
       const price = estimateCoursePrice(course);
@@ -19187,6 +19381,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     }
 
     bindButtons();
+    handleCoursePurchaseReturnFromUrl();
     fillCourseSelects();
     resetUserForm();
     renderAdminCourses();
@@ -19229,6 +19424,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.prepareCourseCheckout = prepareCourseCheckout;
     window.openCoursePurchaseModal = openCoursePurchaseModal;
     window.openWompiCheckout = openWompiCheckout;
+    window.grantCourseAccessToUser = grantCourseAccessToUser;
     window.copyText = copyText;
     window.openCoursePlayer = openCoursePlayer;
     window.selectLesson = selectLesson;
