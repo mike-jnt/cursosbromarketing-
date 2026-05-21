@@ -9935,6 +9935,58 @@
       .player-empty-courses-card h2{font-size:24px;}
     }
 
+
+    /* Estado vacío de Clases: solo recuadro, sin reproductor ni lista */
+    #tab-student-player.is-empty{
+      display:grid !important;
+      place-items:center !important;
+      min-height:calc(100vh - 84px) !important;
+      background:
+        radial-gradient(circle at top left, rgba(10,132,56,.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(95,135,255,.08), transparent 34%),
+        linear-gradient(135deg,#07180c 0%,#090612 46%,#06040b 100%) !important;
+      border:1px solid rgba(255,255,255,.08) !important;
+      padding:32px 18px !important;
+    }
+    #tab-student-player.is-empty > :not(#playerNoCoursesBox){
+      display:none !important;
+    }
+    #tab-student-player.is-empty #playerNoCoursesBox{
+      display:grid !important;
+      width:100% !important;
+      min-height:420px !important;
+      place-items:center !important;
+      padding:22px !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card{
+      background:
+        radial-gradient(circle at top right, rgba(10,132,56,.22), transparent 36%),
+        linear-gradient(180deg,#121018 0%,#0b1110 100%) !important;
+      border:1px solid rgba(127,243,165,.28) !important;
+      box-shadow:0 24px 60px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06) !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card .student-panel-kicker{
+      background:rgba(10,132,56,.16) !important;
+      border-color:rgba(127,243,165,.26) !important;
+      color:#7ff3a5 !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card h2{
+      color:#ffffff !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card p{
+      color:#d4d0d9 !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card .btn-primary{
+      background:#0a8438 !important;
+      color:#ffffff !important;
+      border:1px solid #7ff3a5 !important;
+      box-shadow:0 16px 30px rgba(10,132,56,.20) !important;
+    }
+    #tab-student-player.is-empty .player-empty-courses-card .btn-primary:hover{
+      background:#07692d !important;
+      border-color:#0b8844 !important;
+    }
+
 </style>
 </head>
 <body>
@@ -10911,8 +10963,8 @@
 <div class="player-empty-courses hidden" id="playerNoCoursesBox">
 <div class="player-empty-courses-card">
 <span class="student-panel-kicker">Clases</span>
-<h2>Por el momento no tienes cursos comprados</h2>
-<p>Cuando compres un curso o el administrador active tu acceso, tus clases aparecerán en esta sección.</p>
+<h2>Actualmente no tienes cursos comprados</h2>
+<p>Explora los cursos disponibles, elige el que quieras iniciar y cuando tengas acceso aparecerán aquí tus clases.</p>
 <button class="btn btn-primary" type="button" onclick="showTab('student-discover')">Explorar cursos</button>
 </div>
 </div>
@@ -12306,6 +12358,7 @@ function buildStudentCourseView(course, user = getCurrentStudentRecord()){
 function getStudentCourses(){
   const user = getCurrentStudentRecord();
   if(!user) return [];
+  if(typeof isUserBlockedForCourses === 'function' && isUserBlockedForCourses(user)) return [];
   const ids = new Set(getStudentCourseIds(user));
   return state.courses
     .filter(course => ids.has(Number(course.id)) && isCourseVisible(course))
@@ -12317,6 +12370,8 @@ function getStudentCourseForDisplay(courseId){
   const course = courseById(courseId);
   if(!course) return null;
   if(state.currentUser && state.currentUser.role === 'student'){
+    const user = getCurrentStudentRecord();
+    if(typeof isUserBlockedForCourses === 'function' && isUserBlockedForCourses(user)) return null;
     if(!isCourseVisible(course)) return null;
     if(!isCourseAssignedToCurrentStudent(courseId)) return null;
     return buildStudentCourseView(course, getCurrentStudentRecord());
@@ -15760,13 +15815,19 @@ function getStudentPaidCourses(){
 
 
     function setPlayerNoCoursesState(isEmpty){
+      const tab = document.getElementById('tab-student-player');
       const emptyBox = document.getElementById('playerNoCoursesBox');
       const breadcrumb = document.querySelector('#tab-student-player .bro-learning-breadcrumb');
       const shell = document.querySelector('#tab-student-player .player-shell');
+
+      if(tab) tab.classList.toggle('is-empty', Boolean(isEmpty));
       if(emptyBox) emptyBox.classList.toggle('hidden', !isEmpty);
       if(breadcrumb) breadcrumb.classList.toggle('hidden', isEmpty);
       if(shell) shell.classList.toggle('hidden', isEmpty);
+
       if(isEmpty){
+        state.currentCourseId = 0;
+        state.currentLessonIndex = 0;
         const iframe = document.getElementById('playerIframe');
         const video = document.getElementById('playerVideo');
         if(typeof resetPlayerMedia === 'function') resetPlayerMedia(iframe, video);
