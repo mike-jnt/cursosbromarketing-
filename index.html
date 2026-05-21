@@ -9391,10 +9391,15 @@
 
 
 
-    /* Ajuste visual: línea superior de Tu meta de hoy */
-    #tab-student-home .student-side-stack > .goal-card:first-child::before{
+    /* Ajuste visual: líneas superiores de tarjetas del panel alumno */
+    #tab-student-home .student-side-stack > .goal-card:first-child::before,
+    #tab-student-home .student-side-stack > .desire-card::before{
       background:linear-gradient(90deg, var(--bro-accent) 0%, #183024 100%) !important;
       opacity:1 !important;
+    }
+
+    #tab-student-home .student-side-stack > .desire-card{
+      border-color:rgba(8,122,50,.18) !important;
     }
 </style>
 </head>
