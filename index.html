@@ -11006,7 +11006,7 @@
           id: 2,
           title: 'Canva para Negocios',
           category: 'Diseño',
-          status: 'Borrador',
+          status: 'Activo',
           description: 'Curso práctico para negocios que quieren crear contenido y piezas visuales sin depender de un diseñador.',
           createdAt: '2026-03-28',
           progress: 25,
@@ -11861,7 +11861,110 @@ function ensureDefaultStudentUser(){
   return user;
 }
 
+
+function buildDefaultExampleCourses(){
+  return [
+    {
+      id: 7,
+      title: 'Meta Ads para Negocios',
+      category: 'Publicidad',
+      status: 'Activo',
+      visible: true,
+      description: 'Curso práctico para crear campañas, organizar anuncios y llevar clientes potenciales a WhatsApp.',
+      createdAt: '2026-04-08',
+      progress: 0,
+      assigned: false,
+      benefit: 'Aprende a convertir anuncios en conversaciones reales de venta.',
+      price: 87000,
+      paymentType: 'Único',
+      allowPartial: true,
+      installments: 1,
+      completedLessons: [],
+      lessons: [
+        { module: 'Módulo 1 · Meta Ads', title: 'Estructura de una campaña', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+        { module: 'Módulo 1 · Meta Ads', title: 'Anuncios hacia WhatsApp', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
+      ]
+    },
+    {
+      id: 8,
+      title: 'CapCut Videomarketing',
+      category: 'Video',
+      status: 'Activo',
+      visible: true,
+      description: 'Curso para crear videos cortos con estructura de atención, edición clara y enfoque comercial.',
+      createdAt: '2026-04-09',
+      progress: 0,
+      assigned: false,
+      benefit: 'Crea videos que expliquen, conecten y ayuden a vender mejor.',
+      price: 99000,
+      paymentType: 'Único',
+      allowPartial: true,
+      installments: 2,
+      completedLessons: [],
+      lessons: [
+        { module: 'Módulo 1 · Video', title: 'Gancho de atención', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+        { module: 'Módulo 1 · Video', title: 'Edición básica en CapCut', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Embudos Simples con WhatsApp',
+      category: 'Estrategia',
+      status: 'Activo',
+      visible: true,
+      description: 'Aprende a ordenar el camino del cliente desde el anuncio hasta el cierre por WhatsApp.',
+      createdAt: '2026-04-10',
+      progress: 0,
+      assigned: false,
+      benefit: 'Organiza mejor tus mensajes, seguimientos y cierres sin complicarte.',
+      price: 77000,
+      paymentType: 'Único',
+      allowPartial: false,
+      installments: 1,
+      completedLessons: [],
+      lessons: [
+        { module: 'Módulo 1 · Embudo', title: 'Ruta del cliente', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+        { module: 'Módulo 1 · Embudo', title: 'Seguimiento y cierre', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Marca Personal para Vender',
+      category: 'Marca',
+      status: 'Activo',
+      visible: true,
+      description: 'Curso para construir presencia digital, confianza y contenido que aumente la intención de compra.',
+      createdAt: '2026-04-11',
+      progress: 0,
+      assigned: false,
+      benefit: 'Haz que tu negocio se vea más confiable antes de vender.',
+      price: 69000,
+      paymentType: 'Único',
+      allowPartial: true,
+      installments: 1,
+      completedLessons: [],
+      lessons: [
+        { module: 'Módulo 1 · Marca', title: 'Claridad del mensaje', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') },
+        { module: 'Módulo 1 · Marca', title: 'Contenido que genera confianza', url: buildProtectedYouTubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') }
+      ]
+    }
+  ];
+}
+
+function ensureDefaultExampleCourses(){
+  const currentCourses = Array.isArray(state.courses) ? state.courses : [];
+  const existingIds = new Set(currentCourses.map(course => Number(course && course.id)).filter(Boolean));
+  buildDefaultExampleCourses().forEach(course => {
+    if(!existingIds.has(Number(course.id))){
+      currentCourses.push(clonePlain(course));
+      existingIds.add(Number(course.id));
+    }
+  });
+  state.courses = currentCourses;
+}
+
 function syncUsersState(){
+  ensureDefaultExampleCourses();
   normalizeCourseVisibility();
   state.users = (state.users || []).map((user, index) => normalizeUserRecord(user, index));
   ensureDefaultStudentUser();
