@@ -9700,6 +9700,97 @@
       #tab-student-discover .student-paid-grid{grid-template-columns:1fr;}
     }
 
+
+
+/* =========================================================
+   AJUSTE: marca, navegación, usuario y cerrar sesión dentro
+   de una sola barra del header.
+========================================================= */
+#appShell .topbar{
+  padding:12px 0 !important;
+}
+#appShell .topbar-inner{
+  width:min(1480px,96%) !important;
+  margin:0 auto !important;
+  padding:8px 10px !important;
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) auto !important;
+  grid-template-areas:"brand nav actions" !important;
+  align-items:center !important;
+  gap:14px !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.060) 0%, rgba(255,255,255,.032) 100%) !important;
+  border:1px solid rgba(255,255,255,.095) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 14px 34px rgba(0,0,0,.24) !important;
+}
+#appShell .top-left{
+  grid-area:brand !important;
+  min-width:max-content !important;
+}
+#appShell .top-nav-wrap{
+  grid-area:nav !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  min-width:0 !important;
+  display:block !important;
+}
+#appShell .top-nav-scroll{
+  width:100% !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  display:flex !important;
+  justify-content:center !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+}
+#appShell .topbar .menu.top-nav-menu:not(.hidden),
+#appShell .topbar #menuAdmin:not(.hidden),
+#appShell .topbar #menuStudent:not(.hidden){
+  min-width:0 !important;
+  width:max-content !important;
+  justify-content:center !important;
+}
+#appShell .top-right{
+  grid-area:actions !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:10px !important;
+  min-width:max-content !important;
+}
+#appShell .top-right .btn-soft{
+  white-space:nowrap !important;
+}
+@media (max-width:920px){
+  #appShell .topbar-inner{
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-areas:"brand actions" "nav nav" !important;
+    gap:10px 12px !important;
+    padding:10px !important;
+  }
+  #appShell .top-nav-scroll{
+    justify-content:flex-start !important;
+  }
+  #appShell .top-left{
+    min-width:0 !important;
+  }
+}
+@media (max-width:560px){
+  #appShell .topbar-inner{
+    grid-template-columns:1fr !important;
+    grid-template-areas:"brand" "actions" "nav" !important;
+    align-items:stretch !important;
+  }
+  #appShell .top-right{
+    width:100% !important;
+    justify-content:space-between !important;
+    min-width:0 !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -9791,17 +9882,6 @@
 <small id="topRoleSubtitle">Control total de cursos, usuarios y accesos</small>
 </div>
 </div>
-<div class="top-right">
-<div class="header-user-meta">
-<strong id="sideUserName">Admin Principal</strong>
-<small id="sideUserEmail">admin@campus.com</small>
-</div>
-<span class="role role-admin" id="sideRoleBadge">Administrador</span>
-<span class="chip" id="roleChip">ADMIN</span>
-<div class="avatar" id="avatarText">A</div>
-<button class="btn btn-soft" onclick="logout()" type="button">Cerrar sesión</button>
-</div>
-</div>
 <div class="top-nav-wrap">
 <div class="top-nav-scroll">
 <div class="menu top-nav-menu" id="menuAdmin">
@@ -9821,6 +9901,17 @@
 <button data-tab="student-player" onclick="showTab('student-player', this)" type="button">Continuar clase</button>
 <button data-tab="student-profile" onclick="showTab('student-profile', this)" type="button">Mi perfil</button>
 </div>
+</div>
+</div>
+<div class="top-right">
+<div class="header-user-meta">
+<strong id="sideUserName">Admin Principal</strong>
+<small id="sideUserEmail">admin@campus.com</small>
+</div>
+<span class="role role-admin" id="sideRoleBadge">Administrador</span>
+<span class="chip" id="roleChip">ADMIN</span>
+<div class="avatar" id="avatarText">A</div>
+<button class="btn btn-soft" onclick="logout()" type="button">Cerrar sesión</button>
 </div>
 </div>
 </header>
