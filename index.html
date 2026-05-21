@@ -12438,6 +12438,20 @@
     }
 
 
+
+    function getFirebaseSignedUid(){
+      try{
+        return firebaseAuth && firebaseAuth.currentUser ? String(firebaseAuth.currentUser.uid || '') : '';
+      }catch(error){
+        return '';
+      }
+    }
+
+    function isFirestorePermissionError(error){
+      const text = String((error && (error.code || error.message)) || error || '').toLowerCase();
+      return text.includes('permission-denied') || text.includes('missing or insufficient permissions');
+    }
+
     function getStudentProgressDocId(email){
       const clean = normalizeEmail(email || state.currentUser?.email || '');
       return 'studentProgress_' + (clean.replace(/[^a-z0-9_-]/g, '_') || 'sin_email');
@@ -12532,12 +12546,40 @@
 
     function getStudentProgressDocRefs(email){
       if(!firebaseDb) return [];
-      const safeId = getStudentProgressSafeId(email);
-      return [
-        { label: 'studentProgress', ref: firebaseDb.collection('studentProgress').doc(safeId) },
-        { label: 'campusStudentProgress', ref: firebaseDb.collection('campusStudentProgress').doc(safeId) },
-        { label: 'campusInline', ref: firebaseDb.collection(FIREBASE_COLLECTION).doc(getStudentProgressDocId(email)) }
-      ];
+      const cleanEmail = normalizeEmail(email || state.currentUser?.email || '');
+      const safeId = getStudentProgressSafeId(cleanEmail);
+      const signedUid = getFirebaseSignedUid();
+      const signedEmail = getFirebaseSignedEmail();
+      const isStudentSession = state.currentUser?.role === 'student';
+      const emailMatchesSession = !signedEmail || !cleanEmail || signedEmail === cleanEmail;
+
+      // En sesión de alumno se usa el UID real de Firebase Auth.
+      // Esto coincide con reglas comunes: allow read/write si request.auth.uid == docId.
+      if(isStudentSession && signedUid && emailMatchesSession){
+        return [
+          { label: 'studentProgress(uid)', ref: firebaseDb.collection('studentProgress').doc(signedUid) }
+        ];
+      }
+
+      const refs = [];
+      if(signedUid && emailMatchesSession){
+        refs.push({ label: 'studentProgress(uid)', ref: firebaseDb.collection('studentProgress').doc(signedUid) });
+      }
+
+      // Rutas heredadas para administradores o instalaciones con reglas antiguas.
+      refs.push(
+        { label: 'studentProgress(email)', ref: firebaseDb.collection('studentProgress').doc(safeId) },
+        { label: 'campusStudentProgress(email)', ref: firebaseDb.collection('campusStudentProgress').doc(safeId) },
+        { label: 'campusInline', ref: firebaseDb.collection(FIREBASE_COLLECTION).doc(getStudentProgressDocId(cleanEmail)) }
+      );
+
+      const seen = new Set();
+      return refs.filter(item => {
+        const key = item.label + ':' + item.ref.path;
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     }
 
     function buildStudentProgressPayload(user = getCurrentStudentRecord(), options = {}){
@@ -12699,7 +12741,7 @@
             changed = mergeStudentProgressPayload(doc.data(), getCurrentStudentRecord()) || changed;
           }
         }catch(error){
-          console.warn('No se pudo cargar progreso desde', item.label, error);
+          if(!options.silent || !isFirestorePermissionError(error)) console.warn('No se pudo cargar progreso desde', item.label, error);
         }
       }
 
@@ -12729,7 +12771,7 @@
               changed = mergeStudentProgressPayload(doc.data(), user) || changed;
             }
           }catch(error){
-            console.warn('No se pudo cargar progreso de', email, 'desde', item.label, error);
+            if(!options.silent || !isFirestorePermissionError(error)) console.warn('No se pudo cargar progreso de', email, 'desde', item.label, error);
           }
         }
       }
@@ -12768,7 +12810,7 @@
           await item.ref.set(data, { merge: true });
           saved = true;
         }catch(error){
-          console.warn('No se pudo guardar progreso en', item.label, error);
+          if(!options.silent || !isFirestorePermissionError(error)) console.warn('No se pudo guardar progreso en', item.label, error);
         }
       }
       if(!saved && !options.silent){
@@ -18029,9 +18071,12 @@ function renderPlayer(courseId){
       // se suben con saveSharedStateToFirebaseNow() al crear/editar.
       saveState({ localOnly: true });
 
-      document.getElementById('sideUserName').textContent = cleanUser.name;
-      document.getElementById('sideUserEmail').textContent = cleanUser.email;
-      document.getElementById('avatarText').textContent = cleanUser.name.charAt(0).toUpperCase();
+      const sideUserNameEl = document.getElementById('sideUserName');
+      const sideUserEmailEl = document.getElementById('sideUserEmail');
+      const avatarTextEl = document.getElementById('avatarText');
+      if(sideUserNameEl) sideUserNameEl.textContent = cleanUser.name;
+      if(sideUserEmailEl) sideUserEmailEl.textContent = cleanUser.email;
+      if(avatarTextEl) avatarTextEl.textContent = cleanUser.name.charAt(0).toUpperCase();
 
       const roleChip = document.getElementById('roleChip');
       const sideRoleBadge = document.getElementById('sideRoleBadge');
@@ -18045,32 +18090,32 @@ function renderPlayer(courseId){
       document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
 
       if(cleanUser.role === 'admin'){
-        roleChip.textContent = 'ADMIN';
-        sideRoleBadge.textContent = 'Administrador';
-        sideRoleBadge.className = 'role role-admin';
-        topRoleTitle.textContent = 'Panel Administrativo';
-        topRoleSubtitle.textContent = 'Control total de cursos, usuarios y accesos';
-        menuAdmin.classList.remove('hidden');
-        menuStudent.classList.add('hidden');
-        const firstBtn = menuAdmin.querySelector('button[data-tab="admin-dashboard"]');
+        if(roleChip) roleChip.textContent = 'ADMIN';
+        if(sideRoleBadge) sideRoleBadge.textContent = 'Administrador';
+        if(sideRoleBadge) sideRoleBadge.className = 'role role-admin';
+        if(topRoleTitle) topRoleTitle.textContent = 'Panel Administrativo';
+        if(topRoleSubtitle) topRoleSubtitle.textContent = 'Control total de cursos, usuarios y accesos';
+        if(menuAdmin) menuAdmin.classList.remove('hidden');
+        if(menuStudent) menuStudent.classList.add('hidden');
+        const firstBtn = menuAdmin ? menuAdmin.querySelector('button[data-tab="admin-dashboard"]') : null;
         if(firstBtn) firstBtn.classList.add('active');
-        document.getElementById('tab-admin-dashboard').classList.remove('hidden');
+        document.getElementById('tab-admin-dashboard')?.classList.remove('hidden');
         await loadRegistrationRequestsFromFirestore({ silent: true });
         renderAdminDashboard();
         renderAdminCourses();
         renderUsersTable();
         renderRegistrationRequests();
       }else{
-        roleChip.textContent = 'ALUMNO';
-        sideRoleBadge.textContent = 'Alumno';
-        sideRoleBadge.className = 'role role-student';
-        topRoleTitle.textContent = 'Área del Alumno';
-        topRoleSubtitle.textContent = 'Tus cursos, tus clases y tu progreso';
-        menuAdmin.classList.add('hidden');
-        menuStudent.classList.remove('hidden');
-        const firstBtn = menuStudent.querySelector('button[data-tab="student-home"]');
+        if(roleChip) roleChip.textContent = 'ALUMNO';
+        if(sideRoleBadge) sideRoleBadge.textContent = 'Alumno';
+        if(sideRoleBadge) sideRoleBadge.className = 'role role-student';
+        if(topRoleTitle) topRoleTitle.textContent = 'Área del Alumno';
+        if(topRoleSubtitle) topRoleSubtitle.textContent = 'Tus cursos, tus clases y tu progreso';
+        if(menuAdmin) menuAdmin.classList.add('hidden');
+        if(menuStudent) menuStudent.classList.remove('hidden');
+        const firstBtn = menuStudent ? menuStudent.querySelector('button[data-tab="student-home"]') : null;
         if(firstBtn) firstBtn.classList.add('active');
-        document.getElementById('tab-student-home').classList.remove('hidden');
+        document.getElementById('tab-student-home')?.classList.remove('hidden');
         renderStudentAssignedCourses();
         renderStudentDiscover();
         renderStudentProgress();
@@ -21331,9 +21376,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       renderStudentCertificates();
       renderPlayer(state.currentCourseId);
       updateStudentDesire();
-      if(state.currentUser && state.currentUser.role){
-        enterApp(state.currentUser);
-      }
+      // Evita reingresar a la app desde refreshAllViews para no duplicar cargas Firebase.
       queueHydrateFirestoreCovers();
       hydrateCourseCoverFallbacks();
     }
