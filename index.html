@@ -10548,6 +10548,37 @@
       }
     }
 
+
+    /* Ajuste final solicitado: solo botón central y volumen más fácil de usar */
+    .youtube-center-actions,
+    #btnYoutubeCenterBack,
+    #btnYoutubeCenterForward{
+      display:none !important;
+    }
+    .youtube-volume-range{
+      height:9px !important;
+      width:136px !important;
+      min-width:136px !important;
+      border-radius:999px !important;
+    }
+    .youtube-volume-range::-webkit-slider-thumb{
+      width:22px !important;
+      height:22px !important;
+      border-width:3px !important;
+    }
+    .youtube-volume-range::-moz-range-thumb{
+      width:22px !important;
+      height:22px !important;
+      border-width:3px !important;
+    }
+    @media (max-width:760px){
+      .youtube-volume-range{
+        height:9px !important;
+        width:118px !important;
+        min-width:118px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -11550,52 +11581,10 @@
     <small id="youtubePrivateCourseTitle">Campus privado</small>
   </div>
 </div>
-<div class="youtube-center-actions" id="youtubeCenterActions" aria-label="Controles centrales de clase">
-  <button aria-label="Retroceder 10 segundos" class="youtube-center-seek" id="btnYoutubeCenterBack" type="button"><span>↺</span><small>10</small></button>
-  <button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir o pausar clase">
-    <span class="youtube-center-play-icon">▶</span>
-    <small>Reproducir</small>
-  </button>
-  <button aria-label="Adelantar 10 segundos" class="youtube-center-seek" id="btnYoutubeCenterForward" type="button"><small>10</small><span>↻</span></button>
-</div>
-<div class="youtube-custom-controls" id="youtubeCustomControls" aria-label="Controles personalizados de YouTube">
-<button aria-label="Retroceder 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeBack" type="button"><span>↺</span><small>10</small></button>
-<button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
-<button aria-label="Adelantar 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeForward" type="button"><small>10</small><span>↻</span></button>
-<div class="youtube-time-control" aria-label="Progreso del video">
-  <span class="youtube-time-label" id="youtubeCurrentTime">0:00</span>
-  <input aria-label="Barra de tiempo del video" class="youtube-progress-range" id="youtubeProgressRange" max="1000" min="0" step="1" type="range" value="0"/>
-  <span class="youtube-time-label" id="youtubeDuration">0:00</span>
-</div>
-<div class="youtube-volume-control" aria-label="Volumen del video">
-  <button aria-label="Silenciar o activar volumen" class="youtube-control-btn" id="btnYoutubeMute" type="button">🔊</button>
-  <input aria-label="Controlar volumen del video" class="youtube-volume-range" id="youtubeVolumeRange" max="100" min="0" step="1" type="range" value="80"/>
-</div>
-<div class="youtube-quality-control" aria-label="Calidad del video">
-  <span>Calidad</span>
-  <select id="youtubeQualitySelect" aria-label="Elegir calidad del video">
-    <option value="default">Auto</option>
-    <option value="small">240p</option>
-    <option value="medium">360p</option>
-    <option value="large">480p</option>
-    <option value="hd720">720p</option>
-    <option value="hd1080">1080p</option>
-    <option value="highres">Máxima</option>
-  </select>
-</div>
-<span class="youtube-control-label">Clase privada</span>
-<button aria-label="Pantalla completa" class="youtube-control-btn" id="btnYoutubeFullscreen" type="button">⛶</button>
-</div>
-<div class="lesson-end-overlay hidden" id="lessonEndOverlay" aria-live="polite">
-  <div class="lesson-end-card">
-    <div class="lesson-end-badge">Clase finalizada</div>
-    <h3 id="lessonEndTitle">Muy bien, terminaste esta clase</h3>
-    <p id="lessonEndText">Puedes repetirla para reforzar la idea principal o continuar con la siguiente clase.</p>
-    <div class="lesson-end-actions">
-      <button class="btn btn-soft" id="btnReplayLesson" type="button">Repetir clase</button>
-      <button class="btn btn-primary" id="btnContinueAfterEnd" type="button">Continuar a la siguiente clase</button>
-    </div>
-  </div>
+<button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir o pausar clase">
+  <span class="youtube-center-play-icon">▶</span>
+  <small>Reproducir</small>
+</button>
 </div>
 <div class="placeholder" id="playerPlaceholder">
 <div>
@@ -20757,8 +20746,6 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
       byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
       byId('btnYoutubeCenterPlay')?.addEventListener('click', toggleYoutubePlayPause);
-      byId('btnYoutubeCenterBack')?.addEventListener('click', () => seekYoutubeBy(-10));
-      byId('btnYoutubeCenterForward')?.addEventListener('click', () => seekYoutubeBy(10));
       byId('btnYoutubeBack')?.addEventListener('click', () => seekYoutubeBy(-10));
       byId('btnYoutubeForward')?.addEventListener('click', () => seekYoutubeBy(10));
       byId('btnYoutubeFullscreen')?.addEventListener('click', toggleYoutubeFullscreen);
