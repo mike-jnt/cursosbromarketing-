@@ -9987,6 +9987,95 @@
       border-color:#0b8844 !important;
     }
 
+
+    /* Ajuste: el recuadro vacío solo debe verse dentro de la sección Clases activa */
+    #tab-student-player.hidden.is-empty,
+    #tab-student-player.hidden.is-empty #playerNoCoursesBox{
+      display:none !important;
+    }
+
+    /* Animación de tarjetas en Mi panel y Explorar cursos */
+    @keyframes studentCourseCardEntrance{
+      from{opacity:0;transform:translateY(22px) scale(.96)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+    @keyframes studentCourseButtonSheen{
+      from{transform:translateX(-120%) skewX(-18deg)}
+      to{transform:translateX(140%) skewX(-18deg)}
+    }
+    #tab-student-home .student-paid-card,
+    #tab-student-discover .student-paid-card{
+      animation:studentCourseCardEntrance .58s cubic-bezier(.2,.8,.2,1) both !important;
+      will-change:transform, opacity;
+      transition:transform .28s cubic-bezier(.2,.8,.2,1), filter .28s ease !important;
+    }
+    #tab-student-home .student-paid-card:nth-child(1),
+    #tab-student-discover .student-paid-card:nth-child(1){animation-delay:.03s !important;}
+    #tab-student-home .student-paid-card:nth-child(2),
+    #tab-student-discover .student-paid-card:nth-child(2){animation-delay:.07s !important;}
+    #tab-student-home .student-paid-card:nth-child(3),
+    #tab-student-discover .student-paid-card:nth-child(3){animation-delay:.11s !important;}
+    #tab-student-home .student-paid-card:nth-child(4),
+    #tab-student-discover .student-paid-card:nth-child(4){animation-delay:.15s !important;}
+    #tab-student-home .student-paid-card:nth-child(5),
+    #tab-student-discover .student-paid-card:nth-child(5){animation-delay:.19s !important;}
+    #tab-student-home .student-paid-card:nth-child(6),
+    #tab-student-discover .student-paid-card:nth-child(6){animation-delay:.23s !important;}
+    #tab-student-home .student-paid-card:nth-child(7),
+    #tab-student-discover .student-paid-card:nth-child(7){animation-delay:.27s !important;}
+    #tab-student-home .student-paid-card:nth-child(8),
+    #tab-student-discover .student-paid-card:nth-child(8){animation-delay:.31s !important;}
+    #tab-student-home .student-paid-card:nth-child(9),
+    #tab-student-discover .student-paid-card:nth-child(9){animation-delay:.35s !important;}
+    #tab-student-home .student-paid-card:nth-child(10),
+    #tab-student-discover .student-paid-card:nth-child(10){animation-delay:.39s !important;}
+    #tab-student-home .student-paid-card:hover,
+    #tab-student-discover .student-paid-card:hover{
+      transform:translateY(-8px) scale(1.018) !important;
+      filter:saturate(1.04);
+    }
+    #tab-student-home .student-paid-cover .cover,
+    #tab-student-discover .student-paid-cover .cover{
+      transition:transform .32s cubic-bezier(.2,.8,.2,1), box-shadow .32s ease, border-color .28s ease !important;
+      will-change:transform;
+    }
+    #tab-student-home .student-paid-card:hover .student-paid-cover .cover,
+    #tab-student-discover .student-paid-card:hover .student-paid-cover .cover{
+      transform:scale(1.025) !important;
+      box-shadow:0 22px 42px rgba(18,41,56,.16) !important;
+    }
+    #tab-student-home .student-paid-actions .btn,
+    #tab-student-discover .student-paid-actions .btn{
+      position:relative !important;
+      overflow:hidden !important;
+      isolation:isolate;
+    }
+    #tab-student-home .student-paid-actions .btn::after,
+    #tab-student-discover .student-paid-actions .btn::after{
+      content:"";
+      position:absolute;
+      inset:-40% auto -40% -60%;
+      width:42%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);
+      opacity:0;
+      pointer-events:none;
+      z-index:1;
+    }
+    #tab-student-home .student-paid-card:hover .student-paid-actions .btn::after,
+    #tab-student-discover .student-paid-card:hover .student-paid-actions .btn::after{
+      opacity:1;
+      animation:studentCourseButtonSheen .82s ease both;
+    }
+    @media (prefers-reduced-motion:reduce){
+      #tab-student-home .student-paid-card,
+      #tab-student-discover .student-paid-card,
+      #tab-student-home .student-paid-cover .cover,
+      #tab-student-discover .student-paid-cover .cover{
+        animation:none !important;
+        transition:none !important;
+      }
+    }
+
 </style>
 </head>
 <body>
