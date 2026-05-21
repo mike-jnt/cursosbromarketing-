@@ -9202,6 +9202,62 @@
       text-shadow:none !important;
     }
 
+
+
+    /* Ajuste: miniatura principal del curso en el panel del alumno */
+    #tab-student-home .student-hero-grid{
+      grid-template-columns:minmax(0,1.45fr) minmax(320px,.75fr) !important;
+      align-items:start !important;
+    }
+
+    #tab-student-home .continue-card{
+      gap:18px !important;
+    }
+
+    #tab-student-home .continue-course-thumb{
+      width:100% !important;
+      aspect-ratio:16 / 9 !important;
+      min-height:clamp(260px, 31vw, 420px) !important;
+      border-radius:22px !important;
+      background-size:cover !important;
+      background-position:center center !important;
+      background-repeat:no-repeat !important;
+      padding:20px !important;
+    }
+
+    #tab-student-home .continue-course-thumb.has-image{
+      min-height:clamp(280px, 34vw, 460px) !important;
+      background-size:cover !important;
+      background-position:center center !important;
+      background-repeat:no-repeat !important;
+    }
+
+    #tab-student-home .continue-course-thumb.has-image span{
+      display:none !important;
+    }
+
+    @media (max-width:1100px){
+      #tab-student-home .student-hero-grid{
+        grid-template-columns:1fr !important;
+      }
+      #tab-student-home .continue-course-thumb,
+      #tab-student-home .continue-course-thumb.has-image{
+        min-height:clamp(240px, 48vw, 390px) !important;
+      }
+    }
+
+    @media (max-width:640px){
+      #tab-student-home .continue-card{
+        padding:20px !important;
+      }
+      #tab-student-home .continue-course-thumb,
+      #tab-student-home .continue-course-thumb.has-image{
+        aspect-ratio:16 / 10 !important;
+        min-height:220px !important;
+        border-radius:18px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
