@@ -10408,6 +10408,146 @@
       .youtube-custom-controls.has-timebar .youtube-quality-control{grid-column:6 !important;grid-row:1 !important;}
     }
 
+
+    /* Controles centrales compactos: atrás 10 / pausa / adelante 10 */
+    .youtube-center-actions{
+      position:absolute !important;
+      left:50% !important;
+      top:50% !important;
+      transform:translate(-50%, -50%) !important;
+      z-index:28 !important;
+      display:none !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:14px !important;
+      padding:12px 14px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(255,255,255,.16) !important;
+      background:rgba(5,5,7,.48) !important;
+      box-shadow:0 24px 64px rgba(0,0,0,.46) !important;
+      backdrop-filter:blur(14px) !important;
+      -webkit-backdrop-filter:blur(14px) !important;
+    }
+    .video-frame.is-youtube-custom-controls:not(.is-youtube-playing) .youtube-center-actions{
+      display:flex !important;
+    }
+    .youtube-center-actions .youtube-center-play{
+      position:relative !important;
+      left:auto !important;
+      top:auto !important;
+      transform:none !important;
+      display:flex !important;
+      opacity:1 !important;
+      pointer-events:auto !important;
+    }
+    .youtube-center-actions .youtube-center-play:hover{
+      transform:scale(1.04) !important;
+    }
+    .youtube-center-seek{
+      width:58px !important;
+      height:58px !important;
+      min-width:58px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(255,255,255,.16) !important;
+      background:rgba(255,255,255,.10) !important;
+      color:#ffffff !important;
+      cursor:pointer !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:3px !important;
+      font-weight:900 !important;
+      box-shadow:0 14px 30px rgba(0,0,0,.28) !important;
+      transition:transform .18s ease, background-color .18s ease, border-color .18s ease !important;
+    }
+    .youtube-center-seek:hover{
+      transform:translateY(-1px) scale(1.04) !important;
+      background:rgba(10,132,56,.24) !important;
+      border-color:rgba(127,243,165,.32) !important;
+    }
+    .youtube-center-seek span{
+      font-size:18px !important;
+      line-height:1 !important;
+    }
+    .youtube-center-seek small{
+      color:#ffffff !important;
+      font-size:12px !important;
+      font-weight:900 !important;
+      line-height:1 !important;
+    }
+    .youtube-center-actions .youtube-center-play small{
+      font-size:10px !important;
+    }
+
+    /* Volumen desplegable vertical para ahorrar espacio */
+    .youtube-volume-control{
+      width:46px !important;
+      min-width:46px !important;
+      max-width:46px !important;
+      height:46px !important;
+      padding:5px !important;
+      justify-content:center !important;
+      overflow:visible !important;
+    }
+    .youtube-volume-control .youtube-control-btn{
+      width:34px !important;
+      height:34px !important;
+      min-width:34px !important;
+      z-index:3 !important;
+    }
+    .youtube-volume-range{
+      position:absolute !important;
+      left:50% !important;
+      bottom:54px !important;
+      width:118px !important;
+      min-width:118px !important;
+      transform:translateX(-50%) rotate(-90deg) !important;
+      transform-origin:center !important;
+      opacity:0 !important;
+      pointer-events:none !important;
+      transition:opacity .18s ease, bottom .18s ease !important;
+      box-shadow:0 12px 26px rgba(0,0,0,.36) !important;
+    }
+    .youtube-volume-control:hover .youtube-volume-range,
+    .youtube-volume-control:focus-within .youtube-volume-range{
+      opacity:1 !important;
+      pointer-events:auto !important;
+      bottom:74px !important;
+    }
+    .youtube-volume-control::after{
+      content:'';
+      position:absolute;
+      left:50%;
+      bottom:48px;
+      width:42px;
+      height:128px;
+      transform:translateX(-50%);
+      pointer-events:none;
+    }
+    .youtube-volume-control:hover::after,
+    .youtube-volume-control:focus-within::after{
+      pointer-events:auto;
+    }
+    @media (max-width:760px){
+      .youtube-center-actions{
+        gap:9px !important;
+        padding:9px 10px !important;
+      }
+      .youtube-center-seek{
+        width:46px !important;
+        height:46px !important;
+        min-width:46px !important;
+      }
+      .youtube-center-actions .youtube-center-play{
+        width:82px !important;
+        height:82px !important;
+      }
+      .youtube-volume-range{
+        width:100px !important;
+        min-width:100px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -11410,10 +11550,14 @@
     <small id="youtubePrivateCourseTitle">Campus privado</small>
   </div>
 </div>
-<button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir clase">
-  <span class="youtube-center-play-icon">▶</span>
-  <small>Reproducir clase</small>
-</button>
+<div class="youtube-center-actions" id="youtubeCenterActions" aria-label="Controles centrales de clase">
+  <button aria-label="Retroceder 10 segundos" class="youtube-center-seek" id="btnYoutubeCenterBack" type="button"><span>↺</span><small>10</small></button>
+  <button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir o pausar clase">
+    <span class="youtube-center-play-icon">▶</span>
+    <small>Reproducir</small>
+  </button>
+  <button aria-label="Adelantar 10 segundos" class="youtube-center-seek" id="btnYoutubeCenterForward" type="button"><small>10</small><span>↻</span></button>
+</div>
 <div class="youtube-custom-controls" id="youtubeCustomControls" aria-label="Controles personalizados de YouTube">
 <button aria-label="Retroceder 10 segundos" class="youtube-control-btn youtube-seek-btn" id="btnYoutubeBack" type="button"><span>↺</span><small>10</small></button>
 <button aria-label="Reproducir o pausar" class="youtube-control-btn is-main" id="btnYoutubePlayPause" type="button">▶</button>
@@ -20613,6 +20757,8 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
       byId('btnYoutubePlayPause')?.addEventListener('click', toggleYoutubePlayPause);
       byId('btnYoutubeCenterPlay')?.addEventListener('click', toggleYoutubePlayPause);
+      byId('btnYoutubeCenterBack')?.addEventListener('click', () => seekYoutubeBy(-10));
+      byId('btnYoutubeCenterForward')?.addEventListener('click', () => seekYoutubeBy(10));
       byId('btnYoutubeBack')?.addEventListener('click', () => seekYoutubeBy(-10));
       byId('btnYoutubeForward')?.addEventListener('click', () => seekYoutubeBy(10));
       byId('btnYoutubeFullscreen')?.addEventListener('click', toggleYoutubeFullscreen);
