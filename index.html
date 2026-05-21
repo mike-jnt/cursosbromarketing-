@@ -11862,6 +11862,7 @@
     let firebaseAnalytics = null;
     let firebaseRemoteLoaded = false;
     let firebaseSaveTimer = null;
+    let studentProgressSyncTimer = null;
     let firebaseAuthSyncStarted = false;
     let lessonAutoCompleteTimer = null;
 
@@ -12392,6 +12393,211 @@
         console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la copia local.', error);
         return false;
       }
+    }
+
+
+    function getStudentProgressDocId(email){
+      const clean = normalizeEmail(email || state.currentUser?.email || '');
+      return 'studentProgress_' + (clean.replace(/[^a-z0-9_-]/g, '_') || 'sin_email');
+    }
+
+    function normalizeCompletedLessonsMap(map){
+      const clean = {};
+      if(!map || typeof map !== 'object') return clean;
+      Object.entries(map).forEach(([courseId, lessons]) => {
+        const id = Number(courseId);
+        if(!id) return;
+        clean[id] = Array.from(new Set((Array.isArray(lessons) ? lessons : [])
+          .map(Number)
+          .filter(Number.isFinite)
+        )).sort((a,b) => a-b);
+      });
+      return clean;
+    }
+
+    function normalizeProgressMap(map){
+      const clean = {};
+      if(!map || typeof map !== 'object') return clean;
+      Object.entries(map).forEach(([courseId, value]) => {
+        const id = Number(courseId);
+        if(!id) return;
+        clean[id] = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+      });
+      return clean;
+    }
+
+    function recalcStudentProgressForCourse(user, courseId){
+      const course = courseById(courseId);
+      if(!user || !course) return 0;
+      if(!user.completedLessonsByCourse || typeof user.completedLessonsByCourse !== 'object') user.completedLessonsByCourse = {};
+      if(!user.progressByCourse || typeof user.progressByCourse !== 'object') user.progressByCourse = {};
+      const completed = Array.from(new Set((user.completedLessonsByCourse[courseId] || [])
+        .map(Number)
+        .filter(Number.isFinite)
+      )).sort((a,b) => a-b);
+      user.completedLessonsByCourse[courseId] = completed;
+      const total = Math.max(1, (course.lessons || []).length);
+      const calculated = Math.max(0, Math.min(100, Math.round((completed.length / total) * 100)));
+      const manual = Math.max(0, Math.min(100, Math.round(Number(user.progressByCourse[courseId]) || 0)));
+      user.progressByCourse[courseId] = Math.max(calculated, manual);
+      if(Number(user.courseId) === Number(courseId)){
+        user.progress = user.progressByCourse[courseId];
+        user.lastLesson = user.progress > 0 ? 'Clase en progreso' : 'Sin avance';
+      }
+      return user.progressByCourse[courseId];
+    }
+
+    function buildStudentProgressPayload(user = getCurrentStudentRecord()){
+      if(!user) return null;
+      const email = normalizeEmail(user.email || state.currentUser?.email || '');
+      if(!email) return null;
+      const completedLessonsByCourse = normalizeCompletedLessonsMap(user.completedLessonsByCourse || {});
+      const progressByCourse = normalizeProgressMap(user.progressByCourse || {});
+      const courseIds = Array.from(new Set([
+        ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+        ...Object.keys(completedLessonsByCourse),
+        ...Object.keys(progressByCourse),
+        Number(user.courseId) || 0
+      ].map(Number).filter(Boolean)));
+      courseIds.forEach(id => {
+        if(!Array.isArray(completedLessonsByCourse[id])) completedLessonsByCourse[id] = [];
+        if(progressByCourse[id] === undefined) progressByCourse[id] = recalcStudentProgressForCourse(user, id);
+      });
+      return {
+        email,
+        userId: Number(user.id) || 0,
+        name: user.name || state.currentUser?.name || '',
+        courseId: Number(user.courseId) || 0,
+        currentCourseId: Number(state.currentCourseId) || Number(user.courseId) || 0,
+        currentLessonIndex: Number(state.currentLessonIndex) || 0,
+        assignedCourseIds: Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds.map(Number).filter(Boolean) : [],
+        completedLessonsByCourse,
+        progressByCourse,
+        lastLesson: user.lastLesson || '',
+        updatedAtClient: new Date().toISOString()
+      };
+    }
+
+    function mergeStudentProgressPayload(payload, user = getCurrentStudentRecord()){
+      if(!payload || !user) return false;
+      const payloadEmail = normalizeEmail(payload.email || '');
+      const userEmail = normalizeEmail(user.email || state.currentUser?.email || '');
+      if(payloadEmail && userEmail && payloadEmail !== userEmail) return false;
+      if(!user.completedLessonsByCourse || typeof user.completedLessonsByCourse !== 'object') user.completedLessonsByCourse = {};
+      if(!user.progressByCourse || typeof user.progressByCourse !== 'object') user.progressByCourse = {};
+      const remoteCompleted = normalizeCompletedLessonsMap(payload.completedLessonsByCourse || {});
+      const remoteProgress = normalizeProgressMap(payload.progressByCourse || {});
+      let changed = false;
+      const courseIds = Array.from(new Set([
+        ...Object.keys(remoteCompleted),
+        ...Object.keys(remoteProgress),
+        ...(Array.isArray(payload.assignedCourseIds) ? payload.assignedCourseIds : []),
+        Number(payload.currentCourseId) || 0,
+        Number(payload.courseId) || 0
+      ].map(Number).filter(Boolean)));
+      courseIds.forEach(courseId => {
+        const localCompleted = normalizeCompletedLessonsMap({ [courseId]: user.completedLessonsByCourse[courseId] || [] })[courseId] || [];
+        const combinedCompleted = Array.from(new Set([
+          ...localCompleted,
+          ...(remoteCompleted[courseId] || [])
+        ].map(Number).filter(Number.isFinite))).sort((a,b) => a-b);
+        if(JSON.stringify(localCompleted) !== JSON.stringify(combinedCompleted)){
+          user.completedLessonsByCourse[courseId] = combinedCompleted;
+          changed = true;
+        }
+        const beforeProgress = Math.max(0, Math.min(100, Math.round(Number(user.progressByCourse[courseId]) || 0)));
+        const remoteValue = Math.max(0, Math.min(100, Math.round(Number(remoteProgress[courseId]) || 0)));
+        user.progressByCourse[courseId] = Math.max(beforeProgress, remoteValue);
+        const recalculated = recalcStudentProgressForCourse(user, courseId);
+        if(recalculated !== beforeProgress || user.progressByCourse[courseId] !== beforeProgress) changed = true;
+      });
+      const remoteCurrentCourse = Number(payload.currentCourseId) || 0;
+      const remoteLessonIndex = Number(payload.currentLessonIndex);
+      if(remoteCurrentCourse && canCurrentStudentOpenCourse(remoteCurrentCourse)){
+        state.currentCourseId = remoteCurrentCourse;
+        if(Number.isFinite(remoteLessonIndex)) state.currentLessonIndex = Math.max(0, remoteLessonIndex);
+      }
+      return changed;
+    }
+
+    async function loadStudentProgressFromFirebaseNow(email, options = {}){
+      const cleanEmail = normalizeEmail(email || state.currentUser?.email || '');
+      if(!cleanEmail) return false;
+      if(!initFirebaseConnection() || !firebaseDb) return false;
+      if(!hasFirebaseAuthSession()) return false;
+      try{
+        const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(getStudentProgressDocId(cleanEmail)).get();
+        if(!doc.exists) return false;
+        const changed = mergeStudentProgressPayload(doc.data(), getCurrentStudentRecord());
+        if(changed){
+          saveState({ localOnly: true });
+          if(typeof refreshAllViews === 'function') refreshAllViews();
+          if(!options.silent) toast('Progreso cargado correctamente.');
+          scheduleStudentProgressFirebaseSave({ delay: 1200 });
+        }
+        return true;
+      }catch(error){
+        console.warn('No se pudo cargar el progreso del alumno desde Firebase.', error);
+        return false;
+      }
+    }
+
+    async function loadAllStudentProgressFromFirebaseNow(options = {}){
+      if(!initFirebaseConnection() || !firebaseDb) return false;
+      if(!hasFirebaseAuthSession() || !isAdminEmail(getFirebaseSignedEmail())) return false;
+      const users = Array.isArray(state.users) ? state.users : [];
+      let changed = false;
+      for(const user of users){
+        const email = normalizeEmail(user.email || '');
+        if(!email) continue;
+        try{
+          const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(getStudentProgressDocId(email)).get();
+          if(doc.exists){
+            changed = mergeStudentProgressPayload(doc.data(), user) || changed;
+          }
+        }catch(error){
+          console.warn('No se pudo cargar progreso de', email, error);
+        }
+      }
+      if(changed){
+        saveState({ localOnly: true });
+        if(typeof refreshAllViews === 'function') refreshAllViews();
+        if(!options.silent) toast('Progreso de alumnos actualizado desde Firebase.');
+      }
+      return changed;
+    }
+
+    async function saveStudentProgressToFirebaseNow(options = {}){
+      const user = getCurrentStudentRecord();
+      const payload = buildStudentProgressPayload(user);
+      if(!payload) return false;
+      if(!initFirebaseConnection() || !firebaseDb) return false;
+      if(!hasFirebaseAuthSession()) return false;
+      const signedEmail = getFirebaseSignedEmail();
+      if(state.currentUser?.role === 'student' && signedEmail && signedEmail !== payload.email){
+        return false;
+      }
+      try{
+        const data = { ...payload };
+        if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+          data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        await firebaseDb.collection(FIREBASE_COLLECTION).doc(getStudentProgressDocId(payload.email)).set(data, { merge: true });
+        return true;
+      }catch(error){
+        console.warn('No se pudo guardar el progreso del alumno en Firebase. Se conserva localmente.', error);
+        if(!options.silent) toast('El progreso quedó guardado en este equipo. Revisa conexión para sincronizarlo.');
+        return false;
+      }
+    }
+
+    function scheduleStudentProgressFirebaseSave(options = {}){
+      if(!(state.currentUser && state.currentUser.role === 'student')) return;
+      clearTimeout(studentProgressSyncTimer);
+      const delay = Number(options.delay) || 900;
+      studentProgressSyncTimer = setTimeout(() => {
+        saveStudentProgressToFirebaseNow({ silent: true });
+      }, delay);
     }
 
     async function loadFirebaseState(options = {}){
@@ -17587,18 +17793,28 @@ function renderPlayer(courseId){
       }
 
       if(cleanUser.role === 'student'){
-        const studentRecord = getCurrentStudentRecord();
+        let studentRecord = getCurrentStudentRecord();
         if(studentRecord){
           cleanUser.id = studentRecord.id;
           cleanUser.name = studentRecord.name;
           cleanUser.email = normalizeEmail(studentRecord.email);
           cleanUser.courseId = Number(studentRecord.courseId) || 0;
           state.currentUser = cleanUser;
+          await loadStudentProgressFromFirebaseNow(cleanUser.email, { silent: true });
+          studentRecord = getCurrentStudentRecord();
+          if(studentRecord){
+            cleanUser.id = studentRecord.id;
+            cleanUser.name = studentRecord.name;
+            cleanUser.email = normalizeEmail(studentRecord.email);
+            cleanUser.courseId = Number(studentRecord.courseId) || 0;
+            state.currentUser = cleanUser;
+          }
           const firstCourse = getStudentCourses()[0];
-          if(firstCourse) state.currentCourseId = firstCourse.id;
+          if(firstCourse && (!state.currentCourseId || !canCurrentStudentOpenCourse(state.currentCourseId))) state.currentCourseId = firstCourse.id;
         }
       }else{
         state.currentUser = cleanUser;
+        await loadAllStudentProgressFromFirebaseNow({ silent: true });
       }
 
       // Guardamos solo la sesión local del navegador. Los cambios reales de cursos
@@ -17866,7 +18082,8 @@ function renderPlayer(courseId){
         if(!access.ok) return access;
         user.authUid = credential.user ? credential.user.uid : user.authUid || '';
         user.lastAccess = 'Último ingreso autenticado';
-        saveState();
+        saveState({ localOnly: true });
+        await loadStudentProgressFromFirebaseNow(authEmail, { silent: true });
         return { ok: true, user: buildStudentSessionUser(user) };
       }catch(error){
         return { ok: false, reason: 'firebase_error', error, message: getFirebaseAuthMessage(error) };
@@ -19867,6 +20084,7 @@ function openSelectedStudentCourseInClasses(courseId){
       state.currentCourseId = Number(course.id) || selectedCourseId;
       state.currentLessonIndex = total ? Math.max(0, Math.min(nextIndex, total - 1)) : 0;
       if (typeof saveState === 'function') saveState({ localOnly: true });
+      if(state.currentUser && state.currentUser.role === 'student') scheduleStudentProgressFirebaseSave({ delay: 1400 });
       showTab('student-player');
       renderPlayer(state.currentCourseId);
     }
@@ -19878,6 +20096,7 @@ function openSelectedStudentCourseInClasses(courseId){
       state.currentCourseId = courseId;
       state.currentLessonIndex = total ? Math.max(0, Math.min(Number(lessonIndex) || 0, total - 1)) : 0;
       saveState({ localOnly: true });
+      if(state.currentUser && state.currentUser.role === 'student') scheduleStudentProgressFirebaseSave({ delay: 1400 });
       renderPlayer(courseId);
     }
 
@@ -20220,6 +20439,9 @@ function openSelectedStudentCourseInClasses(courseId){
       }
 
       saveState(state.currentUser && state.currentUser.role === 'student' ? { localOnly: true } : {});
+      if(state.currentUser && state.currentUser.role === 'student'){
+        scheduleStudentProgressFirebaseSave();
+      }
       if(options.render !== false){
         renderPlayer(courseId);
         renderStudentAssignedCourses();
