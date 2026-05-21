@@ -9576,7 +9576,6 @@
 </div>
 <div class="menu top-nav-menu hidden" id="menuStudent">
 <button class="active" data-tab="student-home" onclick="showTab('student-home', this)" type="button">Mi panel</button>
-<button data-tab="student-courses" onclick="showTab('student-courses', this)" type="button">Mis cursos</button>
 <button data-tab="student-discover" onclick="showTab('student-discover', this)" type="button">Explorar cursos</button>
 <button data-tab="student-progress" onclick="showTab('student-progress', this)" type="button">Mi progreso</button>
 <button data-tab="student-certificates" onclick="showTab('student-certificates', this)" type="button">Certificados</button>
@@ -10415,7 +10414,7 @@
 </div>
 <div class="course-actions-row">
 <button class="btn btn-primary" id="btnContinueMain" type="button">Continuar ahora</button>
-<button class="btn btn-dark" data-tab="student-courses" onclick="showTab('student-courses')" type="button">Ver todos mis cursos</button>
+<button class="btn btn-dark" data-tab="student-progress" onclick="showTab('student-progress')" type="button">Ver mi progreso</button>
 </div>
 </div>
 <div class="student-side-stack">
@@ -10449,27 +10448,6 @@
 </div>
 </div>
 </div>
-</section>
-<section class="panel section-card tab-section hidden" id="tab-student-courses">
-<div class="student-panel-header">
-<div>
-<span class="student-panel-kicker">Ruta activa</span>
-<h2>Mis cursos</h2>
-<p>Una vista pensada para que siempre tengas ganas de continuar, completar y desbloquear nuevos logros.</p>
-</div>
-<span class="pill-note" id="studentCoursesTopNote">Tu progreso te está esperando</span>
-</div>
-<div class="split-row" style="margin-top:18px">
-<div class="goal-card">
-<h3 class="section-mini-title">Recomendado para hoy</h3>
-<p class="section-mini-sub" id="studentRecommendedText">Sigue con el curso que ya comenzaste para no perder impulso.</p>
-</div>
-<div class="goal-card">
-<h3 class="section-mini-title">Próxima recompensa</h3>
-<p class="section-mini-sub" id="studentRewardText">Completa tus clases pendientes para acercarte al certificado.</p>
-</div>
-</div>
-<div class="course-grid" id="studentAssignedCoursesGrid" style="margin-top:18px"></div>
 </section>
 <section class="panel section-card tab-section hidden" id="tab-student-discover">
 <div class="student-panel-header">
@@ -15869,7 +15847,6 @@ function renderPlayer(courseId){
       if(tabId === 'admin-accounting') renderAccountingSection();
       if(tabId === 'admin-users') renderUsersTable();
       if(tabId === 'admin-registrations') renderRegistrationRequests();
-      if(tabId === 'student-courses') renderStudentAssignedCourses();
       if(tabId === 'student-discover') renderStudentDiscover();
       if(tabId === 'student-progress') renderStudentProgress();
       if(tabId === 'student-certificates') renderStudentCertificates();
@@ -18089,7 +18066,7 @@ function openPaymentHistoryModal(id){
       const course = getRecommendedContinueCourse();
       if(!course){
         toast('Aún no tienes un curso activo para continuar.');
-        showTab('student-courses');
+        showTab('student-discover');
         return;
       }
       const nextIndex = getNextLessonIndexForCourse(course.id);
@@ -18100,7 +18077,7 @@ function openPaymentHistoryModal(id){
       if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(courseId)){
         const course = courseById(courseId);
         toast(!isCourseVisible(course) ? 'Este curso no está visible para alumnos en este momento.' : 'Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
-        showTab('student-courses');
+        showTab('student-discover');
         return;
       }
       const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
@@ -18238,7 +18215,7 @@ function openPaymentHistoryModal(id){
             <div class="student-signal-content">
               <strong>${favoriteCount ? `${favoriteCount} curso(s) guardado(s).` : 'Marca una ruta para volver más fácil.'}</strong>
               <small>${favoriteCount ? 'Tus favoritos funcionan como un recordatorio visual para regresar y continuar.' : 'Guardar un curso reduce la fricción y hace más fácil volver al aprendizaje.'}</small>
-              <div class="student-signal-actions">${favoriteAction}<button class="btn student-signal-btn secondary" type="button" onclick="showTab('student-courses')">Mis cursos</button></div>
+              <div class="student-signal-actions">${favoriteAction}<button class="btn student-signal-btn secondary" type="button" onclick="showTab('student-progress')">Mi progreso</button></div>
             </div>
           </div>
         `;
