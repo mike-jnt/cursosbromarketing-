@@ -9868,6 +9868,73 @@
       }
     }
 
+
+    /* Ajuste final: logo más grande manteniendo compacto el header */
+    #appShell .header-brand-logo{
+      width:80px !important;
+      height:80px !important;
+      min-width:80px !important;
+      flex:0 0 80px !important;
+      margin-top:-6px !important;
+      margin-bottom:-6px !important;
+    }
+    #appShell .header-brand-logo img{
+      padding:2px !important;
+    }
+    #appShell .topbar-inner{
+      padding-top:4px !important;
+      padding-bottom:4px !important;
+    }
+    @media (max-width:760px){
+      #appShell .header-brand-logo{
+        width:56px !important;
+        height:56px !important;
+        min-width:56px !important;
+        flex-basis:56px !important;
+        margin-top:-4px !important;
+        margin-bottom:-4px !important;
+      }
+      #appShell .header-brand-logo img{
+        padding:2px !important;
+      }
+    }
+
+
+    .player-empty-courses{
+      display:grid;
+      place-items:center;
+      min-height:420px;
+      padding:34px 18px;
+    }
+    .player-empty-courses.hidden{display:none !important;}
+    .player-empty-courses-card{
+      width:min(620px,100%);
+      text-align:center;
+      padding:34px 28px;
+      border-radius:22px;
+      border:1px solid var(--student-accent-border);
+      background:linear-gradient(180deg,#ffffff 0%, var(--student-accent-soft-2) 100%);
+      box-shadow:var(--student-shadow);
+    }
+    .player-empty-courses-card h2{
+      margin:10px 0 10px;
+      color:var(--student-text);
+      font-size:30px;
+      letter-spacing:-.03em;
+      line-height:1.12;
+    }
+    .player-empty-courses-card p{
+      margin:0 auto 20px;
+      max-width:470px;
+      color:var(--student-muted);
+      line-height:1.7;
+    }
+    @media (max-width:760px){
+      .player-empty-courses{min-height:320px;padding:24px 0;}
+      .player-empty-courses-card{padding:26px 18px;border-radius:18px;}
+      .player-empty-courses-card h2{font-size:24px;}
+    }
+
 </style>
 </head>
 <body>
@@ -9971,7 +10038,7 @@
 <button class="active" data-tab="student-home" onclick="showTab('student-home', this)" type="button">Mi panel</button>
 <button data-tab="student-discover" onclick="showTab('student-discover', this)" type="button">Explorar cursos</button>
 <button data-tab="student-certificates" onclick="showTab('student-certificates', this)" type="button">Certificados</button>
-<button data-tab="student-player" onclick="showTab('student-player', this)" type="button">Continuar clase</button>
+<button data-tab="student-player" onclick="showTab('student-player', this)" type="button">Clases</button>
 <button data-tab="student-profile" onclick="showTab('student-profile', this)" type="button">Mi perfil</button>
 </div>
 </div>
@@ -10841,6 +10908,14 @@
 <div class="list-box" id="studentCertificatesList" style="margin-top:18px"></div>
 </section>
 <section class="panel section-card tab-section hidden" id="tab-student-player">
+<div class="player-empty-courses hidden" id="playerNoCoursesBox">
+<div class="player-empty-courses-card">
+<span class="student-panel-kicker">Clases</span>
+<h2>Por el momento no tienes cursos comprados</h2>
+<p>Cuando compres un curso o el administrador active tu acceso, tus clases aparecerán en esta sección.</p>
+<button class="btn btn-primary" type="button" onclick="showTab('student-discover')">Explorar cursos</button>
+</div>
+</div>
 <div class="bro-learning-breadcrumb" aria-label="Ruta del curso">
   <span>BROMARKETING</span>
   <b>/</b>
@@ -12192,8 +12267,12 @@ function getStudentCourseIds(user = getCurrentStudentRecord()){
   const revoked = new Set((Array.isArray(user.revokedCourseIds) ? user.revokedCourseIds : [])
     .map(Number)
     .filter(Boolean));
+  const paidIds = (typeof getConfirmedCoursePaymentIdsForUser === 'function')
+    ? Array.from(getConfirmedCoursePaymentIdsForUser(user))
+    : [];
   return Array.from(new Set([
     ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+    ...paidIds,
     Number(user.courseId) || 0
   ].map(Number).filter(id => id && !revoked.has(id))));
 }
@@ -14136,7 +14215,7 @@ function getStudentPaidCourses(){
           </div>
           <div class="student-paid-progress" aria-hidden="true"><span style="width:${progress}%"></span></div>
           <div class="student-paid-actions">
-            <button class="btn btn-primary" type="button" onclick="openCoursePlayer(${course.id})">${actionLabel}</button>
+            <button class="btn btn-primary" type="button" onclick="openSelectedStudentCourseInClasses(${course.id})">${actionLabel}</button>
           </div>
         </article>`;
       }).join('');
@@ -15679,10 +15758,44 @@ function getStudentPaidCourses(){
       });
     }
 
+
+    function setPlayerNoCoursesState(isEmpty){
+      const emptyBox = document.getElementById('playerNoCoursesBox');
+      const breadcrumb = document.querySelector('#tab-student-player .bro-learning-breadcrumb');
+      const shell = document.querySelector('#tab-student-player .player-shell');
+      if(emptyBox) emptyBox.classList.toggle('hidden', !isEmpty);
+      if(breadcrumb) breadcrumb.classList.toggle('hidden', isEmpty);
+      if(shell) shell.classList.toggle('hidden', isEmpty);
+      if(isEmpty){
+        const iframe = document.getElementById('playerIframe');
+        const video = document.getElementById('playerVideo');
+        if(typeof resetPlayerMedia === 'function') resetPlayerMedia(iframe, video);
+      }
+    }
+
 function renderPlayer(courseId){
-      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
-      if(!course) return;
-      state.currentCourseId = courseId;
+      let course = null;
+      if(state.currentUser && state.currentUser.role === 'student'){
+        const requestedCourseId = Number(courseId) || 0;
+        course = requestedCourseId ? getStudentCourseForDisplay(requestedCourseId) : null;
+        if(!course){
+          const recommendedCourse = typeof getRecommendedContinueCourse === 'function' ? getRecommendedContinueCourse() : (getStudentCourses()[0] || null);
+          if(recommendedCourse){
+            course = recommendedCourse;
+            courseId = recommendedCourse.id;
+          }
+        }
+        if(!course){
+          setPlayerNoCoursesState(true);
+          return;
+        }
+      }else{
+        course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+        if(!course) return;
+      }
+      setPlayerNoCoursesState(false);
+      state.currentCourseId = Number(course.id) || courseId;
+      courseId = state.currentCourseId;
       if(state.currentLessonIndex >= course.lessons.length) state.currentLessonIndex = 0;
       const lesson = course.lessons[state.currentLessonIndex] || course.lessons[0];
 
@@ -16614,7 +16727,19 @@ function renderPlayer(courseId){
       if(tabId === 'student-discover') renderStudentDiscover();
       if(tabId === 'student-progress') renderStudentProgress();
       if(tabId === 'student-certificates') renderStudentCertificates();
-      if(tabId === 'student-player') renderPlayer(state.currentCourseId);
+      if(tabId === 'student-player'){
+        const currentId = Number(state.currentCourseId) || 0;
+        if(state.currentUser && state.currentUser.role === 'student'){
+          if(currentId && canCurrentStudentOpenCourse(currentId)){
+            renderPlayer(currentId);
+          }else{
+            const recommended = typeof getRecommendedContinueCourse === 'function' ? getRecommendedContinueCourse() : null;
+            renderPlayer(recommended ? recommended.id : 0);
+          }
+        }else{
+          renderPlayer(currentId);
+        }
+      }
       if(tabId === 'student-profile') renderStudentProfileSummary();
     }
 
@@ -18875,22 +19000,50 @@ function openPaymentHistoryModal(id){
       openCoursePlayer(course.id, { lessonIndex: nextIndex });
     }
 
-    function openCoursePlayer(courseId, options = {}){
-      if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(courseId)){
-        const course = courseById(courseId);
-        toast(!isCourseVisible(course) ? 'Este curso no está visible para alumnos en este momento.' : 'Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
-        showTab('student-discover');
+function openSelectedStudentCourseInClasses(courseId){
+      const id = Number(courseId) || 0;
+      if(!id){
+        setPlayerNoCoursesState(true);
+        showTab('student-player');
         return;
       }
-      const course = getStudentCourseForDisplay(courseId) || courseById(courseId);
+      const course = getStudentCourseForDisplay(id);
+      if(state.currentUser && state.currentUser.role === 'student' && !course){
+        toast('Este curso no está activo para tu usuario.');
+        state.currentCourseId = 0;
+        showTab('student-player');
+        renderPlayer(0);
+        return;
+      }
+      const nextIndex = getNextLessonIndexForCourse(id);
+      openCoursePlayer(id, { lessonIndex: nextIndex });
+    }
+
+    function openCoursePlayer(courseId, options = {}){
+      const selectedCourseId = Number(courseId) || 0;
+      if(state.currentUser && state.currentUser.role === 'student' && !canCurrentStudentOpenCourse(selectedCourseId)){
+        const course = courseById(selectedCourseId);
+        toast(!isCourseVisible(course) ? 'Este curso no está visible para alumnos en este momento.' : 'Este curso no está activo para tu usuario. Revisa tu acceso con el administrador.');
+        state.currentCourseId = 0;
+        showTab('student-player');
+        renderPlayer(0);
+        return;
+      }
+      const course = getStudentCourseForDisplay(selectedCourseId) || courseById(selectedCourseId);
+      if(!course){
+        state.currentCourseId = 0;
+        showTab('student-player');
+        renderPlayer(0);
+        return;
+      }
       const total = Array.isArray(course?.lessons) ? course.lessons.length : 0;
       const requestedIndex = Number(options.lessonIndex);
-      const nextIndex = Number.isFinite(requestedIndex) ? requestedIndex : getNextLessonIndexForCourse(courseId);
-      state.currentCourseId = courseId;
+      const nextIndex = Number.isFinite(requestedIndex) ? requestedIndex : getNextLessonIndexForCourse(selectedCourseId);
+      state.currentCourseId = Number(course.id) || selectedCourseId;
       state.currentLessonIndex = total ? Math.max(0, Math.min(nextIndex, total - 1)) : 0;
       if (typeof saveState === 'function') saveState({ localOnly: true });
       showTab('student-player');
-      renderPlayer(courseId);
+      renderPlayer(state.currentCourseId);
     }
 
     function selectLesson(courseId, lessonIndex){
@@ -19746,6 +19899,7 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     window.openRegisterPaymentModalForSelectedCourse = openRegisterPaymentModalForSelectedCourse;
     window.copyText = copyText;
     window.openCoursePlayer = openCoursePlayer;
+    window.openSelectedStudentCourseInClasses = openSelectedStudentCourseInClasses;
     window.selectLesson = selectLesson;
     window.closeModal = closeModal;
     window.fillDemo = fillDemo;
