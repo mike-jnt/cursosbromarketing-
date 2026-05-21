@@ -9580,6 +9580,108 @@
       #tab-student-home .student-paid-grid{grid-template-columns:1fr;}
     }
 
+
+    /* === Explorar cursos: mismas tarjetas del panel del alumno === */
+    #tab-student-discover .student-paid-section{
+      margin-top:0;
+      padding-top:0;
+    }
+    #tab-student-discover .student-paid-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:22px 16px;
+      margin-top:18px;
+    }
+    #tab-student-discover .student-paid-card{
+      background:transparent;
+      border:0;
+      box-shadow:none;
+      padding:0;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      animation:fadeSlideIn .48s cubic-bezier(.2,.8,.2,1) both;
+    }
+    #tab-student-discover .student-paid-card:hover{
+      transform:translateY(-3px);
+    }
+    #tab-student-discover .student-paid-cover .cover{
+      width:100%;
+      height:auto;
+      min-height:148px;
+      aspect-ratio:16/9;
+      border-radius:18px;
+      border:1px solid var(--student-accent-border);
+      overflow:hidden;
+      box-shadow:0 14px 30px rgba(18,41,56,.10);
+      margin:0 0 4px;
+      background-size:cover;
+      background-position:center;
+    }
+    #tab-student-discover .student-paid-cover .cover.cover-has-image span{
+      display:none;
+    }
+    #tab-student-discover .student-paid-title{
+      margin:0;
+      color:var(--student-text);
+      font-size:17px;
+      line-height:1.18;
+      letter-spacing:-.02em;
+    }
+    #tab-student-discover .student-paid-description{
+      margin:0;
+      color:var(--student-muted);
+      font-size:13px;
+      line-height:1.45;
+      min-height:38px;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+    #tab-student-discover .student-paid-row{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:2px;
+    }
+    #tab-student-discover .student-paid-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid var(--student-accent-border);
+      background:var(--student-accent-soft);
+      color:var(--student-accent-strong);
+      font-size:11px;
+      font-weight:800;
+      line-height:1;
+    }
+    #tab-student-discover .student-paid-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:4px;
+    }
+    #tab-student-discover .student-paid-actions .btn{
+      border-radius:999px;
+      padding:9px 18px;
+      min-height:auto;
+      min-width:132px;
+      font-size:13px;
+      line-height:1;
+    }
+    @media (max-width:1100px){
+      #tab-student-discover .student-paid-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media (max-width:720px){
+      #tab-student-discover .student-paid-grid{grid-template-columns:1fr;}
+    }
+
 </style>
 </head>
 <body>
@@ -10533,21 +10635,16 @@
 <section class="panel section-card tab-section hidden" id="tab-student-discover">
 <div class="student-panel-header">
 <div>
-<span class="student-panel-kicker">Catálogo</span>
+<span class="student-panel-kicker">Nuevos cursos</span>
 <h2>Explorar cursos</h2>
-<p>Aquí el alumno puede ver los cursos disponibles, revisar su valor y abrir el flujo de compra del curso que quiere adquirir.</p>
+<p>Esta sección muestra únicamente los cursos nuevos disponibles para comprar que el alumno todavía no tiene activos.</p>
 </div>
-<span class="pill-note">Catálogo general para alumnos</span>
+<span class="pill-note" id="studentDiscoverCoursesNote">Disponibles para comprar</span>
 </div>
-<div style="margin-top:22px">
-<h3 class="section-block-title">Cursos recién agregados</h3>
-<p class="section-block-subtitle">Estos son los cursos nuevos o más recientes publicados dentro de la plataforma.</p>
-<div class="course-grid" id="studentRecentCoursesGrid"></div>
-</div>
-<div style="margin-top:30px">
-<h3 class="section-block-title">Todos los cursos</h3>
-<p class="section-block-subtitle">Catálogo completo disponible para consulta del alumno. Desde aquí puede revisar la oferta, ver su valor y abrir el flujo de compra de cada curso.</p>
-<div class="course-grid" id="studentAllCoursesGrid"></div>
+<div class="student-paid-section student-discover-section" style="margin-top:22px">
+<h3 class="section-block-title">Cursos nuevos disponibles</h3>
+<p class="section-block-subtitle">Aquí solo aparecen cursos publicados que aún no han sido comprados ni activados para este alumno.</p>
+<div class="student-paid-grid" id="studentRecentCoursesGrid"></div>
 </div>
 </section>
 <section class="panel section-card tab-section hidden" id="tab-student-progress">
@@ -13469,48 +13566,59 @@ function getStudentPaidCourses(){
     }
 
     function renderStudentDiscover(){
-      const recentGrid = document.getElementById('studentRecentCoursesGrid');
-      const allGrid = document.getElementById('studentAllCoursesGrid');
-      if(!recentGrid || !allGrid) return;
+      const grid = document.getElementById('studentRecentCoursesGrid');
+      if(!grid) return;
 
-      const visibleCourses = getVisibleCourses();
-      const sorted = [...visibleCourses].sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-      const recent = sorted.slice(0, 3);
+      const note = document.getElementById('studentDiscoverCoursesNote');
+      const user = getCurrentStudentRecord();
+      const assignedIds = new Set(getStudentCourseIds(user).map(Number).filter(Boolean));
+      const paidIds = new Set(
+        (state.payments || [])
+          .filter(payment => {
+            const sameUser = user && Number(payment.userId) === Number(user.id);
+            const status = String(payment.status || '').trim().toLowerCase();
+            return sameUser && ['confirmado','pagado','aprobado'].includes(status);
+          })
+          .map(payment => Number(payment.courseId))
+          .filter(Boolean)
+      );
+      const unavailableIds = new Set([...assignedIds, ...paidIds]);
+      const availableCourses = getVisibleCourses()
+        .filter(course => !unavailableIds.has(Number(course.id)))
+        .sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')) || Number(b.id || 0) - Number(a.id || 0));
 
-      const renderCard = (course) => {
-        const purchaseIntent = findOpenCoursePurchase(course.id);
-        const assigned = isCourseAssignedToCurrentStudent(course.id);
-        return `
-        <div class="course-card">
-          ${renderCourseCover(course)}
-          <div class="tags">
-            <span class="tag">${assigned ? 'Asignado' : purchaseIntent ? 'Compra iniciada' : 'Disponible'}</span>
-            <span class="tag">${course.category}</span>
-            <span class="tag">${course.lessons.length} clases</span>
-          </div>
-          <div class="course-price-line">
-            <span class="course-price-pill">${formatCurrencyCOP(estimateCoursePrice(course))}</span>
-            <span class="course-price-pill">${course.paymentType || 'Único'}</span>
-            <span class="course-price-pill">${course.allowPartial === false ? 'Sin abonos' : 'Permite abonos'}</span>
-          </div>
-          <p class="course-benefit">${course.benefit || course.description}</p>
-          <div class="micro-copy">${assigned ? 'Ya puedes entrar y seguir avanzando.' : purchaseIntent ? 'Tu compra ya fue iniciada. Abre el flujo para continuar con el checkout.' : 'Abre el flujo de compra y deja listo el checkout del curso que quieres adquirir.'}</div>
-          <div class="course-actions-row">
-            ${assigned
-              ? `<button class="btn btn-dark" onclick="openCoursePlayer(${course.id})">Ya disponible</button>`
-              : `<button class="btn btn-primary" onclick="openCoursePurchaseModal(${course.id})">${purchaseIntent ? 'Continuar compra' : 'Comprar curso'}</button>`}
-          </div>
-        </div>`;
-      };
+      if(note){
+        note.textContent = availableCourses.length
+          ? `${availableCourses.length} curso${availableCourses.length === 1 ? '' : 's'} para comprar`
+          : 'Sin cursos nuevos';
+      }
 
-      if(!sorted.length){
-        const empty = `<div class="empty-state">Por ahora no hay cursos visibles para alumnos. El administrador puede activarlos desde la sección Cursos.</div>`;
-        recentGrid.innerHTML = empty;
-        allGrid.innerHTML = empty;
+      if(!availableCourses.length){
+        grid.innerHTML = `<div class="empty-state">Por ahora no hay cursos nuevos disponibles para comprar. Cuando el administrador agregue un curso nuevo que no tengas activo, aparecerá aquí.</div>`;
         return;
       }
-      recentGrid.innerHTML = recent.map(c => renderCard(c)).join('');
-      allGrid.innerHTML = sorted.map(c => renderCard(c)).join('');
+
+      grid.innerHTML = availableCourses.map(course => {
+        const lessonsCount = Array.isArray(course.lessons) ? course.lessons.length : 0;
+        const category = course.category || 'Curso';
+        const desc = course.benefit || course.description || 'Curso nuevo disponible para comprar en la plataforma.';
+        const price = formatCurrencyCOP(estimateCoursePrice(course));
+        return `
+        <article class="student-paid-card">
+          <div class="student-paid-cover">${renderCourseCover(course)}</div>
+          <h3 class="student-paid-title">${escapeHtml(course.title || 'Curso')}</h3>
+          <p class="student-paid-description">${escapeHtml(desc)}</p>
+          <div class="student-paid-row">
+            <span class="student-paid-chip">Nuevo</span>
+            <span class="student-paid-chip">${escapeHtml(category)}</span>
+            <span class="student-paid-chip">${lessonsCount} clases</span>
+            <span class="student-paid-chip">${escapeHtml(price)}</span>
+          </div>
+          <div class="student-paid-actions">
+            <button class="btn btn-primary" type="button" onclick="openCoursePurchaseModal(${course.id})">Comprar</button>
+          </div>
+        </article>`;
+      }).join('');
     }
 
     
