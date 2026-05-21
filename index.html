@@ -351,7 +351,8 @@
       font-size:13px;
       font-weight:700;
     }
-    .student-hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    .student-hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
+    .student-side-stack{display:flex;flex-direction:column;gap:18px}
     .continue-card{
       padding:24px;
       border:1px solid #d9e6dc;
@@ -10215,6 +10216,7 @@
 <button class="btn btn-dark" data-tab="student-courses" onclick="showTab('student-courses')" type="button">Ver todos mis cursos</button>
 </div>
 </div>
+<div class="student-side-stack">
 <div class="goal-card">
 <h3 class="section-mini-title">Tu meta de hoy</h3>
 <p class="section-mini-sub" id="dailyGoalText">Avanzar una clase hoy puede acercarte al certificado.</p>
@@ -10233,8 +10235,6 @@
 </div>
 </div>
 </div>
-</div>
-<div class="split-row" style="margin-top:18px">
 <div class="desire-card">
 <h3 class="section-mini-title">Tu siguiente oportunidad</h3>
 <p class="section-mini-sub" id="studentOpportunityText">Siempre hay un curso que puedes retomar o terminar esta semana.</p>
@@ -10244,6 +10244,7 @@
 <h3 class="section-mini-title">Señales de avance</h3>
 <p class="section-mini-sub">Pequeños recordatorios para mantener el deseo de volver a tus cursos.</p>
 <div class="course-meta-list" id="studentSignalsBox"></div>
+</div>
 </div>
 </div>
 </section>
