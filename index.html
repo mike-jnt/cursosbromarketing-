@@ -25483,47 +25483,6 @@ function openSelectedStudentCourseInClasses(courseId){
     window.onload = function(){ setTimeout(function(){ window.print(); }, 350); };
   ${'</scr' + 'ipt>'}
 
-<script id="youtube-mobile-preplay-no-thumbnail-sync">
-(function(){
-  function revealPrivateMobileBarsAfterPlay(){
-    if(window.innerWidth > 760) return;
-    var frame = document.querySelector('#tab-student-player .video-frame');
-    var gate = document.getElementById('youtubePreplayGate');
-    var iframe = document.getElementById('playerIframe');
-    if(!frame) return;
-    frame.classList.add('yt-private-starting', 'is-youtube-protected', 'is-youtube-custom-controls');
-    frame.classList.remove('is-youtube-ui-hidden', 'is-youtube-title-hidden');
-    if(iframe){
-      iframe.style.display = 'block';
-      iframe.style.visibility = 'visible';
-      iframe.style.opacity = '1';
-    }
-    if(gate){
-      gate.classList.add('hidden');
-      gate.setAttribute('aria-hidden','true');
-    }
-    frame.classList.remove('is-youtube-preplay');
-    if(typeof showYoutubeUiTemporarily === 'function'){
-      try{ showYoutubeUiTemporarily({ showTitle:true, titleDelay:3600, controlsDelay:4300, force:true }); }catch(error){}
-    }
-    window.setTimeout(function(){ frame.classList.remove('yt-private-starting'); }, 500);
-  }
-  function bind(){
-    var play = document.getElementById('btnYoutubePreplayPlay');
-    if(play && play.dataset.cleanMobileBarsBound !== 'true'){
-      play.dataset.cleanMobileBarsBound = 'true';
-      play.addEventListener('click', function(){ window.setTimeout(revealPrivateMobileBarsAfterPlay, 40); });
-    }
-  }
-  document.addEventListener('DOMContentLoaded', bind);
-  document.addEventListener('click', function(event){
-    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option')){
-      window.setTimeout(bind, 80);
-    }
-  });
-  window.setTimeout(bind, 700);
-})();
-</script>
 
 </body>
 </html>`;
@@ -26832,6 +26791,48 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
 </script>
 
+
+<script id="youtube-mobile-preplay-no-thumbnail-sync">
+(function(){
+  function revealPrivateMobileBarsAfterPlay(){
+    if(window.innerWidth > 760) return;
+    var frame = document.querySelector('#tab-student-player .video-frame');
+    var gate = document.getElementById('youtubePreplayGate');
+    var iframe = document.getElementById('playerIframe');
+    if(!frame) return;
+    frame.classList.add('yt-private-starting', 'is-youtube-protected', 'is-youtube-custom-controls');
+    frame.classList.remove('is-youtube-ui-hidden', 'is-youtube-title-hidden');
+    if(iframe){
+      iframe.style.display = 'block';
+      iframe.style.visibility = 'visible';
+      iframe.style.opacity = '1';
+    }
+    if(gate){
+      gate.classList.add('hidden');
+      gate.setAttribute('aria-hidden','true');
+    }
+    frame.classList.remove('is-youtube-preplay');
+    if(typeof showYoutubeUiTemporarily === 'function'){
+      try{ showYoutubeUiTemporarily({ showTitle:true, titleDelay:3600, controlsDelay:4300, force:true }); }catch(error){}
+    }
+    window.setTimeout(function(){ frame.classList.remove('yt-private-starting'); }, 500);
+  }
+  function bind(){
+    var play = document.getElementById('btnYoutubePreplayPlay');
+    if(play && play.dataset.cleanMobileBarsBound !== 'true'){
+      play.dataset.cleanMobileBarsBound = 'true';
+      play.addEventListener('click', function(){ window.setTimeout(revealPrivateMobileBarsAfterPlay, 40); });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option')){
+      window.setTimeout(bind, 80);
+    }
+  });
+  window.setTimeout(bind, 700);
+})();
+</script>
 
 <script id="youtube-mobile-private-pause-v2">
 (function(){
