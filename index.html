@@ -14966,6 +14966,118 @@
   }
 </style>
 
+
+<style id="youtube-mobile-private-overlay-v3">
+  .youtube-mobile-pause-cover{display:none;}
+  @media (max-width:760px){
+    /* Tarjeta superior propia: más oscura y levemente más grande. */
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      left:8px !important;
+      top:8px !important;
+      width:min(315px, calc(100% - 112px)) !important;
+      height:60px !important;
+      min-height:60px !important;
+      padding:10px 14px !important;
+      border-radius:17px !important;
+      background:linear-gradient(108deg, rgba(0,0,0,1) 0%, rgba(1,2,4,.998) 74%, rgba(1,2,4,.96) 100%) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      box-shadow:0 14px 32px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.04) !important;
+      backdrop-filter:blur(14px) !important;
+      -webkit-backdrop-filter:blur(14px) !important;
+      z-index:160 !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy{
+      gap:4px !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy strong{
+      font-size:13.5px !important;
+      line-height:1.12 !important;
+      color:#fff !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy small{
+      font-size:10px !important;
+      line-height:1.15 !important;
+      color:rgba(255,255,255,.68) !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      z-index:166 !important;
+      top:18px !important;
+      right:8px !important;
+    }
+
+    /* La tarjeta acompaña exactamente a nuestros controles. */
+    #tab-student-player .video-frame.is-youtube-ui-hidden:not(.is-youtube-paused-private) .youtube-mobile-runtime-title-shield{
+      opacity:0 !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+      transform:translateY(-7px) scale(.985) !important;
+    }
+    #tab-student-player .video-frame:not(.is-youtube-ui-hidden) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-paused-private .youtube-mobile-runtime-title-shield{
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      transform:translateY(0) scale(1) !important;
+    }
+
+    /* Al pausar se tapa TODO el iframe: nunca se ven rótulos o botones nativos. */
+    #tab-student-player .video-frame.is-youtube-paused-private:not(.is-youtube-preplay) .youtube-mobile-pause-cover{
+      position:absolute !important;
+      inset:0 !important;
+      display:block !important;
+      z-index:145 !important;
+      pointer-events:auto !important;
+      background:linear-gradient(135deg, rgba(2,4,7,.99), rgba(5,11,12,.985)) !important;
+    }
+    #tab-student-player .video-frame.is-youtube-playing .youtube-mobile-pause-cover,
+    #tab-student-player .video-frame.is-youtube-preplay .youtube-mobile-pause-cover{
+      display:none !important;
+    }
+    #tab-student-player .video-frame.is-youtube-paused-private:not(.is-youtube-preplay) .youtube-center-play{
+      display:flex !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      z-index:163 !important;
+      width:52px !important;
+      height:52px !important;
+      min-width:52px !important;
+      border-radius:999px !important;
+      background:linear-gradient(135deg,#0a8438,#0b8844) !important;
+      border:1px solid rgba(127,243,165,.38) !important;
+      box-shadow:0 14px 30px rgba(0,0,0,.52), 0 12px 25px rgba(10,132,56,.22) !important;
+    }
+    #tab-student-player .video-frame.is-youtube-paused-private:not(.is-youtube-preplay) .youtube-native-center-shield{
+      display:none !important;
+    }
+    #tab-student-player .video-frame .youtube-custom-controls,
+    #tab-student-player .video-frame .youtube-custom-controls.has-timebar{
+      z-index:168 !important;
+    }
+    #tab-student-player .video-frame.is-youtube-paused-private:not(.is-youtube-preplay)::before,
+    #tab-student-player .video-frame.is-youtube-paused-private:not(.is-youtube-preplay)::after{
+      opacity:0 !important;
+      height:0 !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      left:6px !important;
+      top:6px !important;
+      width:min(268px, calc(100% - 100px)) !important;
+      height:56px !important;
+      min-height:56px !important;
+      padding:9px 11px !important;
+      border-radius:15px !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy strong{font-size:12.5px !important;}
+    #tab-student-player .youtube-mobile-runtime-copy small{font-size:9px !important;}
+    #tab-student-player .video-frame .mobile-video-quality-float{top:15px !important; right:6px !important;}
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -15998,6 +16110,7 @@
   </div>
 </div>
 <div class="youtube-native-center-shield" aria-hidden="true"></div>
+<div class="youtube-mobile-pause-cover" aria-hidden="true"></div>
 <button class="youtube-center-play" id="btnYoutubeCenterPlay" type="button" aria-label="Reproducir clase">
   <span class="youtube-center-play-icon">▶</span>
   <small>Reproducir clase</small>
