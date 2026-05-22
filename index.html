@@ -15078,6 +15078,134 @@
   }
 </style>
 
+
+
+<style id="youtube-mobile-topbar-clean-final">
+  /* Móvil: preinicio limpio, encabezado corto y controles visibles desde Play. */
+  @media (max-width:760px){
+    /* El preinicio mantiene privacidad, pero sin cargar ni mostrar miniatura. */
+    #tab-student-player .youtube-preplay-gate{
+      background:linear-gradient(145deg,#050709 0%,#080d12 58%,#04120c 100%) !important;
+    }
+    #tab-student-player .youtube-preplay-poster,
+    #tab-student-player .youtube-preplay-glow,
+    #tab-student-player .youtube-preplay-copy,
+    #tab-student-player .youtube-mobile-title-shield{
+      display:none !important;
+      background-image:none !important;
+    }
+    #tab-student-player .youtube-preplay-play{
+      width:64px !important;
+      height:64px !important;
+      min-width:64px !important;
+      border-radius:999px !important;
+      background:linear-gradient(135deg,#0a8438,#0b8844) !important;
+      border:1px solid rgba(127,243,165,.42) !important;
+      box-shadow:0 12px 32px rgba(10,132,56,.28) !important;
+    }
+    #tab-student-player .youtube-preplay-play span{
+      font-size:23px !important;
+      line-height:1 !important;
+      transform:translateX(2px) !important;
+    }
+
+    /* Una franja corta, completa y discreta cubre título/canal de YouTube. */
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      display:flex !important;
+      align-items:center !important;
+      left:6px !important;
+      right:6px !important;
+      top:6px !important;
+      width:auto !important;
+      min-width:0 !important;
+      height:42px !important;
+      min-height:42px !important;
+      max-height:42px !important;
+      padding:5px 104px 5px 12px !important;
+      border-radius:12px !important;
+      background:linear-gradient(90deg,rgba(2,3,5,.98),rgba(2,3,5,.94)) !important;
+      border:1px solid rgba(255,255,255,.08) !important;
+      box-shadow:0 8px 18px rgba(0,0,0,.28) !important;
+      z-index:142 !important;
+      pointer-events:auto !important;
+      overflow:hidden !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      transform:none !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy{
+      width:100% !important;
+      min-width:0 !important;
+      gap:1px !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy strong{
+      font-size:11px !important;
+      line-height:1.12 !important;
+      font-weight:850 !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy small{
+      font-size:8.5px !important;
+      line-height:1.1 !important;
+      letter-spacing:.06em !important;
+    }
+    /* Calidad queda contenida arriba y libre, sin tapar el texto. */
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:10px !important;
+      right:10px !important;
+      height:34px !important;
+      min-height:34px !important;
+      z-index:150 !important;
+    }
+    #tab-student-player .mobile-video-quality-float select{
+      height:24px !important;
+      min-width:62px !important;
+      max-width:72px !important;
+    }
+    /* Arranca visible junto a la barra inferior cuando el usuario presiona Play. */
+    #tab-student-player .video-frame.yt-private-starting .youtube-custom-controls,
+    #tab-student-player .video-frame.yt-private-starting .mobile-video-quality-float{
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+    }
+    #tab-student-player .video-frame.is-youtube-ui-hidden:not(.is-youtube-paused-private) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-ui-hidden:not(.is-youtube-paused-private) .mobile-video-quality-float{
+      opacity:0 !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .youtube-preplay-play{
+      width:58px !important;
+      height:58px !important;
+      min-width:58px !important;
+    }
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      left:5px !important;
+      right:5px !important;
+      top:5px !important;
+      height:38px !important;
+      min-height:38px !important;
+      max-height:38px !important;
+      padding:4px 94px 4px 10px !important;
+      border-radius:11px !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy strong{font-size:10px !important;}
+    #tab-student-player .youtube-mobile-runtime-copy small{font-size:8px !important;}
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:8px !important;
+      right:8px !important;
+      height:30px !important;
+      min-height:30px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -25354,6 +25482,49 @@ function openSelectedStudentCourseInClasses(courseId){
   <script>
     window.onload = function(){ setTimeout(function(){ window.print(); }, 350); };
   ${'</scr' + 'ipt>'}
+
+<script id="youtube-mobile-preplay-no-thumbnail-sync">
+(function(){
+  function revealPrivateMobileBarsAfterPlay(){
+    if(window.innerWidth > 760) return;
+    var frame = document.querySelector('#tab-student-player .video-frame');
+    var gate = document.getElementById('youtubePreplayGate');
+    var iframe = document.getElementById('playerIframe');
+    if(!frame) return;
+    frame.classList.add('yt-private-starting', 'is-youtube-protected', 'is-youtube-custom-controls');
+    frame.classList.remove('is-youtube-ui-hidden', 'is-youtube-title-hidden');
+    if(iframe){
+      iframe.style.display = 'block';
+      iframe.style.visibility = 'visible';
+      iframe.style.opacity = '1';
+    }
+    if(gate){
+      gate.classList.add('hidden');
+      gate.setAttribute('aria-hidden','true');
+    }
+    frame.classList.remove('is-youtube-preplay');
+    if(typeof showYoutubeUiTemporarily === 'function'){
+      try{ showYoutubeUiTemporarily({ showTitle:true, titleDelay:3600, controlsDelay:4300, force:true }); }catch(error){}
+    }
+    window.setTimeout(function(){ frame.classList.remove('yt-private-starting'); }, 500);
+  }
+  function bind(){
+    var play = document.getElementById('btnYoutubePreplayPlay');
+    if(play && play.dataset.cleanMobileBarsBound !== 'true'){
+      play.dataset.cleanMobileBarsBound = 'true';
+      play.addEventListener('click', function(){ window.setTimeout(revealPrivateMobileBarsAfterPlay, 40); });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option')){
+      window.setTimeout(bind, 80);
+    }
+  });
+  window.setTimeout(bind, 700);
+})();
+</script>
+
 </body>
 </html>`;
     }
