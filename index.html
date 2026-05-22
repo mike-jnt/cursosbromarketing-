@@ -15459,6 +15459,94 @@
   }
 </style>
 
+
+<style id="mobile-quality-native-control-stable-fix">
+  /* Ajuste final móvil: reutiliza el selector real y lo mantiene visible sobre la barra superior. */
+  @media (max-width:760px){
+    #tab-student-player .video-frame .mobile-video-quality-float:not(.mobile-quality-native){display:none !important;}
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
+      position:absolute !important;
+      top:11px !important;
+      left:11px !important;
+      right:auto !important;
+      bottom:auto !important;
+      width:auto !important;
+      min-width:0 !important;
+      max-width:none !important;
+      height:34px !important;
+      min-height:34px !important;
+      padding:4px 6px !important;
+      margin:0 !important;
+      display:none !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:0 !important;
+      border-radius:999px !important;
+      border:1px solid rgba(127,243,165,.34) !important;
+      background:rgba(3,10,7,.97) !important;
+      box-shadow:0 8px 18px rgba(0,0,0,.34) !important;
+      backdrop-filter:blur(10px) !important;
+      -webkit-backdrop-filter:blur(10px) !important;
+      z-index:500 !important;
+      overflow:visible !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      transform:none !important;
+    }
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active,
+    #tab-student-player .video-frame.is-youtube-preplay .youtube-quality-control.mobile-quality-native.is-quality-active,
+    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-quality-native.is-quality-active{
+      display:flex !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      transform:none !important;
+    }
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native span{
+      display:none !important;
+    }
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
+      display:block !important;
+      width:auto !important;
+      min-width:66px !important;
+      max-width:78px !important;
+      height:25px !important;
+      min-height:25px !important;
+      margin:0 !important;
+      padding:0 7px !important;
+      border:0 !important;
+      border-radius:999px !important;
+      outline:none !important;
+      background:#0a8438 !important;
+      color:#fff !important;
+      font-size:10px !important;
+      font-weight:900 !important;
+      line-height:1 !important;
+      box-shadow:none !important;
+    }
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select option{
+      background:#10151a !important;
+      color:#fff !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
+      top:9px !important;
+      left:9px !important;
+      height:31px !important;
+      min-height:31px !important;
+      padding:3px 5px !important;
+    }
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
+      min-width:62px !important;
+      max-width:72px !important;
+      height:23px !important;
+      min-height:23px !important;
+      font-size:9.5px !important;
+    }
+  }
+</style>
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -25735,168 +25823,6 @@ function openSelectedStudentCourseInClasses(courseId){
   <script>
     window.onload = function(){ setTimeout(function(){ window.print(); }, 350); };
   ${'</scr' + 'ipt>'}
-
-
-
-<style id="mobile-quality-native-control-stable-fix">
-  /* Ajuste final móvil: reutiliza el selector real y lo mantiene visible sobre la barra superior. */
-  @media (max-width:760px){
-    #tab-student-player .video-frame .mobile-video-quality-float:not(.mobile-quality-native){display:none !important;}
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
-      position:absolute !important;
-      top:11px !important;
-      left:11px !important;
-      right:auto !important;
-      bottom:auto !important;
-      width:auto !important;
-      min-width:0 !important;
-      max-width:none !important;
-      height:34px !important;
-      min-height:34px !important;
-      padding:4px 6px !important;
-      margin:0 !important;
-      display:none !important;
-      align-items:center !important;
-      justify-content:center !important;
-      gap:0 !important;
-      border-radius:999px !important;
-      border:1px solid rgba(127,243,165,.34) !important;
-      background:rgba(3,10,7,.97) !important;
-      box-shadow:0 8px 18px rgba(0,0,0,.34) !important;
-      backdrop-filter:blur(10px) !important;
-      -webkit-backdrop-filter:blur(10px) !important;
-      z-index:500 !important;
-      overflow:visible !important;
-      opacity:1 !important;
-      visibility:visible !important;
-      pointer-events:auto !important;
-      transform:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active,
-    #tab-student-player .video-frame.is-youtube-preplay .youtube-quality-control.mobile-quality-native.is-quality-active,
-    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-quality-native.is-quality-active{
-      display:flex !important;
-      opacity:1 !important;
-      visibility:visible !important;
-      pointer-events:auto !important;
-      transform:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native span{
-      display:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
-      display:block !important;
-      width:auto !important;
-      min-width:66px !important;
-      max-width:78px !important;
-      height:25px !important;
-      min-height:25px !important;
-      margin:0 !important;
-      padding:0 7px !important;
-      border:0 !important;
-      border-radius:999px !important;
-      outline:none !important;
-      background:#0a8438 !important;
-      color:#fff !important;
-      font-size:10px !important;
-      font-weight:900 !important;
-      line-height:1 !important;
-      box-shadow:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select option{
-      background:#10151a !important;
-      color:#fff !important;
-    }
-  }
-  @media (max-width:430px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
-      top:9px !important;
-      left:9px !important;
-      height:31px !important;
-      min-height:31px !important;
-      padding:3px 5px !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
-      min-width:62px !important;
-      max-width:72px !important;
-      height:23px !important;
-      min-height:23px !important;
-      font-size:9.5px !important;
-    }
-  }
-</style>
-<script id="mobile-quality-native-control-stable-script">
-(function(){
-  function isMobile(){
-    return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
-  }
-  function nodes(){
-    var frame = document.querySelector('#tab-student-player .video-frame');
-    var controls = document.getElementById('youtubeCustomControls');
-    var select = document.getElementById('youtubeQualitySelect');
-    var quality = select ? select.closest('.youtube-quality-control') : null;
-    var iframe = document.getElementById('playerIframe');
-    return { frame:frame, controls:controls, select:select, quality:quality, iframe:iframe };
-  }
-  function hasYoutube(n){
-    if(!n.frame) return false;
-    var src = '';
-    if(n.iframe){
-      src = String(n.iframe.dataset.pendingYoutubeUrl || n.iframe.getAttribute('src') || n.iframe.src || '').toLowerCase();
-    }
-    return n.frame.classList.contains('is-youtube-preplay') ||
-      n.frame.classList.contains('is-youtube-protected') ||
-      n.frame.classList.contains('is-youtube-custom-controls') ||
-      src.indexOf('youtube') !== -1 || src.indexOf('youtu.be') !== -1;
-  }
-  function syncQualityControl(){
-    try{
-      var n = nodes();
-      if(!n.frame || !n.controls || !n.quality) return;
-      if(isMobile()){
-        if(n.quality.parentElement !== n.frame) n.frame.appendChild(n.quality);
-        n.quality.classList.add('mobile-quality-native');
-        n.quality.classList.toggle('is-quality-active', hasYoutube(n));
-        var duplicate = n.frame.querySelector('#mobileYoutubeQualitySelect');
-        if(duplicate){
-          var duplicateWrap = duplicate.closest('.mobile-video-quality-float');
-          if(duplicateWrap && duplicateWrap !== n.quality) duplicateWrap.remove();
-        }
-      }else{
-        n.quality.classList.remove('mobile-video-quality-float','mobile-quality-native','is-quality-active');
-        var label = n.controls.querySelector('.youtube-control-label');
-        if(n.quality.parentElement !== n.controls){
-          if(label) n.controls.insertBefore(n.quality, label);
-          else n.controls.appendChild(n.quality);
-        }
-      }
-    }catch(error){}
-  }
-  function installObserver(){
-    var player = document.getElementById('tab-student-player');
-    if(!player || player.dataset.qualityObserverInstalled === 'true') return;
-    player.dataset.qualityObserverInstalled = 'true';
-    var observer = new MutationObserver(function(){ window.setTimeout(syncQualityControl, 0); });
-    observer.observe(player, {subtree:true, childList:true, attributes:true, attributeFilter:['class','src','data-pending-youtube-url']});
-  }
-  function boot(){
-    syncQualityControl();
-    installObserver();
-    window.setTimeout(syncQualityControl, 180);
-    window.setTimeout(syncQualityControl, 650);
-  }
-  document.addEventListener('DOMContentLoaded', boot);
-  document.addEventListener('click', function(event){
-    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option, #menuStudent button')){
-      window.setTimeout(syncQualityControl, 60);
-      window.setTimeout(syncQualityControl, 280);
-    }
-  });
-  window.addEventListener('resize', syncQualityControl);
-  window.setTimeout(boot, 950);
-})();
-</script>
-
 </body>
 </html>`;
     }
@@ -27338,5 +27264,77 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 })();
 </script>
 
+
+<script id="mobile-quality-native-control-stable-script">
+(function(){
+  function isMobile(){
+    return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+  }
+  function nodes(){
+    var frame = document.querySelector('#tab-student-player .video-frame');
+    var controls = document.getElementById('youtubeCustomControls');
+    var select = document.getElementById('youtubeQualitySelect');
+    var quality = select ? select.closest('.youtube-quality-control') : null;
+    var iframe = document.getElementById('playerIframe');
+    return { frame:frame, controls:controls, select:select, quality:quality, iframe:iframe };
+  }
+  function hasYoutube(n){
+    if(!n.frame) return false;
+    var src = '';
+    if(n.iframe){
+      src = String(n.iframe.dataset.pendingYoutubeUrl || n.iframe.getAttribute('src') || n.iframe.src || '').toLowerCase();
+    }
+    return n.frame.classList.contains('is-youtube-preplay') ||
+      n.frame.classList.contains('is-youtube-protected') ||
+      n.frame.classList.contains('is-youtube-custom-controls') ||
+      src.indexOf('youtube') !== -1 || src.indexOf('youtu.be') !== -1;
+  }
+  function syncQualityControl(){
+    try{
+      var n = nodes();
+      if(!n.frame || !n.controls || !n.quality) return;
+      if(isMobile()){
+        if(n.quality.parentElement !== n.frame) n.frame.appendChild(n.quality);
+        n.quality.classList.add('mobile-quality-native');
+        n.quality.classList.toggle('is-quality-active', hasYoutube(n));
+        var duplicate = n.frame.querySelector('#mobileYoutubeQualitySelect');
+        if(duplicate){
+          var duplicateWrap = duplicate.closest('.mobile-video-quality-float');
+          if(duplicateWrap && duplicateWrap !== n.quality) duplicateWrap.remove();
+        }
+      }else{
+        n.quality.classList.remove('mobile-video-quality-float','mobile-quality-native','is-quality-active');
+        var label = n.controls.querySelector('.youtube-control-label');
+        if(n.quality.parentElement !== n.controls){
+          if(label) n.controls.insertBefore(n.quality, label);
+          else n.controls.appendChild(n.quality);
+        }
+      }
+    }catch(error){}
+  }
+  function installObserver(){
+    var player = document.getElementById('tab-student-player');
+    if(!player || player.dataset.qualityObserverInstalled === 'true') return;
+    player.dataset.qualityObserverInstalled = 'true';
+    var observer = new MutationObserver(function(){ window.setTimeout(syncQualityControl, 0); });
+    observer.observe(player, {subtree:true, childList:true, attributes:true, attributeFilter:['class','src','data-pending-youtube-url']});
+  }
+  function boot(){
+    syncQualityControl();
+    installObserver();
+    window.setTimeout(syncQualityControl, 180);
+    window.setTimeout(syncQualityControl, 650);
+  }
+  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option, #menuStudent button')){
+      window.setTimeout(syncQualityControl, 60);
+      window.setTimeout(syncQualityControl, 280);
+    }
+  });
+  window.addEventListener('resize', syncQualityControl);
+  window.setTimeout(boot, 950);
+})();
+</script>
 </body>
 </html>
