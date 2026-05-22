@@ -14664,6 +14664,48 @@
     }
   }
 </style>
+
+<style id="youtube-mobile-runtime-title-shield-fix">
+  /* Capa persistente sobre el iframe: el título y canal de YouTube quedan ocultos también durante la reproducción. */
+  .youtube-mobile-runtime-title-shield{display:none;}
+  @media (max-width:760px){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      display:block !important;
+      position:absolute !important;
+      left:0 !important;
+      right:0 !important;
+      top:0 !important;
+      height:clamp(78px, 13vw, 92px) !important;
+      z-index:100 !important;
+      pointer-events:auto !important;
+      background:linear-gradient(180deg,#050507 0%,#050507 62%,rgba(5,5,7,.97) 78%,rgba(5,5,7,0) 100%) !important;
+    }
+    #tab-student-player .video-frame.is-youtube-preplay .youtube-mobile-runtime-title-shield{
+      display:none !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      z-index:122 !important;
+    }
+    #tab-student-player .video-frame .youtube-custom-controls,
+    #tab-student-player .video-frame .youtube-custom-controls.has-timebar{
+      z-index:120 !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      height:84px !important;
+    }
+  }
+  @media (max-width:760px) and (orientation:landscape){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      height:62px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -15683,6 +15725,7 @@
     <span>▶</span>
   </button>
 </div>
+<div class="youtube-mobile-runtime-title-shield" aria-hidden="true"></div>
 <div class="youtube-private-titlebar" id="youtubePrivateTitlebar" aria-hidden="true">
   <div class="youtube-private-titlecopy">
     <strong id="youtubePrivateLessonTitle">Clase del curso</strong>
