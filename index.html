@@ -15570,6 +15570,99 @@
   }
 </style>
 
+
+<style id="mobile-quality-captions-auto-hide-fix">
+  .mobile-youtube-caption-off-btn{display:none !important;}
+  @media (max-width:760px){
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active{
+      left:auto !important;
+      right:10px !important;
+      top:10px !important;
+      display:flex !important;
+      align-items:center !important;
+      gap:5px !important;
+      padding:4px 5px !important;
+      height:34px !important;
+      min-height:34px !important;
+      border-radius:999px !important;
+      background:rgba(3,10,7,.96) !important;
+      border:1px solid rgba(127,243,165,.32) !important;
+      z-index:650 !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      transform:translateY(0) !important;
+      transition:opacity .22s ease, transform .22s ease, visibility .22s ease !important;
+    }
+
+    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-quality-native.is-quality-active{
+      opacity:0 !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+      transform:translateY(-7px) !important;
+    }
+
+    #tab-student-player .youtube-quality-control.mobile-quality-native select{
+      height:24px !important;
+      min-width:60px !important;
+      max-width:72px !important;
+      padding:0 5px !important;
+      border:0 !important;
+      border-radius:999px !important;
+      background:#0a8438 !important;
+      color:#ffffff !important;
+      font-size:10px !important;
+      font-weight:900 !important;
+    }
+
+    #tab-student-player .mobile-youtube-caption-off-btn{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:3px !important;
+      height:24px !important;
+      min-width:48px !important;
+      padding:0 7px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(127,243,165,.28) !important;
+      background:rgba(255,255,255,.09) !important;
+      color:#ffffff !important;
+      font-size:9px !important;
+      font-weight:900 !important;
+      line-height:1 !important;
+      cursor:pointer !important;
+      white-space:nowrap !important;
+    }
+
+    #tab-student-player .mobile-youtube-caption-off-btn.is-off{
+      background:rgba(10,132,56,.24) !important;
+      border-color:rgba(127,243,165,.38) !important;
+      color:#caffd9 !important;
+    }
+  }
+
+  @media (max-width:430px){
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active{
+      right:7px !important;
+      top:7px !important;
+      height:32px !important;
+      min-height:32px !important;
+      padding:4px !important;
+      gap:4px !important;
+    }
+    #tab-student-player .youtube-quality-control.mobile-quality-native select{
+      min-width:55px !important;
+      max-width:62px !important;
+      font-size:9px !important;
+    }
+    #tab-student-player .mobile-youtube-caption-off-btn{
+      min-width:43px !important;
+      padding:0 6px !important;
+      font-size:8.5px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -25846,6 +25939,9 @@ function openSelectedStudentCourseInClasses(courseId){
   <script>
     window.onload = function(){ setTimeout(function(){ window.print(); }, 350); };
   ${'</scr' + 'ipt>'}
+
+
+
 </body>
 </html>`;
     }
@@ -27357,6 +27453,126 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
   });
   window.addEventListener('resize', syncQualityControl);
   window.setTimeout(boot, 950);
+})();
+</script>
+
+<script id="mobile-quality-captions-control-script">
+(function(){
+  function isMobile(){
+    return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
+  }
+
+  function getNodes(){
+    var frame = document.querySelector('#tab-student-player .video-frame');
+    var quality = document.querySelector('#tab-student-player .youtube-quality-control.mobile-quality-native') ||
+                  document.querySelector('#tab-student-player .youtube-quality-control');
+    var iframe = document.getElementById('playerIframe');
+    return { frame:frame, quality:quality, iframe:iframe };
+  }
+
+  function youtubeUrlWithCaptionsOff(raw){
+    try{
+      if(!raw || !/youtube|youtu\.be/i.test(String(raw))) return raw;
+      var value = String(raw);
+      var key = 'cc_load_policy';
+      var matcher = new RegExp('([?&])' + key + '=[^&]*', 'i');
+      if(matcher.test(value)) return value.replace(matcher, '$1' + key + '=0');
+      return value + (value.indexOf('?') >= 0 ? '&' : '?') + key + '=0';
+    }catch(error){
+      return raw;
+    }
+  }
+
+  function pushCaptionsOffCommand(){
+    try{
+      if(typeof sendYoutubePlayerCommand === 'function'){
+        sendYoutubePlayerCommand('setOption', ['captions', 'track', {}]);
+      }
+    }catch(error){}
+  }
+
+  function forceCaptionsOff(showMessage){
+    var n = getNodes();
+    if(!n.iframe) return;
+
+    if(n.iframe.dataset && n.iframe.dataset.pendingYoutubeUrl){
+      n.iframe.dataset.pendingYoutubeUrl = youtubeUrlWithCaptionsOff(n.iframe.dataset.pendingYoutubeUrl);
+    }
+
+    if(n.frame) n.frame.dataset.mobileCaptions = 'off';
+    var button = document.getElementById('btnMobileYoutubeCaptionsOff');
+    if(button){
+      button.classList.add('is-off');
+      button.setAttribute('aria-pressed', 'true');
+      button.setAttribute('title', 'Subtítulos desactivados');
+      button.innerHTML = 'CC&nbsp;OFF';
+    }
+
+    pushCaptionsOffCommand();
+    window.setTimeout(pushCaptionsOffCommand, 220);
+    window.setTimeout(pushCaptionsOffCommand, 760);
+
+    if(showMessage && typeof toast === 'function'){
+      try{ toast('Subtítulos desactivados.'); }catch(error){}
+    }
+  }
+
+  function ensureCaptionsControl(){
+    try{
+      if(!isMobile()) return;
+      var n = getNodes();
+      if(!n.quality) return;
+
+      var button = document.getElementById('btnMobileYoutubeCaptionsOff');
+      if(!button){
+        button = document.createElement('button');
+        button.type = 'button';
+        button.id = 'btnMobileYoutubeCaptionsOff';
+        button.className = 'mobile-youtube-caption-off-btn is-off';
+        button.setAttribute('aria-label', 'Desactivar subtítulos');
+        button.setAttribute('aria-pressed', 'true');
+        button.innerHTML = 'CC&nbsp;OFF';
+        button.addEventListener('click', function(event){
+          event.preventDefault();
+          event.stopPropagation();
+          forceCaptionsOff(true);
+          if(typeof showYoutubeUiTemporarily === 'function'){
+            try{ showYoutubeUiTemporarily({ showTitle:false, controlsDelay:4400, force:true }); }catch(error){}
+          }
+        });
+        n.quality.appendChild(button);
+      }
+
+      forceCaptionsOff(false);
+    }catch(error){}
+  }
+
+  function observeMobilePlayer(){
+    var player = document.getElementById('tab-student-player');
+    if(!player || player.dataset.mobileCaptionsObserver === 'true') return;
+    player.dataset.mobileCaptionsObserver = 'true';
+    var observer = new MutationObserver(function(){
+      window.setTimeout(ensureCaptionsControl, 10);
+    });
+    observer.observe(player, { subtree:true, childList:true, attributes:true, attributeFilter:['class','src','data-pending-youtube-url'] });
+  }
+
+  function boot(){
+    ensureCaptionsControl();
+    observeMobilePlayer();
+    window.setTimeout(ensureCaptionsControl, 250);
+    window.setTimeout(ensureCaptionsControl, 900);
+  }
+
+  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option, #menuStudent button')){
+      window.setTimeout(ensureCaptionsControl, 80);
+      window.setTimeout(ensureCaptionsControl, 380);
+    }
+  });
+  window.addEventListener('resize', ensureCaptionsControl);
+  window.setTimeout(boot, 1100);
 })();
 </script>
 </body>
