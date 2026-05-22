@@ -14706,6 +14706,125 @@
   }
 </style>
 
+
+<style id="youtube-mobile-compact-title-controls-sync">
+  /* Encabezado privado compacto: cubre el texto nativo sin una franja negra extensa. */
+  @media (max-width:760px){
+    #tab-student-player .video-frame.is-youtube-protected::before,
+    #tab-student-player .video-frame.is-youtube-custom-controls::before{
+      display:none !important;
+      height:0 !important;
+      background:transparent !important;
+    }
+
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      position:absolute !important;
+      display:flex !important;
+      align-items:center !important;
+      left:8px !important;
+      right:auto !important;
+      top:8px !important;
+      width:min(250px, calc(100% - 126px)) !important;
+      min-width:0 !important;
+      height:42px !important;
+      padding:6px 10px !important;
+      border-radius:12px !important;
+      z-index:118 !important;
+      pointer-events:auto !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      transform:translateY(0) !important;
+      transition:opacity .18s ease, visibility .18s ease, transform .18s ease !important;
+      background:linear-gradient(90deg, rgba(4,5,7,.98), rgba(4,5,7,.94) 84%, rgba(4,5,7,.55)) !important;
+      box-shadow:0 7px 18px rgba(0,0,0,.20) !important;
+      overflow:hidden !important;
+    }
+
+    #tab-student-player .youtube-mobile-runtime-copy{
+      width:100% !important;
+      min-width:0 !important;
+      display:flex !important;
+      flex-direction:column !important;
+      justify-content:center !important;
+      gap:2px !important;
+      line-height:1 !important;
+    }
+
+    #tab-student-player .youtube-mobile-runtime-copy strong{
+      display:block !important;
+      min-width:0 !important;
+      color:#ffffff !important;
+      font-size:10.5px !important;
+      font-weight:800 !important;
+      letter-spacing:.01em !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      line-height:1.16 !important;
+    }
+
+    #tab-student-player .youtube-mobile-runtime-copy small{
+      display:block !important;
+      color:rgba(255,255,255,.66) !important;
+      font-size:9px !important;
+      font-weight:700 !important;
+      letter-spacing:.05em !important;
+      text-transform:uppercase !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      line-height:1.14 !important;
+    }
+
+    /* El encabezado pequeño vive exactamente el mismo tiempo que los controles. */
+    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-ui-hidden .mobile-video-quality-float{
+      opacity:0 !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+      transform:translateY(-5px) !important;
+    }
+
+    #tab-student-player .video-frame:not(.is-youtube-ui-hidden) .mobile-video-quality-float{
+      opacity:1 !important;
+      visibility:visible !important;
+      transform:translateY(0) !important;
+      transition:opacity .18s ease, visibility .18s ease, transform .18s ease !important;
+    }
+
+    #tab-student-player .video-frame.is-youtube-preplay .youtube-mobile-runtime-title-shield{
+      display:none !important;
+    }
+
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:9px !important;
+      right:9px !important;
+      height:38px !important;
+      z-index:122 !important;
+    }
+  }
+
+  @media (max-width:430px){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield{
+      left:6px !important;
+      top:6px !important;
+      width:min(214px, calc(100% - 112px)) !important;
+      height:38px !important;
+      padding:5px 9px !important;
+      border-radius:11px !important;
+    }
+    #tab-student-player .youtube-mobile-runtime-copy strong{font-size:10px !important;}
+    #tab-student-player .youtube-mobile-runtime-copy small{font-size:8px !important;}
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:6px !important;
+      right:6px !important;
+      height:34px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -15725,7 +15844,12 @@
     <span>▶</span>
   </button>
 </div>
-<div class="youtube-mobile-runtime-title-shield" aria-hidden="true"></div>
+<div class="youtube-mobile-runtime-title-shield" aria-hidden="true">
+  <div class="youtube-mobile-runtime-copy">
+    <strong id="youtubeMobileShieldLessonTitle">Clase</strong>
+    <small id="youtubeMobileShieldCourseTitle">BRO MARKETING</small>
+  </div>
+</div>
 <div class="youtube-private-titlebar" id="youtubePrivateTitlebar" aria-hidden="true">
   <div class="youtube-private-titlecopy">
     <strong id="youtubePrivateLessonTitle">Clase del curso</strong>
@@ -20481,6 +20605,10 @@ function getStudentPaidCourses(){
       const courseNode = document.getElementById('youtubePrivateCourseTitle');
       if(titleNode) titleNode.textContent = lessonTitle;
       if(courseNode) courseNode.textContent = courseTitle;
+      const mobileShieldTitle = document.getElementById('youtubeMobileShieldLessonTitle');
+      const mobileShieldCourse = document.getElementById('youtubeMobileShieldCourseTitle');
+      if(mobileShieldTitle) mobileShieldTitle.textContent = lessonTitle;
+      if(mobileShieldCourse) mobileShieldCourse.textContent = 'BRO MARKETING';
     }
 
     function formatYoutubeTime(seconds){
