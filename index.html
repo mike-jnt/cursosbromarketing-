@@ -15350,6 +15350,66 @@
   }
 </style>
 
+
+<style id="mobile-quality-over-welcomebar-5px">
+  /* Calidad siempre sobre la barra superior; barra extendida solo 5 px. */
+  @media (max-width:760px){
+    #tab-student-player .video-frame .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      left:6px !important;
+      right:6px !important;
+      top:6px !important;
+      height:49px !important;
+      min-height:49px !important;
+      max-height:49px !important;
+      padding:6px 12px 6px 112px !important;
+      border-radius:12px !important;
+      z-index:310 !important;
+      background:rgba(4,6,8,.93) !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:11px !important;
+      left:11px !important;
+      right:auto !important;
+      height:34px !important;
+      min-height:34px !important;
+      display:flex !important;
+      visibility:visible !important;
+      opacity:1 !important;
+      z-index:340 !important;
+    }
+    #tab-student-player .mobile-video-quality-float select{
+      height:24px !important;
+      min-width:62px !important;
+      max-width:74px !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .video-frame .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      left:5px !important;
+      right:5px !important;
+      top:5px !important;
+      height:45px !important;
+      min-height:45px !important;
+      max-height:45px !important;
+      padding:5px 9px 5px 98px !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:9px !important;
+      left:9px !important;
+      right:auto !important;
+      height:30px !important;
+      min-height:30px !important;
+      z-index:340 !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
