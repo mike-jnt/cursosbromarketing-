@@ -15206,6 +15206,60 @@
   }
 </style>
 
+
+
+<style id="youtube-mobile-quality-on-topbar-final">
+  /* Ajuste final: calidad sobre la barra superior y cobertura 2px mayor. */
+  @media (max-width:760px){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      left:6px !important;
+      right:6px !important;
+      top:6px !important;
+      height:44px !important;
+      min-height:44px !important;
+      max-height:44px !important;
+      padding:5px 12px 5px 112px !important;
+      border-radius:12px !important;
+      z-index:210 !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:11px !important;
+      left:11px !important;
+      right:auto !important;
+      height:34px !important;
+      min-height:34px !important;
+      z-index:220 !important;
+    }
+    #tab-student-player .mobile-video-quality-float select{
+      height:24px !important;
+      min-width:62px !important;
+      max-width:72px !important;
+    }
+  }
+  @media (max-width:430px){
+    #tab-student-player .video-frame.is-youtube-protected:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.is-youtube-custom-controls:not(.is-youtube-preplay) .youtube-mobile-runtime-title-shield,
+    #tab-student-player .video-frame.yt-private-starting .youtube-mobile-runtime-title-shield{
+      left:5px !important;
+      right:5px !important;
+      top:5px !important;
+      height:40px !important;
+      min-height:40px !important;
+      max-height:40px !important;
+      padding:4px 10px 4px 98px !important;
+    }
+    #tab-student-player .video-frame .mobile-video-quality-float{
+      top:9px !important;
+      left:9px !important;
+      right:auto !important;
+      height:30px !important;
+      min-height:30px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
