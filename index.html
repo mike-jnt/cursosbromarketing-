@@ -15548,23 +15548,21 @@
   }
 </style>
 
-<style id="mobile-quality-control-right-position">
+<style id="mobile-quality-control-right-position-fixed">
   @media (max-width:760px){
-    #tab-student-player .mobile-video-quality-float,
-    #tab-student-player .youtube-mobile-quality-control,
-    #tab-student-player .mobile-quality-control,
-    #tab-student-player #mobileYoutubeQualityControl{
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native,
+    #tab-student-player .video-frame .mobile-video-quality-float{
       left:auto !important;
-      right:10px !important;
-      top:10px !important;
-      z-index:120 !important;
+      right:11px !important;
+      top:11px !important;
+      margin-left:0 !important;
+      transform:none !important;
+      z-index:520 !important;
     }
   }
   @media (max-width:430px){
-    #tab-student-player .mobile-video-quality-float,
-    #tab-student-player .youtube-mobile-quality-control,
-    #tab-student-player .mobile-quality-control,
-    #tab-student-player #mobileYoutubeQualityControl{
+    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native,
+    #tab-student-player .video-frame .mobile-video-quality-float{
       left:auto !important;
       right:8px !important;
       top:8px !important;
