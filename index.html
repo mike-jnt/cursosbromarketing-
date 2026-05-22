@@ -14392,6 +14392,76 @@
   }
 </style>
 
+
+
+<style id="youtube-course-thumbnail-preplay-controls">
+  /* Miniatura privada con controles sobrepuestos antes de mostrar YouTube */
+  #tab-student-player .youtube-preplay-gate{
+    background:linear-gradient(135deg,#09121a,#0d171f) !important;
+  }
+  #tab-student-player .youtube-preplay-poster{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background-position:center !important;
+    background-size:cover !important;
+    background-repeat:no-repeat !important;
+    background-color:#0b121a;
+  }
+  #tab-student-player .youtube-preplay-poster::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,rgba(3,6,9,.16),rgba(3,6,9,.08) 42%,rgba(3,6,9,.48) 100%);
+  }
+  #tab-student-player .youtube-preplay-glow{
+    z-index:1;
+    background:linear-gradient(0deg,rgba(0,0,0,.32),transparent 42%) !important;
+  }
+  #tab-student-player .youtube-preplay-copy,
+  #tab-student-player .youtube-preplay-play{
+    display:none !important;
+  }
+  #tab-student-player .video-frame.is-youtube-preplay .youtube-custom-controls{
+    display:flex !important;
+    z-index:150 !important;
+    opacity:1 !important;
+    visibility:visible !important;
+    pointer-events:auto !important;
+  }
+  #tab-student-player .video-frame.is-youtube-preplay .mobile-video-quality-float{
+    display:flex !important;
+    z-index:155 !important;
+  }
+  #tab-student-player .video-frame.is-youtube-preplay iframe[data-preplay-loaded="true"]{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+  #tab-student-player .video-frame.is-youtube-preplay::before,
+  #tab-student-player .video-frame.is-youtube-preplay::after,
+  #tab-student-player .video-frame.is-youtube-preplay .youtube-native-center-shield,
+  #tab-student-player .video-frame.is-youtube-preplay .youtube-center-play{
+    display:none !important;
+  }
+  #tab-student-player .youtube-preplay-gate.is-playing-transition{
+    opacity:1 !important;
+    pointer-events:none !important;
+  }
+  #tab-student-player .youtube-preplay-gate.is-revealing{
+    opacity:0 !important;
+    transition:opacity .26s ease !important;
+  }
+  @media (max-width:760px){
+    #tab-student-player .youtube-preplay-gate{
+      border-radius:inherit !important;
+    }
+    #tab-student-player .video-frame.is-youtube-preplay .youtube-custom-controls{
+      bottom:10px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -15400,6 +15470,7 @@
 <iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" id="playerIframe" referrerpolicy="strict-origin-when-cross-origin" src="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;" title="Clase del curso"></iframe>
 <video controls="" id="playerVideo" playsinline="" preload="none" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000;"></video>
 <div class="youtube-preplay-gate hidden" id="youtubePreplayGate" aria-hidden="true">
+  <div class="youtube-preplay-poster" id="youtubePreplayPoster" aria-hidden="true"></div>
   <div class="youtube-preplay-glow" aria-hidden="true"></div>
   <div class="youtube-preplay-copy">
     <span>BRO MARKETING</span>
@@ -19911,6 +19982,24 @@ function getStudentPaidCourses(){
     }
 
 
+    function updateYoutubePreplayPoster(course, lesson){
+      const poster = document.getElementById('youtubePreplayPoster');
+      if(!poster) return;
+      const lessonThumb = getLessonThumbnailRef(lesson);
+      const lessonInline = getLessonThumbnailInlineData(lesson);
+      const courseCover = String(course?.cover || '').trim();
+      const courseInline = getCourseCoverInlineData(course);
+      const source = lessonThumb || lessonInline || courseCover || courseInline;
+      const fallback = lessonThumb || lessonInline ? lessonInline : courseInline;
+      poster.classList.toggle('has-poster', Boolean(source));
+      if(source){
+        applyCoverSrcToElement(poster, source, fallback);
+      }else{
+        clearCoverBackgroundImage(poster);
+        delete poster.dataset.firestoreCoverId;
+      }
+    }
+
     function shouldUseYoutubePreplayGate(){
       return window.innerWidth <= 760;
     }
@@ -19930,6 +20019,8 @@ function getStudentPaidCourses(){
     }
 
     function resetYoutubePreplayGate(){
+      if(youtubeCustomState.preplayRevealTimer){ window.clearTimeout(youtubeCustomState.preplayRevealTimer); youtubeCustomState.preplayRevealTimer = null; }
+      if(youtubeCustomState.preplaySafetyTimer){ window.clearTimeout(youtubeCustomState.preplaySafetyTimer); youtubeCustomState.preplaySafetyTimer = null; }
       const iframe = document.getElementById('playerIframe');
       const gate = document.getElementById('youtubePreplayGate');
       const frame = iframe ? iframe.closest('.video-frame') : document.querySelector('#tab-student-player .video-frame');
@@ -19959,6 +20050,13 @@ function getStudentPaidCourses(){
       frame.classList.add('is-youtube-protected', 'is-youtube-preplay');
       gate.classList.remove('hidden','is-loading','is-playing-transition','is-revealing');
       gate.setAttribute('aria-hidden','false');
+      const controls = getYoutubeCustomControlsNode();
+      if(controls){
+        controls.style.display = 'flex';
+        controls.classList.add('has-timebar');
+      }
+      setYoutubePlayButtonState(false);
+      updateYoutubeTimeControls();
       return true;
     }
 
@@ -20003,6 +20101,12 @@ function getStudentPaidCourses(){
           gate.classList.remove('is-loading');
         }
       }, 2200);
+      window.clearTimeout(youtubeCustomState.preplaySafetyTimer);
+      youtubeCustomState.preplaySafetyTimer = window.setTimeout(() => {
+        if(gate && !gate.classList.contains('hidden') && iframe.dataset.preplayLoaded === 'true'){
+          closeYoutubePreplayGate();
+        }
+      }, 6500);
     }
 
     function getYoutubeActiveFrame(){
@@ -20474,7 +20578,7 @@ function getStudentPaidCourses(){
         if(preplayGate && !preplayGate.classList.contains('hidden')){
           preplayGate.classList.add('is-playing-transition');
           window.clearTimeout(youtubeCustomState.preplayRevealTimer);
-          youtubeCustomState.preplayRevealTimer = window.setTimeout(closeYoutubePreplayGate, 820);
+          youtubeCustomState.preplayRevealTimer = window.setTimeout(closeYoutubePreplayGate, 3000);
         }
         youtubeCustomState.playing = true;
         startYoutubeClock();
@@ -20685,6 +20789,12 @@ function getStudentPaidCourses(){
     }
 
     function toggleYoutubePlayPause(){
+      const pendingIframe = document.getElementById('playerIframe');
+      const pendingFrame = pendingIframe ? pendingIframe.closest('.video-frame') : null;
+      if(pendingFrame && pendingFrame.classList.contains('is-youtube-preplay') && pendingIframe?.dataset?.pendingYoutubeUrl && pendingIframe.dataset.preplayLoaded !== 'true'){
+        startYoutubeFromPreplayGate();
+        return;
+      }
       if(!youtubeCustomState.iframe) return;
       syncYoutubeApproximateTime();
       if(youtubeCustomState.playing){
@@ -20984,6 +21094,7 @@ function renderPlayer(courseId){
       }
 
       updateYoutubePrivateOverlay(course, lesson);
+      updateYoutubePreplayPoster(course, lesson);
       safeSetPlayerSrc(iframe, placeholder, lesson && lesson.url ? lesson.url : '');
 
       const completedLessons = course.completedLessons || [];
