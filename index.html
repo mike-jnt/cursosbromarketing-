@@ -15459,206 +15459,100 @@
   }
 </style>
 
-
-<style id="mobile-quality-native-control-stable-fix">
-  /* Ajuste final móvil: reutiliza el selector real y lo mantiene visible sobre la barra superior. */
+<style id="mobile-media-toolbar-lightweight-style">
+  /* Barra móvil ligera: calidad + subtítulos junto a los controles personalizados */
+  .mobile-caption-off-control{display:none;}
   @media (max-width:760px){
-    #tab-student-player .video-frame .mobile-video-quality-float:not(.mobile-quality-native){display:none !important;}
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
+    #tab-student-player .video-frame .youtube-quality-control.mobile-media-toolbar{
       position:absolute !important;
-      top:11px !important;
-      left:11px !important;
-      right:auto !important;
-      bottom:auto !important;
-      width:auto !important;
-      min-width:0 !important;
-      max-width:none !important;
-      height:34px !important;
-      min-height:34px !important;
-      padding:4px 6px !important;
-      margin:0 !important;
-      display:none !important;
-      align-items:center !important;
-      justify-content:center !important;
-      gap:0 !important;
-      border-radius:999px !important;
-      border:1px solid rgba(127,243,165,.34) !important;
-      background:rgba(3,10,7,.97) !important;
-      box-shadow:0 8px 18px rgba(0,0,0,.34) !important;
-      backdrop-filter:blur(10px) !important;
-      -webkit-backdrop-filter:blur(10px) !important;
-      z-index:500 !important;
-      overflow:visible !important;
-      opacity:1 !important;
-      visibility:visible !important;
-      pointer-events:auto !important;
-      transform:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active,
-    #tab-student-player .video-frame.is-youtube-preplay .youtube-quality-control.mobile-quality-native.is-quality-active,
-    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-quality-native.is-quality-active{
-      display:flex !important;
-      opacity:1 !important;
-      visibility:visible !important;
-      pointer-events:auto !important;
-      transform:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native span{
-      display:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
-      display:block !important;
-      width:auto !important;
-      min-width:66px !important;
-      max-width:78px !important;
-      height:25px !important;
-      min-height:25px !important;
-      margin:0 !important;
-      padding:0 7px !important;
-      border:0 !important;
-      border-radius:999px !important;
-      outline:none !important;
-      background:#0a8438 !important;
-      color:#fff !important;
-      font-size:10px !important;
-      font-weight:900 !important;
-      line-height:1 !important;
-      box-shadow:none !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select option{
-      background:#10151a !important;
-      color:#fff !important;
-    }
-  }
-  @media (max-width:430px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native{
-      top:9px !important;
-      left:9px !important;
-      height:31px !important;
-      min-height:31px !important;
-      padding:3px 5px !important;
-    }
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native select{
-      min-width:62px !important;
-      max-width:72px !important;
-      height:23px !important;
-      min-height:23px !important;
-      font-size:9.5px !important;
-    }
-  }
-</style>
-
-<style id="mobile-quality-control-right-position-fixed">
-  @media (max-width:760px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native,
-    #tab-student-player .video-frame .mobile-video-quality-float{
-      left:auto !important;
-      right:11px !important;
-      top:11px !important;
-      margin-left:0 !important;
-      transform:none !important;
-      z-index:520 !important;
-    }
-  }
-  @media (max-width:430px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native,
-    #tab-student-player .video-frame .mobile-video-quality-float{
-      left:auto !important;
-      right:8px !important;
-      top:8px !important;
-    }
-  }
-</style>
-
-
-<style id="mobile-quality-captions-auto-hide-fix">
-  .mobile-youtube-caption-off-btn{display:none !important;}
-  @media (max-width:760px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active{
       left:auto !important;
       right:10px !important;
       top:10px !important;
+      z-index:680 !important;
       display:flex !important;
       align-items:center !important;
       gap:5px !important;
-      padding:4px 5px !important;
+      width:auto !important;
+      min-width:0 !important;
       height:34px !important;
-      min-height:34px !important;
+      padding:4px 5px !important;
+      margin:0 !important;
       border-radius:999px !important;
-      background:rgba(3,10,7,.96) !important;
       border:1px solid rgba(127,243,165,.32) !important;
-      z-index:650 !important;
+      background:rgba(4,10,8,.96) !important;
+      backdrop-filter:blur(10px) !important;
+      -webkit-backdrop-filter:blur(10px) !important;
       opacity:1 !important;
       visibility:visible !important;
       pointer-events:auto !important;
-      transform:translateY(0) !important;
-      transition:opacity .22s ease, transform .22s ease, visibility .22s ease !important;
+      transform:none !important;
+      transition:opacity .2s ease, transform .2s ease, visibility .2s ease !important;
     }
-
-    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-quality-native.is-quality-active{
+    #tab-student-player .video-frame.is-youtube-ui-hidden .youtube-quality-control.mobile-media-toolbar{
       opacity:0 !important;
       visibility:hidden !important;
       pointer-events:none !important;
-      transform:translateY(-7px) !important;
+      transform:translateY(-6px) !important;
     }
-
-    #tab-student-player .youtube-quality-control.mobile-quality-native select{
+    #tab-student-player .youtube-quality-control.mobile-media-toolbar > span{
+      display:none !important;
+    }
+    #tab-student-player .youtube-quality-control.mobile-media-toolbar select{
+      display:block !important;
+      width:auto !important;
+      min-width:58px !important;
+      max-width:70px !important;
       height:24px !important;
-      min-width:60px !important;
-      max-width:72px !important;
+      margin:0 !important;
       padding:0 5px !important;
       border:0 !important;
       border-radius:999px !important;
       background:#0a8438 !important;
-      color:#ffffff !important;
+      color:#fff !important;
       font-size:10px !important;
       font-weight:900 !important;
+      outline:none !important;
     }
-
-    #tab-student-player .mobile-youtube-caption-off-btn{
+    #tab-student-player .youtube-quality-control.mobile-media-toolbar select option{
+      background:#101617 !important;
+      color:#fff !important;
+    }
+    #tab-student-player .mobile-caption-off-control{
       display:inline-flex !important;
       align-items:center !important;
       justify-content:center !important;
-      gap:3px !important;
       height:24px !important;
-      min-width:48px !important;
+      min-width:46px !important;
       padding:0 7px !important;
+      margin:0 !important;
       border-radius:999px !important;
-      border:1px solid rgba(127,243,165,.28) !important;
-      background:rgba(255,255,255,.09) !important;
-      color:#ffffff !important;
+      border:1px solid rgba(127,243,165,.32) !important;
+      background:rgba(10,132,56,.23) !important;
+      color:#caffd9 !important;
       font-size:9px !important;
       font-weight:900 !important;
       line-height:1 !important;
-      cursor:pointer !important;
       white-space:nowrap !important;
-    }
-
-    #tab-student-player .mobile-youtube-caption-off-btn.is-off{
-      background:rgba(10,132,56,.24) !important;
-      border-color:rgba(127,243,165,.38) !important;
-      color:#caffd9 !important;
+      cursor:pointer !important;
     }
   }
-
   @media (max-width:430px){
-    #tab-student-player .video-frame .youtube-quality-control.mobile-quality-native.is-quality-active{
-      right:7px !important;
+    #tab-student-player .video-frame .youtube-quality-control.mobile-media-toolbar{
       top:7px !important;
+      right:7px !important;
       height:32px !important;
-      min-height:32px !important;
-      padding:4px !important;
       gap:4px !important;
+      padding:4px !important;
     }
-    #tab-student-player .youtube-quality-control.mobile-quality-native select{
-      min-width:55px !important;
+    #tab-student-player .youtube-quality-control.mobile-media-toolbar select{
+      min-width:54px !important;
       max-width:62px !important;
       font-size:9px !important;
     }
-    #tab-student-player .mobile-youtube-caption-off-btn{
-      min-width:43px !important;
-      padding:0 6px !important;
-      font-size:8.5px !important;
+    #tab-student-player .mobile-caption-off-control{
+      min-width:41px !important;
+      padding:0 5px !important;
+      font-size:8px !important;
     }
   }
 </style>
@@ -27006,60 +26900,6 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     });
 
     setTimeout(buildMobileRouteDropdown, 350);
-
-
-    function buildMobileVideoQualityControl(){
-      try{
-        const frame = document.querySelector('#tab-student-player .video-frame');
-        const originalSelect = document.getElementById('youtubeQualitySelect');
-        if(!frame || !originalSelect) return;
-
-        let wrap = frame.querySelector('.mobile-video-quality-float');
-        if(!wrap){
-          wrap = document.createElement('div');
-          wrap.className = 'mobile-video-quality-float';
-          wrap.innerHTML = '<span>Calidad</span><select id="mobileYoutubeQualitySelect" aria-label="Calidad del video móvil"></select>';
-          frame.appendChild(wrap);
-        }
-
-        const mobileSelect = wrap.querySelector('select');
-        if(!mobileSelect) return;
-
-        if(!mobileSelect.dataset.built || mobileSelect.options.length !== originalSelect.options.length){
-          mobileSelect.innerHTML = '';
-          Array.from(originalSelect.options).forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option.value;
-            opt.textContent = option.textContent;
-            mobileSelect.appendChild(opt);
-          });
-          mobileSelect.dataset.built = 'true';
-        }
-
-        mobileSelect.value = originalSelect.value || 'default';
-
-        if(mobileSelect.dataset.bound !== 'true'){
-          mobileSelect.dataset.bound = 'true';
-          mobileSelect.addEventListener('change', () => {
-            originalSelect.value = mobileSelect.value;
-            originalSelect.dispatchEvent(new Event('change', { bubbles:true }));
-            if(typeof applyYoutubeQuality === 'function'){
-              try{ applyYoutubeQuality(mobileSelect.value); }catch(error){}
-            }
-          });
-        }
-      }catch(error){}
-    }
-
-    document.addEventListener('DOMContentLoaded', () => setTimeout(buildMobileVideoQualityControl, 400));
-    document.addEventListener('click', event => {
-      if(event.target && event.target.closest && event.target.closest('#tab-student-player, #menuStudent, .mobile-route-option')){
-        setTimeout(buildMobileVideoQualityControl, 250);
-      }
-    });
-    setTimeout(buildMobileVideoQualityControl, 900);
-
-
     function requestMobilePlayerFullscreen(){
       try{
         const frame = document.querySelector('#tab-student-player .video-frame');
@@ -27383,12 +27223,18 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 })();
 </script>
 
-
-<script id="mobile-quality-native-control-stable-script">
+<script id="mobile-media-toolbar-lightweight-script">
 (function(){
+  'use strict';
+  var lastCourseKey = '';
+  var originalParent = null;
+  var originalNext = null;
+  var resizeTimer = 0;
+
   function isMobile(){
-    return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+    return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
   }
+
   function nodes(){
     var frame = document.querySelector('#tab-student-player .video-frame');
     var controls = document.getElementById('youtubeCustomControls');
@@ -27397,93 +27243,32 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     var iframe = document.getElementById('playerIframe');
     return { frame:frame, controls:controls, select:select, quality:quality, iframe:iframe };
   }
-  function hasYoutube(n){
-    if(!n.frame) return false;
-    var src = '';
-    if(n.iframe){
-      src = String(n.iframe.dataset.pendingYoutubeUrl || n.iframe.getAttribute('src') || n.iframe.src || '').toLowerCase();
-    }
-    return n.frame.classList.contains('is-youtube-preplay') ||
-      n.frame.classList.contains('is-youtube-protected') ||
-      n.frame.classList.contains('is-youtube-custom-controls') ||
-      src.indexOf('youtube') !== -1 || src.indexOf('youtu.be') !== -1;
-  }
-  function syncQualityControl(){
+
+  function addCcOff(url){
     try{
-      var n = nodes();
-      if(!n.frame || !n.controls || !n.quality) return;
-      if(isMobile()){
-        if(n.quality.parentElement !== n.frame) n.frame.appendChild(n.quality);
-        n.quality.classList.add('mobile-quality-native');
-        n.quality.classList.toggle('is-quality-active', hasYoutube(n));
-        var duplicate = n.frame.querySelector('#mobileYoutubeQualitySelect');
-        if(duplicate){
-          var duplicateWrap = duplicate.closest('.mobile-video-quality-float');
-          if(duplicateWrap && duplicateWrap !== n.quality) duplicateWrap.remove();
-        }
-      }else{
-        n.quality.classList.remove('mobile-video-quality-float','mobile-quality-native','is-quality-active');
-        var label = n.controls.querySelector('.youtube-control-label');
-        if(n.quality.parentElement !== n.controls){
-          if(label) n.controls.insertBefore(n.quality, label);
-          else n.controls.appendChild(n.quality);
-        }
+      if(!url || !/(youtube\.com|youtu\.be)/i.test(String(url))) return url;
+      var value = String(url);
+      if(/([?&])cc_load_policy=/i.test(value)){
+        return value.replace(/([?&])cc_load_policy=[^&]*/i, '$1cc_load_policy=0');
       }
-    }catch(error){}
+      return value + (value.indexOf('?') >= 0 ? '&' : '?') + 'cc_load_policy=0';
+    }catch(error){ return url; }
   }
-  function installObserver(){
-    var player = document.getElementById('tab-student-player');
-    if(!player || player.dataset.qualityObserverInstalled === 'true') return;
-    player.dataset.qualityObserverInstalled = 'true';
-    var observer = new MutationObserver(function(){ window.setTimeout(syncQualityControl, 0); });
-    observer.observe(player, {subtree:true, childList:true, attributes:true, attributeFilter:['class','src','data-pending-youtube-url']});
-  }
-  function boot(){
-    syncQualityControl();
-    installObserver();
-    window.setTimeout(syncQualityControl, 180);
-    window.setTimeout(syncQualityControl, 650);
-  }
-  document.addEventListener('DOMContentLoaded', boot);
-  document.addEventListener('click', function(event){
-    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option, #menuStudent button')){
-      window.setTimeout(syncQualityControl, 60);
-      window.setTimeout(syncQualityControl, 280);
+
+  function ensureCaptionsParameter(iframe){
+    if(!iframe) return '';
+    var pending = iframe.dataset ? String(iframe.dataset.pendingYoutubeUrl || '') : '';
+    if(pending){
+      var secured = addCcOff(pending);
+      if(secured !== pending) iframe.dataset.pendingYoutubeUrl = secured;
+      return secured;
     }
-  });
-  window.addEventListener('resize', syncQualityControl);
-  window.setTimeout(boot, 950);
-})();
-</script>
-
-<script id="mobile-quality-captions-control-script">
-(function(){
-  function isMobile(){
-    return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
+    return String(iframe.getAttribute('src') || '');
   }
 
-  function getNodes(){
-    var frame = document.querySelector('#tab-student-player .video-frame');
-    var quality = document.querySelector('#tab-student-player .youtube-quality-control.mobile-quality-native') ||
-                  document.querySelector('#tab-student-player .youtube-quality-control');
-    var iframe = document.getElementById('playerIframe');
-    return { frame:frame, quality:quality, iframe:iframe };
-  }
-
-  function youtubeUrlWithCaptionsOff(raw){
-    try{
-      if(!raw || !/youtube|youtu\.be/i.test(String(raw))) return raw;
-      var value = String(raw);
-      var key = 'cc_load_policy';
-      var matcher = new RegExp('([?&])' + key + '=[^&]*', 'i');
-      if(matcher.test(value)) return value.replace(matcher, '$1' + key + '=0');
-      return value + (value.indexOf('?') >= 0 ? '&' : '?') + key + '=0';
-    }catch(error){
-      return raw;
-    }
-  }
-
-  function pushCaptionsOffCommand(){
+  function issueCaptionOffOnce(key){
+    if(!key || key === lastCourseKey) return;
+    lastCourseKey = key;
     try{
       if(typeof sendYoutubePlayerCommand === 'function'){
         sendYoutubePlayerCommand('setOption', ['captions', 'track', {}]);
@@ -27491,89 +27276,95 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     }catch(error){}
   }
 
-  function forceCaptionsOff(showMessage){
-    var n = getNodes();
-    if(!n.iframe) return;
-
-    if(n.iframe.dataset && n.iframe.dataset.pendingYoutubeUrl){
-      n.iframe.dataset.pendingYoutubeUrl = youtubeUrlWithCaptionsOff(n.iframe.dataset.pendingYoutubeUrl);
-    }
-
-    if(n.frame) n.frame.dataset.mobileCaptions = 'off';
-    var button = document.getElementById('btnMobileYoutubeCaptionsOff');
-    if(button){
-      button.classList.add('is-off');
-      button.setAttribute('aria-pressed', 'true');
-      button.setAttribute('title', 'Subtítulos desactivados');
-      button.innerHTML = 'CC&nbsp;OFF';
-    }
-
-    pushCaptionsOffCommand();
-    window.setTimeout(pushCaptionsOffCommand, 220);
-    window.setTimeout(pushCaptionsOffCommand, 760);
-
-    if(showMessage && typeof toast === 'function'){
-      try{ toast('Subtítulos desactivados.'); }catch(error){}
-    }
-  }
-
-  function ensureCaptionsControl(){
-    try{
-      if(!isMobile()) return;
-      var n = getNodes();
-      if(!n.quality) return;
-
-      var button = document.getElementById('btnMobileYoutubeCaptionsOff');
-      if(!button){
-        button = document.createElement('button');
-        button.type = 'button';
-        button.id = 'btnMobileYoutubeCaptionsOff';
-        button.className = 'mobile-youtube-caption-off-btn is-off';
-        button.setAttribute('aria-label', 'Desactivar subtítulos');
-        button.setAttribute('aria-pressed', 'true');
-        button.innerHTML = 'CC&nbsp;OFF';
-        button.addEventListener('click', function(event){
-          event.preventDefault();
-          event.stopPropagation();
-          forceCaptionsOff(true);
-          if(typeof showYoutubeUiTemporarily === 'function'){
-            try{ showYoutubeUiTemporarily({ showTitle:false, controlsDelay:4400, force:true }); }catch(error){}
-          }
-        });
-        n.quality.appendChild(button);
-      }
-
-      forceCaptionsOff(false);
-    }catch(error){}
-  }
-
-  function observeMobilePlayer(){
-    var player = document.getElementById('tab-student-player');
-    if(!player || player.dataset.mobileCaptionsObserver === 'true') return;
-    player.dataset.mobileCaptionsObserver = 'true';
-    var observer = new MutationObserver(function(){
-      window.setTimeout(ensureCaptionsControl, 10);
+  function createCaptionButton(quality){
+    if(!quality) return null;
+    var btn = quality.querySelector('#btnMobileCaptionOffLight');
+    if(btn) return btn;
+    btn = document.createElement('button');
+    btn.id = 'btnMobileCaptionOffLight';
+    btn.type = 'button';
+    btn.className = 'mobile-caption-off-control';
+    btn.setAttribute('aria-label', 'Desactivar subtítulos');
+    btn.setAttribute('aria-pressed', 'true');
+    btn.title = 'Subtítulos desactivados';
+    btn.textContent = 'CC OFF';
+    btn.addEventListener('click', function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      var n = nodes();
+      var key = ensureCaptionsParameter(n.iframe) || ('manual-' + Date.now());
+      lastCourseKey = '';
+      issueCaptionOffOnce(key);
+      try{ if(typeof toast === 'function') toast('Subtítulos desactivados.'); }catch(error){}
     });
-    observer.observe(player, { subtree:true, childList:true, attributes:true, attributeFilter:['class','src','data-pending-youtube-url'] });
+    quality.appendChild(btn);
+    return btn;
   }
 
-  function boot(){
-    ensureCaptionsControl();
-    observeMobilePlayer();
-    window.setTimeout(ensureCaptionsControl, 250);
-    window.setTimeout(ensureCaptionsControl, 900);
-  }
-
-  document.addEventListener('DOMContentLoaded', boot);
-  document.addEventListener('click', function(event){
-    if(event.target && event.target.closest && event.target.closest('#tab-student-player, .mobile-route-option, #menuStudent button')){
-      window.setTimeout(ensureCaptionsControl, 80);
-      window.setTimeout(ensureCaptionsControl, 380);
+  function setupToolbar(){
+    var n = nodes();
+    if(!n.quality || !n.frame || !n.controls) return;
+    if(!originalParent){
+      originalParent = n.quality.parentElement;
+      originalNext = n.quality.nextSibling;
     }
+    if(isMobile()){
+      if(n.quality.parentElement !== n.frame) n.frame.appendChild(n.quality);
+      n.quality.classList.add('mobile-media-toolbar');
+      createCaptionButton(n.quality);
+      ensureCaptionsParameter(n.iframe);
+      var oldFloat = n.frame.querySelector('.mobile-video-quality-float');
+      if(oldFloat && oldFloat !== n.quality) oldFloat.remove();
+    }else{
+      n.quality.classList.remove('mobile-media-toolbar');
+      var btn = n.quality.querySelector('#btnMobileCaptionOffLight');
+      if(btn) btn.remove();
+      if(n.quality.parentElement !== originalParent){
+        if(originalParent){
+          if(originalNext && originalNext.parentNode === originalParent) originalParent.insertBefore(n.quality, originalNext);
+          else originalParent.appendChild(n.quality);
+        }else{
+          n.controls.appendChild(n.quality);
+        }
+      }
+    }
+  }
+
+  function onPotentialLessonChange(){
+    window.setTimeout(function(){
+      setupToolbar();
+      var n = nodes();
+      if(!isMobile() || !n.iframe) return;
+      ensureCaptionsParameter(n.iframe);
+    }, 60);
+  }
+
+  // Captura el play antes de que se asigne la URL al iframe: inicia siempre con CC apagado.
+  document.addEventListener('click', function(event){
+    var target = event.target && event.target.closest ? event.target.closest('#btnYoutubePreplayPlay, #btnYoutubeCenterPlay') : null;
+    if(target && isMobile()){
+      var n = nodes();
+      var key = ensureCaptionsParameter(n.iframe) || 'player';
+      window.setTimeout(function(){ issueCaptionOffOnce(key); }, 360);
+      return;
+    }
+    if(event.target && event.target.closest && event.target.closest('.player-lesson-row, #menuStudent button, .mobile-route-option, #tab-student-player')){
+      onPotentialLessonChange();
+    }
+  }, true);
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setupToolbar();
+    window.setTimeout(setupToolbar, 240);
   });
-  window.addEventListener('resize', ensureCaptionsControl);
-  window.setTimeout(boot, 1100);
+  window.addEventListener('pageshow', setupToolbar);
+  window.addEventListener('resize', function(){
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(setupToolbar, 100);
+  });
+  window.setTimeout(setupToolbar, 700);
 })();
 </script>
+
 </body>
 </html>
