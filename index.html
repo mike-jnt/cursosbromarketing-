@@ -15658,6 +15658,69 @@
   }
 </style>
 
+
+<style id="ios-player-fullscreen-viewport-anchor-fix">
+  /* iPhone: mantener el reproductor anclado al viewport y no a tarjetas reordenadas */
+  @media (max-width:760px){
+    html.ios-player-fullscreen-active #appShell,
+    html.ios-player-fullscreen-active #appShell .layout,
+    html.ios-player-fullscreen-active #appShell .main,
+    html.ios-player-fullscreen-active #tab-student-player,
+    html.ios-player-fullscreen-active #tab-student-player .player-shell,
+    html.ios-player-fullscreen-active #tab-student-player .player-main-card,
+    html.ios-player-fullscreen-active #tab-student-player .player-video-wrap{
+      animation:none !important;
+      transform:none !important;
+      filter:none !important;
+      perspective:none !important;
+      contain:none !important;
+      overflow:visible !important;
+    }
+
+    html.ios-player-fullscreen-active #tab-student-player{
+      display:block !important;
+      position:static !important;
+      opacity:1 !important;
+      visibility:visible !important;
+    }
+
+    html.ios-player-fullscreen-active #tab-student-player .player-video-wrap{
+      position:static !important;
+      width:auto !important;
+      max-width:none !important;
+      height:auto !important;
+      min-height:0 !important;
+      margin:0 !important;
+      border:0 !important;
+      box-shadow:none !important;
+      background:transparent !important;
+    }
+
+    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
+      display:block !important;
+      visibility:visible !important;
+      opacity:1 !important;
+      pointer-events:auto !important;
+      isolation:isolate !important;
+    }
+
+    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen iframe,
+    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen video{
+      visibility:visible !important;
+      opacity:1 !important;
+    }
+
+    html.ios-player-fullscreen-active #appShell .topbar,
+    html.ios-player-fullscreen-active #tab-student-player .bro-learning-breadcrumb,
+    html.ios-player-fullscreen-active #tab-student-player .player-video-info,
+    html.ios-player-fullscreen-active #tab-student-player .player-side-card,
+    html.ios-player-fullscreen-active #tab-student-player #playerResourcesBox{
+      visibility:hidden !important;
+      pointer-events:none !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
