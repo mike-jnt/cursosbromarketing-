@@ -15790,145 +15790,79 @@
 </style>
 
 
-<!-- Campus Bromarketing: instalación como aplicación -->
-<meta name="theme-color" content="#090b0f">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Campus Bro">
-<link rel="manifest" href="./bromarketing-campus.webmanifest">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<style id="campus-pwa-install-ui-style">
-  #btnInstallCampusApp{display:none !important;}
-  .campus-install-modal-backdrop{display:none;}
+<style id="ios-landscape-before-fullscreen-style">
+  /* iPhone: el usuario gira primero y luego decide ampliar el reproductor. */
   @media (max-width:760px){
-    #appShell #btnInstallCampusApp.app-install-ready{
-      display:inline-flex !important;
-      width:auto !important;
-      min-width:auto !important;
-      height:34px !important;
-      min-height:34px !important;
-      padding:0 9px !important;
-      gap:5px !important;
+    #tab-student-player .ios-landscape-expand-button{
+      position:absolute !important;
+      right:max(12px, env(safe-area-inset-right)) !important;
+      bottom:58px !important;
+      z-index:980 !important;
+      display:none !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:7px !important;
+      height:38px !important;
+      min-width:108px !important;
+      padding:0 15px !important;
       border-radius:999px !important;
-      background:rgba(10,132,56,.18) !important;
-      border:1px solid rgba(127,243,165,.32) !important;
-      color:#dbffe6 !important;
-      font-size:10.5px !important;
+      border:1px solid rgba(127,243,165,.42) !important;
+      background:linear-gradient(135deg,#0a8438 0%,#0b8844 100%) !important;
+      color:#ffffff !important;
+      font-size:12px !important;
       font-weight:900 !important;
-      line-height:1 !important;
-      white-space:nowrap !important;
-      box-shadow:none !important;
+      letter-spacing:.01em !important;
+      cursor:pointer !important;
+      box-shadow:0 15px 30px rgba(0,0,0,.38), 0 10px 22px rgba(10,132,56,.22) !important;
+      opacity:0 !important;
+      transform:translateY(7px) !important;
+      transition:opacity .2s ease, transform .2s ease !important;
+      pointer-events:none !important;
     }
-    #appShell #btnInstallCampusApp.app-install-ready:active{
-      transform:scale(.97) !important;
-    }
-    #appShell #btnInstallCampusApp .install-app-icon{
-      display:inline-grid;
-      place-items:center;
-      width:15px;
-      height:15px;
-      font-size:12px;
+    #tab-student-player .ios-landscape-expand-button::before{
+      content:'⛶';
+      font-size:14px;
       line-height:1;
     }
-    #appShell .top-right:has(#btnInstallCampusApp.app-install-ready){
-      gap:4px !important;
+    #tab-student-player .video-frame.ios-landscape-ready-expand .ios-landscape-expand-button{
+      display:inline-flex !important;
+      opacity:1 !important;
+      transform:translateY(0) !important;
+      pointer-events:auto !important;
     }
-    .campus-install-modal-backdrop.show{
-      position:fixed;
-      inset:0;
-      z-index:2147483000;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      padding:12px;
-      background:rgba(0,0,0,.62);
-      backdrop-filter:blur(5px);
-      -webkit-backdrop-filter:blur(5px);
+    #tab-student-player .video-frame.ios-player-fullscreen .ios-landscape-expand-button{
+      display:none !important;
     }
-    .campus-install-modal{
-      width:min(100%,420px);
-      border-radius:24px;
-      padding:18px 16px 14px;
-      border:1px solid rgba(127,243,165,.20);
-      background:radial-gradient(circle at top right,rgba(10,132,56,.22),transparent 35%),linear-gradient(180deg,#191820 0%,#0e0c12 100%);
-      box-shadow:0 28px 72px rgba(0,0,0,.58);
-      color:#fff;
+    #tab-student-player .ios-landscape-fullscreen-hint{
+      position:absolute !important;
+      left:50% !important;
+      bottom:60px !important;
+      z-index:980 !important;
+      transform:translateX(-50%) translateY(8px) !important;
+      display:none !important;
+      padding:10px 14px !important;
+      max-width:82% !important;
+      border-radius:999px !important;
+      border:1px solid rgba(127,243,165,.22) !important;
+      background:rgba(3,10,7,.94) !important;
+      color:#ffffff !important;
+      font-size:11px !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+      box-shadow:0 16px 32px rgba(0,0,0,.36) !important;
+      opacity:0 !important;
+      transition:opacity .2s ease, transform .2s ease !important;
     }
-    .campus-install-modal-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      margin-bottom:12px;
-    }
-    .campus-install-modal-head strong{
-      display:block;
-      color:#fff !important;
-      font-size:18px;
-      line-height:1.2;
-      margin:0 0 5px;
-    }
-    .campus-install-modal-head small{
-      display:block;
-      color:rgba(255,255,255,.68) !important;
-      line-height:1.45;
-    }
-    .campus-install-modal-close{
-      flex:0 0 auto;
-      width:34px;
-      height:34px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      font-size:19px;
-      cursor:pointer;
-    }
-    .campus-install-steps{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin:13px 0 14px;
-    }
-    .campus-install-step{
-      display:flex;
-      align-items:center;
-      gap:11px;
-      padding:11px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.09);
-      background:rgba(255,255,255,.055);
-      color:#eff8f2;
-      font-size:13px;
-      line-height:1.45;
-    }
-    .campus-install-step b{
-      width:25px;
-      height:25px;
-      flex:0 0 25px;
-      display:grid;
-      place-items:center;
-      border-radius:999px;
-      background:#0a8438;
-      color:#fff;
-      font-size:12px;
-    }
-    .campus-install-done{
-      width:100%;
-      height:43px;
-      border-radius:999px;
-      border:1px solid rgba(127,243,165,.34);
-      background:#0a8438;
-      color:#fff;
-      font-weight:900;
-      cursor:pointer;
+    #tab-student-player .video-frame.ios-show-landscape-hint .ios-landscape-fullscreen-hint{
+      display:block !important;
+      opacity:1 !important;
+      transform:translateX(-50%) translateY(0) !important;
     }
   }
-  @media (max-width:390px){
-    #appShell #btnInstallCampusApp.app-install-ready{
-      padding:0 7px !important;
-      font-size:9.5px !important;
+  @media (max-width:960px) and (orientation:landscape){
+    #tab-student-player .ios-landscape-expand-button{
+      bottom:max(56px, calc(env(safe-area-inset-bottom) + 50px)) !important;
+      right:max(12px, env(safe-area-inset-right)) !important;
     }
   }
 </style>
@@ -16050,7 +15984,6 @@
 </div>
 <span class="role role-admin" id="sideRoleBadge">Administrador</span>
 <span class="chip" id="roleChip">ADMIN</span>
-<button class="btn btn-soft campus-install-app-btn" id="btnInstallCampusApp" type="button" aria-label="Instalar Campus Bromarketing"><span class="install-app-icon">↓</span><span>Instalar</span></button>
 <button class="btn btn-soft mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileHeaderMenu()" type="button"><span>Opciones</span></button>
 <button class="btn btn-soft header-logout-btn" onclick="logout()" type="button"><span class="desktop-logout-text">Cerrar sesión</span><span class="mobile-logout-text">Salir</span></button>
 </div>
@@ -27746,22 +27679,92 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
 <script id="ios-mobile-player-fullscreen-script">
 (function(){
+  'use strict';
+
   var IOS_FULLSCREEN_CLASS = 'ios-player-fullscreen';
   var ROOT_FULLSCREEN_CLASS = 'ios-player-fullscreen-active';
+  var READY_CLASS = 'ios-landscape-ready-expand';
+  var HINT_CLASS = 'ios-show-landscape-hint';
+  var hintTimer = null;
 
   function isIPhone(){
     return /iPhone|iPod/i.test(String(navigator.userAgent || ''));
+  }
+
+  function isMobileViewport(){
+    return !!(window.matchMedia && window.matchMedia('(max-width:960px)').matches);
+  }
+
+  function isLandscape(){
+    var viewport = window.visualViewport;
+    var width = viewport ? viewport.width : window.innerWidth;
+    var height = viewport ? viewport.height : window.innerHeight;
+    return width > height;
   }
 
   function getFrame(){
     return document.querySelector('#tab-student-player .video-frame');
   }
 
-  function syncIOSPlayerHeight(){
+  function playerTabIsVisible(){
+    var tab = document.getElementById('tab-student-player');
+    return !!(tab && !tab.classList.contains('hidden'));
+  }
+
+  function syncIOSPlayerSize(){
     if(!document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)) return;
-    var viewportHeight = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    var viewport = window.visualViewport;
+    var viewportHeight = (viewport && viewport.height) || window.innerHeight;
+    var viewportWidth = (viewport && viewport.width) || window.innerWidth;
     if(viewportHeight){
       document.documentElement.style.setProperty('--ios-player-viewport-height', Math.round(viewportHeight) + 'px');
+    }
+    if(viewportWidth){
+      document.documentElement.style.setProperty('--ios-player-viewport-width', Math.round(viewportWidth) + 'px');
+    }
+  }
+
+  function hideHint(){
+    var frame = getFrame();
+    if(frame) frame.classList.remove(HINT_CLASS);
+    if(hintTimer){
+      window.clearTimeout(hintTimer);
+      hintTimer = null;
+    }
+  }
+
+  function showPortraitHint(){
+    var frame = getFrame();
+    if(!frame) return;
+    ensureLandscapeControls(frame);
+    frame.classList.add(HINT_CLASS);
+    if(hintTimer) window.clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(hideHint, 2800);
+  }
+
+  function ensureLandscapeControls(frame){
+    if(!frame) return;
+    var expand = frame.querySelector('.ios-landscape-expand-button');
+    if(!expand){
+      expand = document.createElement('button');
+      expand.type = 'button';
+      expand.className = 'ios-landscape-expand-button';
+      expand.setAttribute('aria-label', 'Ampliar video en pantalla completa');
+      expand.textContent = 'Ampliar';
+      expand.addEventListener('click', function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        enterIOSPlayerFullscreen();
+      }, true);
+      frame.appendChild(expand);
+    }
+    var hint = frame.querySelector('.ios-landscape-fullscreen-hint');
+    if(!hint){
+      hint = document.createElement('div');
+      hint.className = 'ios-landscape-fullscreen-hint';
+      hint.textContent = 'Gira el celular para ver Ampliar';
+      frame.appendChild(hint);
     }
   }
 
@@ -27784,15 +27787,33 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     return button;
   }
 
+  function tryNativeFullscreen(frame){
+    try{
+      if(frame.requestFullscreen){
+        var result = frame.requestFullscreen();
+        if(result && typeof result.catch === 'function') result.catch(function(){});
+        return true;
+      }
+      if(frame.webkitRequestFullscreen){
+        frame.webkitRequestFullscreen();
+        return true;
+      }
+    }catch(error){}
+    return false;
+  }
+
   function enterIOSPlayerFullscreen(){
     var frame = getFrame();
-    if(!frame) return;
+    if(!frame || !isLandscape()) return;
+    hideHint();
     ensureExitButton(frame);
-    syncIOSPlayerHeight();
+    frame.classList.remove(READY_CLASS);
     document.documentElement.classList.add(ROOT_FULLSCREEN_CLASS);
     document.body.classList.add(ROOT_FULLSCREEN_CLASS);
     frame.classList.add(IOS_FULLSCREEN_CLASS);
-    syncIOSPlayerHeight();
+    syncIOSPlayerSize();
+    tryNativeFullscreen(frame);
+
     var button = document.getElementById('btnYoutubeFullscreen');
     if(button) button.setAttribute('aria-pressed', 'true');
     try{
@@ -27804,28 +27825,51 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
   function exitIOSPlayerFullscreen(){
     var frame = getFrame();
+    hideHint();
+    if(document.fullscreenElement && document.exitFullscreen){
+      try{ document.exitFullscreen(); }catch(error){}
+    }else if(document.webkitFullscreenElement && document.webkitExitFullscreen){
+      try{ document.webkitExitFullscreen(); }catch(error){}
+    }
     if(frame) frame.classList.remove(IOS_FULLSCREEN_CLASS);
     document.documentElement.classList.remove(ROOT_FULLSCREEN_CLASS);
     document.body.classList.remove(ROOT_FULLSCREEN_CLASS);
     document.documentElement.style.removeProperty('--ios-player-viewport-height');
+    document.documentElement.style.removeProperty('--ios-player-viewport-width');
     var button = document.getElementById('btnYoutubeFullscreen');
     if(button) button.setAttribute('aria-pressed', 'false');
+    updateLandscapeButton();
   }
 
-  function toggleIOSPlayerFullscreen(){
+  function updateLandscapeButton(){
+    if(!isIPhone() || !isMobileViewport()) return;
     var frame = getFrame();
     if(!frame) return;
-    if(frame.classList.contains(IOS_FULLSCREEN_CLASS)) exitIOSPlayerFullscreen();
-    else enterIOSPlayerFullscreen();
+    ensureLandscapeControls(frame);
+    var inFullscreen = frame.classList.contains(IOS_FULLSCREEN_CLASS) || document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS);
+    var canExpand = isLandscape() && playerTabIsVisible() && !inFullscreen;
+    frame.classList.toggle(READY_CLASS, canExpand);
+    if(isLandscape()) hideHint();
+    syncIOSPlayerSize();
   }
 
   document.addEventListener('click', function(event){
-    var button = event.target && event.target.closest ? event.target.closest('#btnYoutubeFullscreen') : null;
-    if(!button || !isIPhone()) return;
+    var fullscreen = event.target && event.target.closest ? event.target.closest('#btnYoutubeFullscreen') : null;
+    if(!fullscreen || !isIPhone() || !isMobileViewport()) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    toggleIOSPlayerFullscreen();
+
+    var frame = getFrame();
+    if(frame && frame.classList.contains(IOS_FULLSCREEN_CLASS)){
+      exitIOSPlayerFullscreen();
+      return;
+    }
+    if(isLandscape()){
+      enterIOSPlayerFullscreen();
+    }else{
+      showPortraitHint();
+    }
   }, true);
 
   document.addEventListener('keydown', function(event){
@@ -27834,107 +27878,43 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     }
   });
 
-  window.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
+  document.addEventListener('fullscreenchange', function(){
+    if(!document.fullscreenElement && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
+      updateLandscapeButton();
+    }
+  });
+
+  window.addEventListener('orientationchange', function(){
+    window.setTimeout(function(){
+      if(document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS) && !isLandscape()){
+        exitIOSPlayerFullscreen();
+      }else{
+        updateLandscapeButton();
+      }
+    }, 220);
+  }, { passive:true });
+
+  window.addEventListener('resize', updateLandscapeButton, { passive:true });
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
-    window.visualViewport.addEventListener('scroll', syncIOSPlayerHeight, { passive:true });
+    window.visualViewport.addEventListener('resize', updateLandscapeButton, { passive:true });
   }
+
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#menuStudent button, .mobile-route-option, #tab-student-player')){
+      window.setTimeout(updateLandscapeButton, 100);
+    }
+  });
+
   document.addEventListener('visibilitychange', function(){
-    if(document.hidden) exitIOSPlayerFullscreen();
-  });
-})();
-</script>
-
-
-<script id="campus-pwa-install-script">
-(function(){
-  'use strict';
-  var deferredInstallPrompt = null;
-  var installButton = null;
-  var installModal = null;
-
-  function isMobileViewport(){
-    return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
-  }
-  function isIOSDevice(){
-    return /iphone|ipad|ipod/i.test(String(navigator.userAgent || '')) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-  function isInstalledApp(){
-    return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true);
-  }
-  function showInstallButton(){
-    installButton = installButton || document.getElementById('btnInstallCampusApp');
-    if(!installButton) return;
-    var shouldShow = isMobileViewport() && !isInstalledApp() && (isIOSDevice() || !!deferredInstallPrompt);
-    installButton.classList.toggle('app-install-ready', shouldShow);
-  }
-  function closeInstallModal(){
-    if(installModal) installModal.classList.remove('show');
-  }
-  function ensureInstallModal(){
-    if(installModal) return installModal;
-    installModal = document.createElement('div');
-    installModal.className = 'campus-install-modal-backdrop';
-    installModal.id = 'campusInstallModal';
-    installModal.innerHTML =
-      '<div class="campus-install-modal" role="dialog" aria-modal="true" aria-label="Instalar aplicación">' +
-        '<div class="campus-install-modal-head"><div><strong>Instalar Campus Bromarketing</strong><small>Accede como aplicación desde tu pantalla de inicio.</small></div><button type="button" class="campus-install-modal-close" aria-label="Cerrar">×</button></div>' +
-        '<div class="campus-install-steps">' +
-          '<div class="campus-install-step"><b>1</b><span>Toca el botón <strong>Compartir</strong> del navegador.</span></div>' +
-          '<div class="campus-install-step"><b>2</b><span>Selecciona <strong>Agregar a pantalla de inicio</strong>.</span></div>' +
-          '<div class="campus-install-step"><b>3</b><span>Confirma en <strong>Agregar</strong>.</span></div>' +
-        '</div>' +
-        '<button type="button" class="campus-install-done">Entendido</button>' +
-      '</div>';
-    document.body.appendChild(installModal);
-    installModal.querySelector('.campus-install-modal-close').addEventListener('click', closeInstallModal);
-    installModal.querySelector('.campus-install-done').addEventListener('click', closeInstallModal);
-    installModal.addEventListener('click', function(event){ if(event.target === installModal) closeInstallModal(); });
-    return installModal;
-  }
-  async function installCampusApp(){
-    if(isInstalledApp()) return;
-    if(deferredInstallPrompt){
-      try{
-        await deferredInstallPrompt.prompt();
-        var choice = await deferredInstallPrompt.userChoice;
-        if(choice && choice.outcome === 'accepted'){
-          deferredInstallPrompt = null;
-          showInstallButton();
-        }
-      }catch(error){}
-      return;
+    if(document.hidden && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
+      exitIOSPlayerFullscreen();
     }
-    if(isIOSDevice()) ensureInstallModal().classList.add('show');
-  }
-  function bootInstallUI(){
-    installButton = document.getElementById('btnInstallCampusApp');
-    if(installButton && installButton.dataset.bound !== 'true'){
-      installButton.dataset.bound = 'true';
-      installButton.addEventListener('click', installCampusApp);
-    }
-    showInstallButton();
-  }
-
-  window.addEventListener('beforeinstallprompt', function(event){
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    showInstallButton();
   });
-  window.addEventListener('appinstalled', function(){
-    deferredInstallPrompt = null;
-    closeInstallModal();
-    showInstallButton();
-  });
-  window.addEventListener('resize', showInstallButton, {passive:true});
-  document.addEventListener('DOMContentLoaded', bootInstallUI);
-  window.setTimeout(bootInstallUI, 600);
 
-  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./bromarketing-sw.js', {scope:'./'}).catch(function(){});
-    });
-  }
+  document.addEventListener('DOMContentLoaded', function(){
+    window.setTimeout(updateLandscapeButton, 320);
+  });
+  window.setTimeout(updateLandscapeButton, 880);
 })();
 </script>
 
