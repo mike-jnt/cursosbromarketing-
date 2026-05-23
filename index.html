@@ -15791,92 +15791,78 @@
 
 
 <style id="ios-landscape-before-fullscreen-style">
+  /* iPhone: el usuario gira primero y luego decide ampliar el reproductor. */
   @media (max-width:760px){
-    #tab-student-player .ios-rotate-before-fullscreen{
-      position:absolute;
-      inset:0;
-      z-index:980;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      background:rgba(0,0,0,.76);
-      backdrop-filter:blur(9px);
-      -webkit-backdrop-filter:blur(9px);
+    #tab-student-player .ios-landscape-expand-button{
+      position:absolute !important;
+      right:max(12px, env(safe-area-inset-right)) !important;
+      bottom:58px !important;
+      z-index:980 !important;
+      display:none !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:7px !important;
+      height:38px !important;
+      min-width:108px !important;
+      padding:0 15px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(127,243,165,.42) !important;
+      background:linear-gradient(135deg,#0a8438 0%,#0b8844 100%) !important;
+      color:#ffffff !important;
+      font-size:12px !important;
+      font-weight:900 !important;
+      letter-spacing:.01em !important;
+      cursor:pointer !important;
+      box-shadow:0 15px 30px rgba(0,0,0,.38), 0 10px 22px rgba(10,132,56,.22) !important;
+      opacity:0 !important;
+      transform:translateY(7px) !important;
+      transition:opacity .2s ease, transform .2s ease !important;
+      pointer-events:none !important;
     }
-    #tab-student-player .video-frame.ios-waiting-landscape .ios-rotate-before-fullscreen{
-      display:flex;
+    #tab-student-player .ios-landscape-expand-button::before{
+      content:'⛶';
+      font-size:14px;
+      line-height:1;
     }
-    #tab-student-player .ios-rotate-prompt-card{
-      width:min(286px,86%);
-      padding:18px 16px 15px;
-      border-radius:22px;
-      border:1px solid rgba(127,243,165,.26);
-      background:
-        radial-gradient(circle at top right,rgba(10,132,56,.22),transparent 35%),
-        linear-gradient(180deg,#151a1d 0%,#0a0d0e 100%);
-      color:#fff;
-      text-align:center;
-      box-shadow:0 22px 50px rgba(0,0,0,.48);
+    #tab-student-player .video-frame.ios-landscape-ready-expand .ios-landscape-expand-button{
+      display:inline-flex !important;
+      opacity:1 !important;
+      transform:translateY(0) !important;
+      pointer-events:auto !important;
     }
-    #tab-student-player .ios-rotate-phone-icon{
-      width:55px;
-      height:84px;
-      margin:0 auto 14px;
-      border:3px solid #7ff3a5;
-      border-radius:12px;
-      position:relative;
-      transform:rotate(90deg);
-      animation:iosRotateGuide 1.35s ease-in-out infinite alternate;
+    #tab-student-player .video-frame.ios-player-fullscreen .ios-landscape-expand-button{
+      display:none !important;
     }
-    #tab-student-player .ios-rotate-phone-icon::before{
-      content:'';
-      position:absolute;
-      width:16px;
-      height:3px;
-      border-radius:999px;
-      background:#7ff3a5;
-      top:5px;
-      left:50%;
-      transform:translateX(-50%);
+    #tab-student-player .ios-landscape-fullscreen-hint{
+      position:absolute !important;
+      left:50% !important;
+      bottom:60px !important;
+      z-index:980 !important;
+      transform:translateX(-50%) translateY(8px) !important;
+      display:none !important;
+      padding:10px 14px !important;
+      max-width:82% !important;
+      border-radius:999px !important;
+      border:1px solid rgba(127,243,165,.22) !important;
+      background:rgba(3,10,7,.94) !important;
+      color:#ffffff !important;
+      font-size:11px !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+      box-shadow:0 16px 32px rgba(0,0,0,.36) !important;
+      opacity:0 !important;
+      transition:opacity .2s ease, transform .2s ease !important;
     }
-    #tab-student-player .ios-rotate-phone-icon::after{
-      content:'↻';
-      position:absolute;
-      color:#7ff3a5;
-      font-size:28px;
-      font-weight:900;
-      right:-38px;
-      top:26px;
-      transform:rotate(-90deg);
+    #tab-student-player .video-frame.ios-show-landscape-hint .ios-landscape-fullscreen-hint{
+      display:block !important;
+      opacity:1 !important;
+      transform:translateX(-50%) translateY(0) !important;
     }
-    #tab-student-player .ios-rotate-prompt-card strong{
-      display:block;
-      color:#fff !important;
-      font-size:17px;
-      line-height:1.28;
-      margin:0 0 7px;
-    }
-    #tab-student-player .ios-rotate-prompt-card p{
-      color:rgba(255,255,255,.72) !important;
-      font-size:12px;
-      line-height:1.55;
-      margin:0 0 14px;
-    }
-    #tab-student-player .ios-rotate-prompt-card button{
-      width:100%;
-      height:39px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:12px;
-      font-weight:800;
-      cursor:pointer;
-    }
-    @keyframes iosRotateGuide{
-      from{transform:rotate(76deg) scale(.98)}
-      to{transform:rotate(90deg) scale(1.03)}
+  }
+  @media (max-width:960px) and (orientation:landscape){
+    #tab-student-player .ios-landscape-expand-button{
+      bottom:max(56px, calc(env(safe-area-inset-bottom) + 50px)) !important;
+      right:max(12px, env(safe-area-inset-right)) !important;
     }
   }
 </style>
@@ -27697,11 +27683,16 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
   var IOS_FULLSCREEN_CLASS = 'ios-player-fullscreen';
   var ROOT_FULLSCREEN_CLASS = 'ios-player-fullscreen-active';
-  var WAITING_CLASS = 'ios-waiting-landscape';
-  var waitingLandscape = false;
+  var READY_CLASS = 'ios-landscape-ready-expand';
+  var HINT_CLASS = 'ios-show-landscape-hint';
+  var hintTimer = null;
 
   function isIPhone(){
     return /iPhone|iPod/i.test(String(navigator.userAgent || ''));
+  }
+
+  function isMobileViewport(){
+    return !!(window.matchMedia && window.matchMedia('(max-width:960px)').matches);
   }
 
   function isLandscape(){
@@ -27715,7 +27706,12 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     return document.querySelector('#tab-student-player .video-frame');
   }
 
-  function syncIOSPlayerHeight(){
+  function playerTabIsVisible(){
+    var tab = document.getElementById('tab-student-player');
+    return !!(tab && !tab.classList.contains('hidden'));
+  }
+
+  function syncIOSPlayerSize(){
     if(!document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)) return;
     var viewport = window.visualViewport;
     var viewportHeight = (viewport && viewport.height) || window.innerHeight;
@@ -27728,36 +27724,48 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     }
   }
 
-  function hideRotatePrompt(){
+  function hideHint(){
     var frame = getFrame();
-    waitingLandscape = false;
-    if(frame) frame.classList.remove(WAITING_CLASS);
+    if(frame) frame.classList.remove(HINT_CLASS);
+    if(hintTimer){
+      window.clearTimeout(hintTimer);
+      hintTimer = null;
+    }
   }
 
-  function ensureRotatePrompt(frame){
-    if(!frame) return null;
-    var overlay = frame.querySelector('.ios-rotate-before-fullscreen');
-    if(overlay) return overlay;
+  function showPortraitHint(){
+    var frame = getFrame();
+    if(!frame) return;
+    ensureLandscapeControls(frame);
+    frame.classList.add(HINT_CLASS);
+    if(hintTimer) window.clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(hideHint, 2800);
+  }
 
-    overlay = document.createElement('div');
-    overlay.className = 'ios-rotate-before-fullscreen';
-    overlay.innerHTML =
-      '<div class="ios-rotate-prompt-card">' +
-        '<div class="ios-rotate-phone-icon" aria-hidden="true"></div>' +
-        '<strong>Gira tu iPhone</strong>' +
-        '<p>Colócalo en horizontal y el video se ampliará automáticamente.</p>' +
-        '<button type="button" class="ios-cancel-rotate">Cancelar</button>' +
-      '</div>';
-
-    overlay.querySelector('.ios-cancel-rotate').addEventListener('click', function(event){
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      hideRotatePrompt();
-    }, true);
-
-    frame.appendChild(overlay);
-    return overlay;
+  function ensureLandscapeControls(frame){
+    if(!frame) return;
+    var expand = frame.querySelector('.ios-landscape-expand-button');
+    if(!expand){
+      expand = document.createElement('button');
+      expand.type = 'button';
+      expand.className = 'ios-landscape-expand-button';
+      expand.setAttribute('aria-label', 'Ampliar video en pantalla completa');
+      expand.textContent = 'Ampliar';
+      expand.addEventListener('click', function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        enterIOSPlayerFullscreen();
+      }, true);
+      frame.appendChild(expand);
+    }
+    var hint = frame.querySelector('.ios-landscape-fullscreen-hint');
+    if(!hint){
+      hint = document.createElement('div');
+      hint.className = 'ios-landscape-fullscreen-hint';
+      hint.textContent = 'Gira el celular para ver Ampliar';
+      frame.appendChild(hint);
+    }
   }
 
   function ensureExitButton(frame){
@@ -27779,19 +27787,35 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     return button;
   }
 
+  function tryNativeFullscreen(frame){
+    try{
+      if(frame.requestFullscreen){
+        var result = frame.requestFullscreen();
+        if(result && typeof result.catch === 'function') result.catch(function(){});
+        return true;
+      }
+      if(frame.webkitRequestFullscreen){
+        frame.webkitRequestFullscreen();
+        return true;
+      }
+    }catch(error){}
+    return false;
+  }
+
   function enterIOSPlayerFullscreen(){
     var frame = getFrame();
-    if(!frame) return;
-    hideRotatePrompt();
+    if(!frame || !isLandscape()) return;
+    hideHint();
     ensureExitButton(frame);
+    frame.classList.remove(READY_CLASS);
     document.documentElement.classList.add(ROOT_FULLSCREEN_CLASS);
     document.body.classList.add(ROOT_FULLSCREEN_CLASS);
     frame.classList.add(IOS_FULLSCREEN_CLASS);
-    syncIOSPlayerHeight();
+    syncIOSPlayerSize();
+    tryNativeFullscreen(frame);
 
     var button = document.getElementById('btnYoutubeFullscreen');
     if(button) button.setAttribute('aria-pressed', 'true');
-
     try{
       if(typeof showYoutubeUiTemporarily === 'function'){
         showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
@@ -27801,7 +27825,12 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 
   function exitIOSPlayerFullscreen(){
     var frame = getFrame();
-    hideRotatePrompt();
+    hideHint();
+    if(document.fullscreenElement && document.exitFullscreen){
+      try{ document.exitFullscreen(); }catch(error){}
+    }else if(document.webkitFullscreenElement && document.webkitExitFullscreen){
+      try{ document.webkitExitFullscreen(); }catch(error){}
+    }
     if(frame) frame.classList.remove(IOS_FULLSCREEN_CLASS);
     document.documentElement.classList.remove(ROOT_FULLSCREEN_CLASS);
     document.body.classList.remove(ROOT_FULLSCREEN_CLASS);
@@ -27809,33 +27838,24 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     document.documentElement.style.removeProperty('--ios-player-viewport-width');
     var button = document.getElementById('btnYoutubeFullscreen');
     if(button) button.setAttribute('aria-pressed', 'false');
+    updateLandscapeButton();
   }
 
-  function requestLandscapeThenFullscreen(){
+  function updateLandscapeButton(){
+    if(!isIPhone() || !isMobileViewport()) return;
     var frame = getFrame();
     if(!frame) return;
-
-    if(isLandscape()){
-      enterIOSPlayerFullscreen();
-      return;
-    }
-
-    waitingLandscape = true;
-    ensureRotatePrompt(frame);
-    frame.classList.add(WAITING_CLASS);
-  }
-
-  function checkLandscapeTransition(){
-    if(waitingLandscape && isLandscape()){
-      window.setTimeout(enterIOSPlayerFullscreen, 120);
-      return;
-    }
-    syncIOSPlayerHeight();
+    ensureLandscapeControls(frame);
+    var inFullscreen = frame.classList.contains(IOS_FULLSCREEN_CLASS) || document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS);
+    var canExpand = isLandscape() && playerTabIsVisible() && !inFullscreen;
+    frame.classList.toggle(READY_CLASS, canExpand);
+    if(isLandscape()) hideHint();
+    syncIOSPlayerSize();
   }
 
   document.addEventListener('click', function(event){
-    var button = event.target && event.target.closest ? event.target.closest('#btnYoutubeFullscreen') : null;
-    if(!button || !isIPhone()) return;
+    var fullscreen = event.target && event.target.closest ? event.target.closest('#btnYoutubeFullscreen') : null;
+    if(!fullscreen || !isIPhone() || !isMobileViewport()) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -27843,29 +27863,58 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     var frame = getFrame();
     if(frame && frame.classList.contains(IOS_FULLSCREEN_CLASS)){
       exitIOSPlayerFullscreen();
+      return;
+    }
+    if(isLandscape()){
+      enterIOSPlayerFullscreen();
     }else{
-      requestLandscapeThenFullscreen();
+      showPortraitHint();
     }
   }, true);
 
   document.addEventListener('keydown', function(event){
-    if(event.key === 'Escape' && (waitingLandscape || document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS))){
+    if(event.key === 'Escape' && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
       exitIOSPlayerFullscreen();
     }
   });
 
+  document.addEventListener('fullscreenchange', function(){
+    if(!document.fullscreenElement && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
+      updateLandscapeButton();
+    }
+  });
+
   window.addEventListener('orientationchange', function(){
-    window.setTimeout(checkLandscapeTransition, 180);
+    window.setTimeout(function(){
+      if(document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS) && !isLandscape()){
+        exitIOSPlayerFullscreen();
+      }else{
+        updateLandscapeButton();
+      }
+    }, 220);
   }, { passive:true });
 
-  window.addEventListener('resize', checkLandscapeTransition, { passive:true });
+  window.addEventListener('resize', updateLandscapeButton, { passive:true });
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', checkLandscapeTransition, { passive:true });
+    window.visualViewport.addEventListener('resize', updateLandscapeButton, { passive:true });
   }
 
-  document.addEventListener('visibilitychange', function(){
-    if(document.hidden) exitIOSPlayerFullscreen();
+  document.addEventListener('click', function(event){
+    if(event.target && event.target.closest && event.target.closest('#menuStudent button, .mobile-route-option, #tab-student-player')){
+      window.setTimeout(updateLandscapeButton, 100);
+    }
   });
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
+      exitIOSPlayerFullscreen();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    window.setTimeout(updateLandscapeButton, 320);
+  });
+  window.setTimeout(updateLandscapeButton, 880);
 })();
 </script>
 
