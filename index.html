@@ -15557,6 +15557,107 @@
   }
 </style>
 
+
+<style id="ios-mobile-player-fullscreen-fix">
+  /* iPhone: pantalla completa visual estable sin alterar la vista de PC ni Android */
+  .ios-player-exit-button{ display:none; }
+
+  html.ios-player-fullscreen-active,
+  html.ios-player-fullscreen-active body{
+    overflow:hidden !important;
+    overscroll-behavior:none !important;
+    touch-action:none !important;
+    height:100% !important;
+  }
+
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
+    position:fixed !important;
+    inset:0 !important;
+    left:0 !important;
+    top:0 !important;
+    right:0 !important;
+    bottom:auto !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    height:var(--ios-player-viewport-height, 100dvh) !important;
+    min-height:var(--ios-player-viewport-height, 100dvh) !important;
+    max-height:var(--ios-player-viewport-height, 100dvh) !important;
+    margin:0 !important;
+    padding:0 !important;
+    transform:none !important;
+    aspect-ratio:auto !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:#000 !important;
+    z-index:2147483000 !important;
+    overflow:hidden !important;
+  }
+
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen iframe,
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen video{
+    position:absolute !important;
+    inset:0 !important;
+    left:0 !important;
+    top:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    max-width:none !important;
+    max-height:none !important;
+    transform:none !important;
+    object-fit:contain !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:#000 !important;
+  }
+
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .youtube-custom-controls{
+    bottom:max(10px, env(safe-area-inset-bottom)) !important;
+    width:min(calc(100vw - 20px), 720px) !important;
+    max-width:calc(100vw - 20px) !important;
+    z-index:2147483200 !important;
+  }
+
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .youtube-quality-control.mobile-quality-native,
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .mobile-video-quality-float{
+    top:max(10px, env(safe-area-inset-top)) !important;
+    right:max(10px, env(safe-area-inset-right)) !important;
+    left:auto !important;
+    z-index:2147483300 !important;
+  }
+
+  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .ios-player-exit-button{
+    position:absolute !important;
+    display:inline-grid !important;
+    place-items:center !important;
+    left:max(10px, env(safe-area-inset-left)) !important;
+    top:max(10px, env(safe-area-inset-top)) !important;
+    width:34px !important;
+    height:34px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    border:1px solid rgba(255,255,255,.20) !important;
+    background:rgba(5,5,7,.78) !important;
+    color:#fff !important;
+    font-size:20px !important;
+    font-weight:400 !important;
+    line-height:1 !important;
+    backdrop-filter:blur(10px) !important;
+    -webkit-backdrop-filter:blur(10px) !important;
+    z-index:2147483400 !important;
+    cursor:pointer !important;
+  }
+
+  @supports not (height:100dvh){
+    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
+      height:var(--ios-player-viewport-height, 100vh) !important;
+      min-height:var(--ios-player-viewport-height, 100vh) !important;
+      max-height:var(--ios-player-viewport-height, 100vh) !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <section class="auth-shell" id="authScreen">
@@ -27363,6 +27464,108 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     resizeTimer = window.setTimeout(setupToolbar, 100);
   });
   window.setTimeout(setupToolbar, 700);
+})();
+</script>
+
+
+<script id="ios-mobile-player-fullscreen-script">
+(function(){
+  var IOS_FULLSCREEN_CLASS = 'ios-player-fullscreen';
+  var ROOT_FULLSCREEN_CLASS = 'ios-player-fullscreen-active';
+
+  function isIPhone(){
+    return /iPhone|iPod/i.test(String(navigator.userAgent || ''));
+  }
+
+  function getFrame(){
+    return document.querySelector('#tab-student-player .video-frame');
+  }
+
+  function syncIOSPlayerHeight(){
+    if(!document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)) return;
+    var viewportHeight = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    if(viewportHeight){
+      document.documentElement.style.setProperty('--ios-player-viewport-height', Math.round(viewportHeight) + 'px');
+    }
+  }
+
+  function ensureExitButton(frame){
+    if(!frame) return null;
+    var button = frame.querySelector('.ios-player-exit-button');
+    if(button) return button;
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ios-player-exit-button';
+    button.setAttribute('aria-label', 'Salir de pantalla completa');
+    button.innerHTML = '&times;';
+    button.addEventListener('click', function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      exitIOSPlayerFullscreen();
+    }, true);
+    frame.appendChild(button);
+    return button;
+  }
+
+  function enterIOSPlayerFullscreen(){
+    var frame = getFrame();
+    if(!frame) return;
+    ensureExitButton(frame);
+    syncIOSPlayerHeight();
+    document.documentElement.classList.add(ROOT_FULLSCREEN_CLASS);
+    document.body.classList.add(ROOT_FULLSCREEN_CLASS);
+    frame.classList.add(IOS_FULLSCREEN_CLASS);
+    syncIOSPlayerHeight();
+    var button = document.getElementById('btnYoutubeFullscreen');
+    if(button) button.setAttribute('aria-pressed', 'true');
+    try{
+      if(typeof showYoutubeUiTemporarily === 'function'){
+        showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
+      }
+    }catch(error){}
+  }
+
+  function exitIOSPlayerFullscreen(){
+    var frame = getFrame();
+    if(frame) frame.classList.remove(IOS_FULLSCREEN_CLASS);
+    document.documentElement.classList.remove(ROOT_FULLSCREEN_CLASS);
+    document.body.classList.remove(ROOT_FULLSCREEN_CLASS);
+    document.documentElement.style.removeProperty('--ios-player-viewport-height');
+    var button = document.getElementById('btnYoutubeFullscreen');
+    if(button) button.setAttribute('aria-pressed', 'false');
+  }
+
+  function toggleIOSPlayerFullscreen(){
+    var frame = getFrame();
+    if(!frame) return;
+    if(frame.classList.contains(IOS_FULLSCREEN_CLASS)) exitIOSPlayerFullscreen();
+    else enterIOSPlayerFullscreen();
+  }
+
+  document.addEventListener('click', function(event){
+    var button = event.target && event.target.closest ? event.target.closest('#btnYoutubeFullscreen') : null;
+    if(!button || !isIPhone()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    toggleIOSPlayerFullscreen();
+  }, true);
+
+  document.addEventListener('keydown', function(event){
+    if(event.key === 'Escape' && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
+      exitIOSPlayerFullscreen();
+    }
+  });
+
+  window.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
+    window.visualViewport.addEventListener('scroll', syncIOSPlayerHeight, { passive:true });
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) exitIOSPlayerFullscreen();
+  });
 })();
 </script>
 
