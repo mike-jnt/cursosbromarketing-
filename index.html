@@ -15557,166 +15557,168 @@
   }
 </style>
 
-
-<style id="ios-mobile-player-fullscreen-fix">
-  /* iPhone: pantalla completa visual estable sin alterar la vista de PC ni Android */
-  .ios-player-exit-button{ display:none; }
+<style id="ios-player-landscape-stage-fix">
+  /* Pantalla completa simulada únicamente para iPhone/Safari. Android y PC no cambian. */
+  #iosPlayerFullscreenStage{display:none;}
+  .ios-player-exit-button{display:none;}
 
   html.ios-player-fullscreen-active,
   html.ios-player-fullscreen-active body{
     overflow:hidden !important;
     overscroll-behavior:none !important;
     touch-action:none !important;
-    height:100% !important;
   }
 
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage{
     position:fixed !important;
-    inset:0 !important;
-    left:0 !important;
-    top:0 !important;
-    right:0 !important;
-    bottom:auto !important;
-    width:100vw !important;
-    max-width:100vw !important;
-    height:var(--ios-player-viewport-height, 100dvh) !important;
-    min-height:var(--ios-player-viewport-height, 100dvh) !important;
-    max-height:var(--ios-player-viewport-height, 100dvh) !important;
+    display:block !important;
+    left:var(--ios-fs-left, 0px) !important;
+    top:var(--ios-fs-top, 0px) !important;
+    width:var(--ios-fs-width, 100vw) !important;
+    height:var(--ios-fs-height, 100dvh) !important;
+    background:#000 !important;
+    z-index:2147482000 !important;
+    overflow:hidden !important;
     margin:0 !important;
     padding:0 !important;
+  }
+
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player{
+    display:block !important;
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:#000 !important;
+    box-shadow:none !important;
+    overflow:hidden !important;
+    animation:none !important;
+    transform:none !important;
+  }
+
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player > :not(.player-shell),
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-video-info,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-side-card,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-bottom-card,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player #playerResourcesBox{
+    display:none !important;
+  }
+
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-shell,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-main-card,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .player-video-wrap{
+    display:block !important;
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    transform:none !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:#000 !important;
+    box-shadow:none !important;
+    overflow:hidden !important;
+    animation:none !important;
+  }
+
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen{
+    display:block !important;
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    padding:0 !important;
+    margin:0 !important;
     transform:none !important;
     aspect-ratio:auto !important;
     border:0 !important;
     border-radius:0 !important;
     background:#000 !important;
-    z-index:2147483000 !important;
     overflow:hidden !important;
+    isolation:isolate !important;
   }
 
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen iframe,
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen video{
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen iframe,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen video{
+    display:block !important;
     position:absolute !important;
     inset:0 !important;
-    left:0 !important;
-    top:0 !important;
     width:100% !important;
     height:100% !important;
-    min-width:0 !important;
-    min-height:0 !important;
     max-width:none !important;
     max-height:none !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    margin:0 !important;
     transform:none !important;
     object-fit:contain !important;
     border:0 !important;
     border-radius:0 !important;
     background:#000 !important;
+    opacity:1 !important;
+    visibility:visible !important;
   }
 
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .youtube-custom-controls{
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen .youtube-custom-controls{
     bottom:max(10px, env(safe-area-inset-bottom)) !important;
-    width:min(calc(100vw - 20px), 720px) !important;
-    max-width:calc(100vw - 20px) !important;
-    z-index:2147483200 !important;
+    width:min(calc(100% - 20px), 760px) !important;
+    max-width:calc(100% - 20px) !important;
+    z-index:2147482500 !important;
   }
 
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .youtube-quality-control.mobile-quality-native,
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .mobile-video-quality-float{
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen .youtube-quality-control.mobile-quality-native,
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen .mobile-video-quality-float{
     top:max(10px, env(safe-area-inset-top)) !important;
     right:max(10px, env(safe-area-inset-right)) !important;
     left:auto !important;
-    z-index:2147483300 !important;
+    z-index:2147482700 !important;
   }
 
-  html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen .ios-player-exit-button{
+  html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen .ios-player-exit-button{
     position:absolute !important;
     display:inline-grid !important;
     place-items:center !important;
-    left:max(10px, env(safe-area-inset-left)) !important;
     top:max(10px, env(safe-area-inset-top)) !important;
-    width:34px !important;
-    height:34px !important;
+    left:max(10px, env(safe-area-inset-left)) !important;
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    min-height:38px !important;
     padding:0 !important;
     border-radius:999px !important;
-    border:1px solid rgba(255,255,255,.20) !important;
-    background:rgba(5,5,7,.78) !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    background:rgba(5,5,7,.82) !important;
     color:#fff !important;
-    font-size:20px !important;
-    font-weight:400 !important;
+    font-size:23px !important;
     line-height:1 !important;
+    z-index:2147482900 !important;
     backdrop-filter:blur(10px) !important;
     -webkit-backdrop-filter:blur(10px) !important;
-    z-index:2147483400 !important;
-    cursor:pointer !important;
   }
 
-  @supports not (height:100dvh){
-    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
-      height:var(--ios-player-viewport-height, 100vh) !important;
-      min-height:var(--ios-player-viewport-height, 100vh) !important;
-      max-height:var(--ios-player-viewport-height, 100vh) !important;
+  @media (orientation:landscape) and (max-height:520px){
+    html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .video-frame.ios-player-fullscreen .youtube-custom-controls{
+      bottom:max(6px, env(safe-area-inset-bottom)) !important;
+      transform:translateX(-50%) scale(.92) !important;
+      transform-origin:center bottom !important;
     }
-  }
-</style>
-
-
-<style id="ios-player-fullscreen-viewport-anchor-fix">
-  /* iPhone: mantener el reproductor anclado al viewport y no a tarjetas reordenadas */
-  @media (max-width:760px){
-    html.ios-player-fullscreen-active #appShell,
-    html.ios-player-fullscreen-active #appShell .layout,
-    html.ios-player-fullscreen-active #appShell .main,
-    html.ios-player-fullscreen-active #tab-student-player,
-    html.ios-player-fullscreen-active #tab-student-player .player-shell,
-    html.ios-player-fullscreen-active #tab-student-player .player-main-card,
-    html.ios-player-fullscreen-active #tab-student-player .player-video-wrap{
-      animation:none !important;
-      transform:none !important;
-      filter:none !important;
-      perspective:none !important;
-      contain:none !important;
-      overflow:visible !important;
-    }
-
-    html.ios-player-fullscreen-active #tab-student-player{
-      display:block !important;
-      position:static !important;
-      opacity:1 !important;
-      visibility:visible !important;
-    }
-
-    html.ios-player-fullscreen-active #tab-student-player .player-video-wrap{
-      position:static !important;
-      width:auto !important;
-      max-width:none !important;
-      height:auto !important;
-      min-height:0 !important;
-      margin:0 !important;
-      border:0 !important;
-      box-shadow:none !important;
-      background:transparent !important;
-    }
-
-    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen{
-      display:block !important;
-      visibility:visible !important;
-      opacity:1 !important;
-      pointer-events:auto !important;
-      isolation:isolate !important;
-    }
-
-    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen iframe,
-    html.ios-player-fullscreen-active #tab-student-player .video-frame.ios-player-fullscreen video{
-      visibility:visible !important;
-      opacity:1 !important;
-    }
-
-    html.ios-player-fullscreen-active #appShell .topbar,
-    html.ios-player-fullscreen-active #tab-student-player .bro-learning-breadcrumb,
-    html.ios-player-fullscreen-active #tab-student-player .player-video-info,
-    html.ios-player-fullscreen-active #tab-student-player .player-side-card,
-    html.ios-player-fullscreen-active #tab-student-player #playerResourcesBox{
-      visibility:hidden !important;
-      pointer-events:none !important;
+    html.ios-player-fullscreen-active #iosPlayerFullscreenStage #tab-student-player .youtube-mobile-runtime-title-shield{
+      min-height:46px !important;
+      max-height:46px !important;
+      padding-top:7px !important;
+      padding-bottom:7px !important;
     }
   }
 </style>
@@ -27530,32 +27532,52 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
 })();
 </script>
 
-
-<script id="ios-mobile-player-fullscreen-script">
+<script id="ios-player-landscape-stage-script">
 (function(){
-  var IOS_FULLSCREEN_CLASS = 'ios-player-fullscreen';
-  var ROOT_FULLSCREEN_CLASS = 'ios-player-fullscreen-active';
+  var ROOT_CLASS = 'ios-player-fullscreen-active';
+  var FRAME_CLASS = 'ios-player-fullscreen';
+  var STAGE_ID = 'iosPlayerFullscreenStage';
+  var originMarker = null;
+  var originalParent = null;
+  var originalNext = null;
+  var savedScrollY = 0;
+  var restoreTimer = null;
 
   function isIPhone(){
     return /iPhone|iPod/i.test(String(navigator.userAgent || ''));
   }
 
-  function getFrame(){
-    return document.querySelector('#tab-student-player .video-frame');
+  function getSection(){ return document.getElementById('tab-student-player'); }
+  function getFrame(){ return document.querySelector('#tab-student-player .video-frame'); }
+
+  function getStage(){
+    var stage = document.getElementById(STAGE_ID);
+    if(stage) return stage;
+    stage = document.createElement('div');
+    stage.id = STAGE_ID;
+    stage.setAttribute('aria-label', 'Reproductor en pantalla completa');
+    document.body.appendChild(stage);
+    return stage;
   }
 
-  function syncIOSPlayerHeight(){
-    if(!document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)) return;
-    var viewportHeight = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-    if(viewportHeight){
-      document.documentElement.style.setProperty('--ios-player-viewport-height', Math.round(viewportHeight) + 'px');
-    }
+  function syncStageViewport(){
+    if(!document.documentElement.classList.contains(ROOT_CLASS)) return;
+    var vv = window.visualViewport;
+    var width = vv && vv.width ? vv.width : window.innerWidth;
+    var height = vv && vv.height ? vv.height : window.innerHeight;
+    var left = vv && Number.isFinite(vv.offsetLeft) ? vv.offsetLeft : 0;
+    var top = vv && Number.isFinite(vv.offsetTop) ? vv.offsetTop : 0;
+    var root = document.documentElement;
+    root.style.setProperty('--ios-fs-width', Math.round(width) + 'px');
+    root.style.setProperty('--ios-fs-height', Math.round(height) + 'px');
+    root.style.setProperty('--ios-fs-left', Math.round(left) + 'px');
+    root.style.setProperty('--ios-fs-top', Math.round(top) + 'px');
   }
 
   function ensureExitButton(frame){
-    if(!frame) return null;
-    var button = frame.querySelector('.ios-player-exit-button');
+    var button = frame && frame.querySelector('.ios-player-exit-button');
     if(button) return button;
+    if(!frame) return null;
     button = document.createElement('button');
     button.type = 'button';
     button.className = 'ios-player-exit-button';
@@ -27565,45 +27587,89 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      exitIOSPlayerFullscreen();
+      exitFullscreen();
     }, true);
     frame.appendChild(button);
     return button;
   }
 
-  function enterIOSPlayerFullscreen(){
+  function lockScroll(){
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.dataset.iosFsPreviousPosition = document.body.style.position || '';
+    document.body.dataset.iosFsPreviousTop = document.body.style.top || '';
+    document.body.dataset.iosFsPreviousWidth = document.body.style.width || '';
+    document.body.style.position = 'fixed';
+    document.body.style.top = '-' + savedScrollY + 'px';
+    document.body.style.width = '100%';
+  }
+
+  function unlockScroll(){
+    document.body.style.position = document.body.dataset.iosFsPreviousPosition || '';
+    document.body.style.top = document.body.dataset.iosFsPreviousTop || '';
+    document.body.style.width = document.body.dataset.iosFsPreviousWidth || '';
+    delete document.body.dataset.iosFsPreviousPosition;
+    delete document.body.dataset.iosFsPreviousTop;
+    delete document.body.dataset.iosFsPreviousWidth;
+    window.scrollTo(0, savedScrollY);
+  }
+
+  function enterFullscreen(){
+    var section = getSection();
     var frame = getFrame();
-    if(!frame) return;
+    if(!section || !frame) return;
+    var stage = getStage();
+    if(!originMarker){
+      originMarker = document.createComment('ios-player-fullscreen-origin');
+      originalParent = section.parentNode;
+      originalNext = section.nextSibling;
+      originalParent.insertBefore(originMarker, section);
+    }
     ensureExitButton(frame);
-    syncIOSPlayerHeight();
-    document.documentElement.classList.add(ROOT_FULLSCREEN_CLASS);
-    document.body.classList.add(ROOT_FULLSCREEN_CLASS);
-    frame.classList.add(IOS_FULLSCREEN_CLASS);
-    syncIOSPlayerHeight();
-    var button = document.getElementById('btnYoutubeFullscreen');
-    if(button) button.setAttribute('aria-pressed', 'true');
+    lockScroll();
+    stage.appendChild(section);
+    frame.classList.add(FRAME_CLASS);
+    document.documentElement.classList.add(ROOT_CLASS);
+    document.body.classList.add(ROOT_CLASS);
+    syncStageViewport();
+    window.setTimeout(syncStageViewport, 80);
+    window.setTimeout(syncStageViewport, 280);
+    window.setTimeout(syncStageViewport, 700);
+    var fsButton = document.getElementById('btnYoutubeFullscreen');
+    if(fsButton) fsButton.setAttribute('aria-pressed','true');
     try{
       if(typeof showYoutubeUiTemporarily === 'function'){
-        showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5200, force:true });
+        showYoutubeUiTemporarily({ showTitle:false, controlsDelay:5000, force:true });
       }
     }catch(error){}
   }
 
-  function exitIOSPlayerFullscreen(){
+  function exitFullscreen(){
+    var section = getSection();
     var frame = getFrame();
-    if(frame) frame.classList.remove(IOS_FULLSCREEN_CLASS);
-    document.documentElement.classList.remove(ROOT_FULLSCREEN_CLASS);
-    document.body.classList.remove(ROOT_FULLSCREEN_CLASS);
-    document.documentElement.style.removeProperty('--ios-player-viewport-height');
-    var button = document.getElementById('btnYoutubeFullscreen');
-    if(button) button.setAttribute('aria-pressed', 'false');
+    if(frame) frame.classList.remove(FRAME_CLASS);
+    document.documentElement.classList.remove(ROOT_CLASS);
+    document.body.classList.remove(ROOT_CLASS);
+    document.documentElement.style.removeProperty('--ios-fs-width');
+    document.documentElement.style.removeProperty('--ios-fs-height');
+    document.documentElement.style.removeProperty('--ios-fs-left');
+    document.documentElement.style.removeProperty('--ios-fs-top');
+    if(section && originMarker && originMarker.parentNode){
+      originMarker.parentNode.insertBefore(section, originMarker.nextSibling);
+      originMarker.remove();
+    } else if(section && originalParent){
+      originalParent.insertBefore(section, originalNext || null);
+    }
+    originMarker = null;
+    originalParent = null;
+    originalNext = null;
+    unlockScroll();
+    var fsButton = document.getElementById('btnYoutubeFullscreen');
+    if(fsButton) fsButton.setAttribute('aria-pressed','false');
   }
 
-  function toggleIOSPlayerFullscreen(){
-    var frame = getFrame();
-    if(!frame) return;
-    if(frame.classList.contains(IOS_FULLSCREEN_CLASS)) exitIOSPlayerFullscreen();
-    else enterIOSPlayerFullscreen();
+  function toggleFullscreen(){
+    if(document.documentElement.classList.contains(ROOT_CLASS)) exitFullscreen();
+    else enterFullscreen();
   }
 
   document.addEventListener('click', function(event){
@@ -27612,22 +27678,28 @@ byId('btnSendAccessInline')?.addEventListener('click', () => {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    toggleIOSPlayerFullscreen();
+    toggleFullscreen();
   }, true);
 
   document.addEventListener('keydown', function(event){
-    if(event.key === 'Escape' && document.documentElement.classList.contains(ROOT_FULLSCREEN_CLASS)){
-      exitIOSPlayerFullscreen();
-    }
+    if(event.key === 'Escape' && document.documentElement.classList.contains(ROOT_CLASS)) exitFullscreen();
   });
 
-  window.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
+  function queueSync(){
+    if(!document.documentElement.classList.contains(ROOT_CLASS)) return;
+    window.clearTimeout(restoreTimer);
+    syncStageViewport();
+    restoreTimer = window.setTimeout(syncStageViewport, 120);
+    window.setTimeout(syncStageViewport, 420);
+  }
+  window.addEventListener('resize', queueSync, {passive:true});
+  window.addEventListener('orientationchange', queueSync, {passive:true});
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', syncIOSPlayerHeight, { passive:true });
-    window.visualViewport.addEventListener('scroll', syncIOSPlayerHeight, { passive:true });
+    window.visualViewport.addEventListener('resize', queueSync, {passive:true});
+    window.visualViewport.addEventListener('scroll', queueSync, {passive:true});
   }
   document.addEventListener('visibilitychange', function(){
-    if(document.hidden) exitIOSPlayerFullscreen();
+    if(document.hidden && document.documentElement.classList.contains(ROOT_CLASS)) exitFullscreen();
   });
 })();
 </script>
