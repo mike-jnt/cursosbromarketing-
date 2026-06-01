@@ -3,6 +3,249 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="campus-app-version" content="2026-06-01-produccion-sync-v3"/>
+<meta name="campus-build-fingerprint" content="build-20260601-produccion-sync-v3"/>
+<script id="campus-auto-update-loader">
+(function(){
+  'use strict';
+  var CAMPUS_APP_VERSION = '2026-06-01-produccion-sync-v3';
+  var CAMPUS_BUILD_FINGERPRINT = 'build-20260601-produccion-sync-v3';
+  var VERSION_META_NAME = 'campus-app-version';
+  var BUILD_META_NAME = 'campus-build-fingerprint';
+  var LAST_CHECK_KEY = 'campus_last_update_check_at';
+  var UPDATE_VERSION_FLAG_KEY = 'campus_update_pending_version';
+  var UPDATE_FINGERPRINT_FLAG_KEY = 'campus_update_pending_fingerprint';
+  var SOURCE_FINGERPRINT_KEY = 'campus_html_source_fingerprint_v2';
+  var SOURCE_VERSION_KEY = 'campus_html_source_version_v2';
+  var CHECK_INTERVAL_MS = 45000;
+
+  window.CAMPUS_APP_VERSION = CAMPUS_APP_VERSION;
+  window.CAMPUS_BUILD_FINGERPRINT = CAMPUS_BUILD_FINGERPRINT;
+
+  function canCheckForUpdates(){
+    return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+  }
+
+  function escapeRegExp(value){
+    return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function getMetaValue(name){
+    var meta = document.querySelector('meta[name="' + name + '"]');
+    return (meta && meta.getAttribute('content') || '').trim();
+  }
+
+  function getCurrentVersion(){
+    return getMetaValue(VERSION_META_NAME) || CAMPUS_APP_VERSION || '';
+  }
+
+  function readMetaValueFromHtml(html, name){
+    try{
+      var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+      var meta = doc.querySelector('meta[name="' + name + '"]');
+      return (meta && meta.getAttribute('content') || '').trim();
+    }catch(error){}
+    return '';
+  }
+
+  function readVarFromHtml(html, varName){
+    html = String(html || '');
+    var escaped = escapeRegExp(varName);
+    var regex = new RegExp(escaped + "\\s*=\\s*[\\\"']([^\\\"']+)[\\\"']", 'i');
+    var match = html.match(regex);
+    return match && match[1] ? match[1].trim() : '';
+  }
+
+  function readRemoteVersion(html){
+    return readMetaValueFromHtml(html, VERSION_META_NAME) || readVarFromHtml(html, 'CAMPUS_APP_VERSION');
+  }
+
+  function readRemoteBuild(html){
+    return readMetaValueFromHtml(html, BUILD_META_NAME) || readVarFromHtml(html, 'CAMPUS_BUILD_FINGERPRINT');
+  }
+
+  function normalizeHtmlForFingerprint(html){
+    return String(html || '')
+      .replace(/<meta\s+[^>]*name=["']campus-app-version["'][^>]*>/gi, '<meta name="campus-app-version" content="__VERSION__">')
+      .replace(/<meta\s+[^>]*name=["']campus-build-fingerprint["'][^>]*>/gi, '<meta name="campus-build-fingerprint" content="__BUILD__">')
+      .replace(/var\s+CAMPUS_APP_VERSION\s*=\s*["'][^"']+["']/gi, 'var CAMPUS_APP_VERSION="__VERSION__"')
+      .replace(/var\s+CAMPUS_BUILD_FINGERPRINT\s*=\s*["'][^"']+["']/gi, 'var CAMPUS_BUILD_FINGERPRINT="__BUILD__"')
+      .replace(/__campus_(?:check|v)=[^"'&\s<>]+/g, '__campus_param=1')
+      .replace(/\r\n/g, '\n')
+      .trim();
+  }
+
+  function fallbackHash(text){
+    var h1 = 0xdeadbeef;
+    var h2 = 0x41c6ce57;
+    for(var i = 0; i < text.length; i++){
+      var ch = text.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 'h' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+
+  async function hashText(text){
+    try{
+      if(window.crypto && window.crypto.subtle && window.TextEncoder){
+        var buffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+        var bytes = Array.prototype.slice.call(new Uint8Array(buffer));
+        return 'sha256-' + bytes.slice(0, 16).map(function(byte){ return byte.toString(16).padStart(2, '0'); }).join('');
+      }
+    }catch(error){}
+    return fallbackHash(text);
+  }
+
+  async function buildRemoteSignature(html){
+    var normalized = normalizeHtmlForFingerprint(html);
+    var contentFingerprint = await hashText(normalized);
+    var remoteVersion = readRemoteVersion(html);
+    var remoteBuild = readRemoteBuild(html);
+    return {
+      version: remoteVersion || '',
+      build: remoteBuild || '',
+      fingerprint: contentFingerprint || ''
+    };
+  }
+
+  function getFreshCheckUrl(){
+    var url = new URL(window.location.href);
+    url.hash = '';
+    url.searchParams.set('__campus_check', String(Date.now()));
+    return url.href;
+  }
+
+  function shouldSkipCheck(force){
+    if(force) return false;
+    try{
+      var now = Date.now();
+      var last = Number(sessionStorage.getItem(LAST_CHECK_KEY) || 0);
+      if(last && now - last < CHECK_INTERVAL_MS) return true;
+      sessionStorage.setItem(LAST_CHECK_KEY, String(now));
+    }catch(error){}
+    return false;
+  }
+
+  function rememberRemoteSignature(signature){
+    try{
+      if(signature.version) localStorage.setItem(SOURCE_VERSION_KEY, signature.version);
+      if(signature.fingerprint) localStorage.setItem(SOURCE_FINGERPRINT_KEY, signature.fingerprint);
+    }catch(error){}
+  }
+
+  function getStoredFingerprint(){
+    try{ return localStorage.getItem(SOURCE_FINGERPRINT_KEY) || ''; }catch(error){ return ''; }
+  }
+
+  function getStoredVersion(){
+    try{ return localStorage.getItem(SOURCE_VERSION_KEY) || ''; }catch(error){ return ''; }
+  }
+
+  async function refreshControlledWorker(){
+    try{
+      if(!('serviceWorker' in navigator)) return;
+      var registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(function(registration){
+        return registration && registration.update ? registration.update().catch(function(){}) : Promise.resolve();
+      }));
+    }catch(error){}
+  }
+
+  async function clearAppRuntimeCaches(){
+    try{
+      if(!('caches' in window)) return;
+      var keys = await caches.keys();
+      var appKeys = keys.filter(function(key){
+        return /campus|bromarketing|curso|courses|pwa|workbox|app-shell/i.test(key);
+      });
+      await Promise.all(appKeys.map(function(key){ return caches.delete(key); }));
+    }catch(error){}
+  }
+
+  async function reloadWithFreshVersion(signature){
+    var nextFingerprint = signature && signature.fingerprint ? signature.fingerprint : String(Date.now());
+    var nextVersion = signature && signature.version ? signature.version : nextFingerprint;
+    try{ sessionStorage.setItem(UPDATE_VERSION_FLAG_KEY, nextVersion); }catch(error){}
+    try{ sessionStorage.setItem(UPDATE_FINGERPRINT_FLAG_KEY, nextFingerprint); }catch(error){}
+    await refreshControlledWorker();
+    await clearAppRuntimeCaches();
+    var url = new URL(window.location.href);
+    url.hash = '';
+    url.searchParams.set('__campus_v', nextFingerprint);
+    window.location.replace(url.href);
+  }
+
+  function needsReload(signature){
+    if(!signature) return false;
+    var currentVersion = getCurrentVersion();
+    var storedVersion = getStoredVersion();
+    var storedFingerprint = getStoredFingerprint();
+    if(signature.version && currentVersion && signature.version !== currentVersion) return true;
+    if(storedVersion && signature.version && signature.version !== storedVersion) return true;
+    if(storedFingerprint && signature.fingerprint && signature.fingerprint !== storedFingerprint) return true;
+    return false;
+  }
+
+  function wasAlreadyApplied(signature){
+    try{
+      var appliedVersion = sessionStorage.getItem(UPDATE_VERSION_FLAG_KEY) || '';
+      var appliedFingerprint = sessionStorage.getItem(UPDATE_FINGERPRINT_FLAG_KEY) || '';
+      if(signature.fingerprint && appliedFingerprint === signature.fingerprint) return true;
+      if(signature.version && appliedVersion === signature.version) return true;
+    }catch(error){}
+    return false;
+  }
+
+  async function checkForCampusUpdate(force){
+    if(!canCheckForUpdates()) return;
+    if(document.visibilityState === 'hidden') return;
+    if(shouldSkipCheck(force)) return;
+    try{
+      await refreshControlledWorker();
+      var response = await fetch(getFreshCheckUrl(), {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
+      if(!response || !response.ok) return;
+      var remoteText = await response.text();
+      var signature = await buildRemoteSignature(remoteText);
+      if(needsReload(signature) && !wasAlreadyApplied(signature)){
+        await reloadWithFreshVersion(signature);
+        return;
+      }
+      rememberRemoteSignature(signature);
+      try{ sessionStorage.removeItem(UPDATE_VERSION_FLAG_KEY); }catch(error){}
+      try{ sessionStorage.removeItem(UPDATE_FINGERPRINT_FLAG_KEY); }catch(error){}
+    }catch(error){}
+  }
+
+  window.CampusUpdateLoader = {
+    version: CAMPUS_APP_VERSION,
+    fingerprint: CAMPUS_BUILD_FINGERPRINT,
+    checkNow: function(){ return checkForCampusUpdate(true); }
+  };
+
+  window.addEventListener('pageshow', function(event){
+    checkForCampusUpdate(Boolean(event && event.persisted));
+  }, { passive: true });
+  window.addEventListener('focus', function(){ checkForCampusUpdate(false); }, { passive: true });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') checkForCampusUpdate(true);
+  });
+  setTimeout(function(){ checkForCampusUpdate(true); }, 900);
+})();
+
+</script>
 <title>Campus Cursos Pro | Login + Admin + Alumno</title>
 <style>
     :root{
@@ -17147,6 +17390,18 @@
     }
     const FIREBASE_COLLECTION = 'campus';
     const FIREBASE_STATE_DOC = 'mainState';
+    const FIREBASE_STATE_SCHEMA_VERSION = 3;
+    const FIREBASE_STATE_STORAGE_MODE = 'split_v1';
+    const FIREBASE_STATE_DOCS = Object.freeze({
+      courses: 'state_courses',
+      users: 'state_users',
+      payments: 'state_payments',
+      resources: 'state_resources',
+      certificates: 'state_certificates',
+      activityLog: 'state_activityLog',
+      accessRequests: 'state_accessRequests',
+      registrationRequests: 'state_registrationRequests'
+    });
     const REGISTRATION_REQUESTS_COLLECTION = 'campusRegistrationRequests';
     const CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_DIRECT_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/direct-upload';
     const CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT = window.CLOUDFLARE_STREAM_TUS_UPLOAD_ENDPOINT || 'https://stream-upload-worker.josenatanaelramosrojo203.workers.dev/api/cloudflare-stream/tus-upload';
@@ -17340,7 +17595,9 @@
       registrationRequests: []
     };
 
-    const STORAGE_KEY = 'campus_cursos_admin_premium_v23_state';
+    const STORAGE_KEY = 'campus_cursos_admin_premium_v24_light_state';
+    const LEGACY_STORAGE_KEYS = ['campus_cursos_admin_premium_v23_state'];
+    const LOCAL_STORAGE_MAX_SAFE_BYTES = 420 * 1024;
     const INITIAL_STATE = JSON.parse(JSON.stringify(state));
 
     function clonePlain(value){
@@ -17348,26 +17605,131 @@
     }
 
     function getPersistableState(){
+      const currentUser = state.currentUser
+        ? {
+            id: Number(state.currentUser.id) || 0,
+            name: state.currentUser.name || '',
+            email: normalizeEmail(state.currentUser.email || ''),
+            role: state.currentUser.role || 'student',
+            courseId: Number(state.currentUser.courseId) || 0
+          }
+        : null;
+      const currentEmail = normalizeEmail(currentUser?.email || '');
+      const currentStudent = currentEmail
+        ? (state.users || []).find(user => normalizeEmail(user.email || '') === currentEmail)
+        : null;
+      const lightStudentProgress = currentStudent
+        ? {
+            schemaVersion: 2,
+            email: currentEmail,
+            userId: Number(currentStudent.id) || 0,
+            name: currentStudent.name || currentUser?.name || '',
+            courseId: Number(currentStudent.courseId) || Number(currentUser?.courseId) || 0,
+            currentCourseId: Number(state.currentCourseId) || 0,
+            currentLessonIndex: Number(state.currentLessonIndex) || 0,
+            assignedCourseIds: Array.isArray(currentStudent.assignedCourseIds) ? currentStudent.assignedCourseIds.map(Number).filter(Boolean) : [],
+            purchasedCourseIds: Array.isArray(currentStudent.purchasedCourseIds) ? currentStudent.purchasedCourseIds.map(Number).filter(Boolean) : [],
+            revokedCourseIds: Array.isArray(currentStudent.revokedCourseIds) ? currentStudent.revokedCourseIds.map(Number).filter(Boolean) : [],
+            completedLessonsByCourse: normalizeCompletedLessonsMap(currentStudent.completedLessonsByCourse || {}),
+            progressByCourse: normalizeProgressMap(currentStudent.progressByCourse || {}),
+            certificates: getStudentCertificateRecords(currentStudent),
+            lastLesson: currentStudent.lastLesson || '',
+            updatedAtClient: new Date().toISOString()
+          }
+        : null;
       return {
-        ...clonePlain({
-          currentCourseId: state.currentCourseId,
-          currentLessonIndex: state.currentLessonIndex,
-          pendingLessons: state.pendingLessons || [],
-          favorites: state.favorites || [],
-          admins: state.admins || [],
-          resources: state.resources || [],
-          certificates: state.certificates || [],
-          activityLog: state.activityLog || [],
-          courses: state.courses || [],
-          users: state.users || [],
-          payments: state.payments || [],
-          accessRequests: state.accessRequests || [],
-          registrationRequests: state.registrationRequests || []
-        }),
-        currentUser: state.currentUser
-          ? { id: state.currentUser.id || 0, name: state.currentUser.name, email: state.currentUser.email, role: state.currentUser.role, courseId: state.currentUser.courseId || 0 }
-          : null
+        schemaVersion: 24,
+        storageMode: 'light',
+        savedAtClient: new Date().toISOString(),
+        currentUser,
+        currentCourseId: Number(state.currentCourseId) || 0,
+        currentLessonIndex: Number(state.currentLessonIndex) || 0,
+        favorites: Array.isArray(state.favorites) ? state.favorites.slice(0, 100) : [],
+        pendingLessons: Array.isArray(state.pendingLessons)
+          ? state.pendingLessons.slice(0, 50).map(sanitizeLessonForSharedState)
+          : [],
+        studentProgress: lightStudentProgress
       };
+    }
+
+    function cleanupLegacyLocalStorage(){
+      try{
+        LEGACY_STORAGE_KEYS.forEach(key => {
+          if(key && key !== STORAGE_KEY) localStorage.removeItem(key);
+        });
+      }catch(error){
+        console.warn('No se pudo limpiar localStorage heredado.', error);
+      }
+    }
+
+    function findLegacyLocalPayload(){
+      const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS].filter(Boolean);
+      for(const key of keys){
+        try{
+          const raw = localStorage.getItem(key);
+          if(!raw) continue;
+          const parsed = JSON.parse(raw);
+          if(parsed && parsed.storageMode !== 'light' && (Array.isArray(parsed.courses) || Array.isArray(parsed.users) || Array.isArray(parsed.payments))){
+            return parsed;
+          }
+        }catch(error){
+          console.warn('No se pudo leer una copia local heredada.', error);
+        }
+      }
+      return null;
+    }
+
+    function writeLightStateToLocalStorage(payload){
+      try{
+        let raw = JSON.stringify(payload || getPersistableState());
+        if(raw.length > LOCAL_STORAGE_MAX_SAFE_BYTES){
+          console.warn('La sesión local superó el tamaño seguro; se guardará una versión mínima.');
+          raw = JSON.stringify({
+            schemaVersion: 24,
+            storageMode: 'light',
+            savedAtClient: new Date().toISOString(),
+            currentUser: payload?.currentUser || null,
+            currentCourseId: Number(payload?.currentCourseId) || 0,
+            currentLessonIndex: Number(payload?.currentLessonIndex) || 0,
+            favorites: Array.isArray(payload?.favorites) ? payload.favorites.slice(0, 50) : []
+          });
+        }
+        localStorage.setItem(STORAGE_KEY, raw);
+        cleanupLegacyLocalStorage();
+        return true;
+      }catch(error){
+        console.warn('No se pudo guardar la sesión liviana en localStorage.', error);
+        return false;
+      }
+    }
+
+    function applyLightLocalStatePayload(parsed){
+      if(!parsed || typeof parsed !== 'object') return false;
+      const currentUser = parsed.currentUser || null;
+      if(currentUser){
+        state.currentUser = {
+          id: Number(currentUser.id) || 0,
+          name: currentUser.name || '',
+          email: normalizeEmail(currentUser.email || ''),
+          role: currentUser.role || 'student',
+          courseId: Number(currentUser.courseId) || 0
+        };
+      }else{
+        state.currentUser = null;
+      }
+      state.currentCourseId = Number(parsed.currentCourseId) || state.currentCourseId || 0;
+      state.currentLessonIndex = Math.max(0, Number(parsed.currentLessonIndex) || 0);
+      if(Array.isArray(parsed.favorites)) state.favorites = parsed.favorites;
+      if(Array.isArray(parsed.pendingLessons)) state.pendingLessons = parsed.pendingLessons.map(sanitizeLessonForSharedState);
+      if(parsed.studentProgress && state.currentUser?.role === 'student'){
+        const email = normalizeEmail(parsed.studentProgress.email || state.currentUser.email || '');
+        const user = (state.users || []).find(item => normalizeEmail(item.email || '') === email);
+        if(user){
+          mergeStudentProgressPayload(parsed.studentProgress, user);
+        }
+      }
+      syncUsersState();
+      return true;
     }
 
     function stripInlineDataUrlValue(value){
@@ -17399,10 +17761,12 @@
     }
 
     function getSharedPersistableState(){
-      // Firestore permite documentos de máximo ~1 MiB. Las imágenes base64 no deben
-      // vivir dentro de campus/mainState; se guardan como coverAsset_* y aquí solo
-      // queda la referencia para que cursos y clases persistan sin borrar cambios.
+      // Firestore es la base real del sistema. Las imágenes base64 no viven en
+      // mainState ni en localStorage: se guardan como coverAsset_* y aquí solo
+      // queda la referencia para que cursos y clases sean livianos.
       const shared = clonePlain({
+        schemaVersion: FIREBASE_STATE_SCHEMA_VERSION,
+        storageMode: FIREBASE_STATE_STORAGE_MODE,
         currentCourseId: state.currentCourseId,
         currentLessonIndex: state.currentLessonIndex,
         pendingLessons: [],
@@ -17418,6 +17782,94 @@
         registrationRequests: state.registrationRequests || []
       });
       return shared;
+    }
+
+    function getStructuredStateMetaPayload(payload){
+      const nowText = new Date().toISOString();
+      const meta = {
+        schemaVersion: FIREBASE_STATE_SCHEMA_VERSION,
+        storageMode: FIREBASE_STATE_STORAGE_MODE,
+        currentCourseId: Number(payload.currentCourseId) || 0,
+        currentLessonIndex: Number(payload.currentLessonIndex) || 0,
+        pendingLessons: [],
+        favorites: Array.isArray(payload.favorites) ? payload.favorites : [],
+        docMap: FIREBASE_STATE_DOCS,
+        updatedAtText: nowText
+      };
+      if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+        meta.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      return meta;
+    }
+
+    function buildStructuredSectionPayload(key, items){
+      const section = {
+        schemaVersion: FIREBASE_STATE_SCHEMA_VERSION,
+        storageMode: FIREBASE_STATE_STORAGE_MODE,
+        section: key,
+        updatedAtText: new Date().toISOString(),
+        [key]: Array.isArray(items) ? clonePlain(items) : []
+      };
+      if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+        section.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      return section;
+    }
+
+    async function saveStructuredSharedStateToFirebase(payload){
+      if(!firebaseDb) throw new Error('Firestore no está disponible.');
+      const baseRef = firebaseDb.collection(FIREBASE_COLLECTION);
+      const batch = firebaseDb.batch();
+      batch.set(baseRef.doc(FIREBASE_STATE_DOC), getStructuredStateMetaPayload(payload), { merge: true });
+      Object.entries(FIREBASE_STATE_DOCS).forEach(([key, docId]) => {
+        batch.set(baseRef.doc(docId), buildStructuredSectionPayload(key, payload[key]), { merge: true });
+      });
+      await batch.commit();
+    }
+
+    async function loadStructuredSharedStateFromFirebase(){
+      if(!firebaseDb) return { exists: false, payload: null };
+      const baseRef = firebaseDb.collection(FIREBASE_COLLECTION);
+      const metaDoc = await baseRef.doc(FIREBASE_STATE_DOC).get();
+      if(!metaDoc.exists) return { exists: false, payload: null };
+      const meta = metaDoc.data() || {};
+      if(meta.storageMode !== FIREBASE_STATE_STORAGE_MODE){
+        return { exists: true, payload: meta };
+      }
+      const payload = {
+        schemaVersion: Number(meta.schemaVersion) || FIREBASE_STATE_SCHEMA_VERSION,
+        storageMode: FIREBASE_STATE_STORAGE_MODE,
+        currentCourseId: Number(meta.currentCourseId) || 0,
+        currentLessonIndex: Number(meta.currentLessonIndex) || 0,
+        pendingLessons: [],
+        favorites: Array.isArray(meta.favorites) ? meta.favorites : [],
+        admins: [],
+        resources: [],
+        certificates: [],
+        activityLog: [],
+        courses: [],
+        users: [],
+        payments: [],
+        accessRequests: [],
+        registrationRequests: []
+      };
+      const entries = Object.entries(FIREBASE_STATE_DOCS);
+      const snapshots = await Promise.all(entries.map(async ([key, docId]) => {
+        try{
+          const doc = await baseRef.doc(docId).get();
+          return { key, doc };
+        }catch(error){
+          console.warn('No se pudo cargar sección Firestore:', key, error);
+          return { key, doc: null };
+        }
+      }));
+      snapshots.forEach(({ key, doc }) => {
+        if(doc && doc.exists){
+          const data = doc.data() || {};
+          payload[key] = Array.isArray(data[key]) ? data[key] : [];
+        }
+      });
+      return { exists: true, payload };
     }
 
     function applyStatePayload(parsed, options = {}){
@@ -17526,9 +17978,7 @@
     }
 
     function scheduleFirebaseSave(){
-      // Evita popups y errores cuando el visitante aún no ha iniciado sesión
-      // o cuando un alumno actualiza progreso local. En producción solo el admin
-      // autenticado en Firebase debe escribir el documento compartido mainState.
+      // Firestore es la fuente principal. localStorage queda solo como sesión liviana.
       if(!canWriteSharedFirebaseState()) return;
       clearTimeout(firebaseSaveTimer);
       firebaseSaveTimer = setTimeout(async () => {
@@ -17545,11 +17995,11 @@
             return;
           }
           const payload = getSharedPersistableState();
-          payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-          await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+          await saveStructuredSharedStateToFirebase(payload);
           firebaseRemoteLoaded = true;
+          cleanupLegacyLocalStorage();
         }catch(error){
-          console.warn('No se pudo guardar en Firestore. Se conserva la copia local.', error);
+          console.warn('No se pudo guardar en Firestore. Se conserva únicamente la sesión liviana local.', error);
           if(state.currentUser && state.currentUser.role === 'admin'){
             toast('No se pudo sincronizar con Firebase. Revisa reglas o sesión del administrador.');
           }
@@ -17558,11 +18008,7 @@
     }
 
     function saveState(options = {}){
-      try{
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistableState()));
-      }catch(error){
-        console.warn('No se pudo guardar el estado en localStorage.', error);
-      }
+      writeLightStateToLocalStorage(getPersistableState());
       if(!options.localOnly){
         scheduleFirebaseSave();
       }
@@ -17579,16 +18025,30 @@
     function loadState(){
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw){
-          syncUsersState();
+        if(raw){
+          const parsed = JSON.parse(raw);
+          if(parsed && parsed.storageMode === 'light'){
+            applyLightLocalStatePayload(parsed);
+            return true;
+          }
+          applyStatePayload(parsed, { includeCurrentUser: true });
           saveState({ localOnly: true });
-          return false;
+          return true;
         }
-        const parsed = JSON.parse(raw);
-        applyStatePayload(parsed, { includeCurrentUser: true });
-        return true;
+
+        const legacyPayload = findLegacyLocalPayload();
+        if(legacyPayload){
+          applyStatePayload(legacyPayload, { includeCurrentUser: true });
+          saveState({ localOnly: true });
+          console.warn('Se migró una copia pesada de localStorage a sesión liviana. Los datos compartidos deben vivir en Firestore.');
+          return true;
+        }
+
+        syncUsersState();
+        saveState({ localOnly: true });
+        return false;
       }catch(error){
-        console.warn('No se pudo cargar el estado desde localStorage. Se restaura la demo base.', error);
+        console.warn('No se pudo cargar la sesión desde localStorage. Se restaura la demo base.', error);
         Object.keys(INITIAL_STATE).forEach(key => {
           state[key] = clonePlain(INITIAL_STATE[key]);
         });
@@ -17658,12 +18118,12 @@
       }
       try{
         const payload = getSharedPersistableState();
-        payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-        await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).set(payload, { merge: true });
+        await saveStructuredSharedStateToFirebase(payload);
         firebaseRemoteLoaded = true;
+        cleanupLegacyLocalStorage();
         return true;
       }catch(error){
-        console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la copia local.', error);
+        console.warn('No se pudo guardar inmediatamente en Firestore. Se conserva la sesión liviana local.', error);
         return false;
       }
     }
@@ -18084,32 +18544,32 @@
       if(!initFirebaseConnection()) return false;
       if(requireAuth && !hasFirebaseAuthSession()){
         // Con reglas de producción, Firestore no debe leerse antes del login.
-        // Por eso se omite la carga remota inicial y se usa localStorage hasta autenticar.
+        // Por eso se omite la carga remota inicial y se usa solo la sesión liviana.
         return false;
       }
       try{
-        const doc = await firebaseDb.collection(FIREBASE_COLLECTION).doc(FIREBASE_STATE_DOC).get();
-        if(doc.exists){
+        const remoteState = await loadStructuredSharedStateFromFirebase();
+        if(remoteState.exists){
           const currentLocalUser = state.currentUser ? clonePlain(state.currentUser) : null;
-          const remotePayload = doc.data();
+          const remotePayload = remoteState.payload || {};
           let payloadToApply = remotePayload;
           let recoveredLocalChanges = false;
           try{
-            const localRaw = localStorage.getItem(STORAGE_KEY);
-            const localPayload = localRaw ? JSON.parse(localRaw) : null;
-            const mergedResult = mergeRemoteStateWithLocalDraft(remotePayload, localPayload);
+            const legacyPayload = findLegacyLocalPayload();
+            const mergedResult = mergeRemoteStateWithLocalDraft(remotePayload, legacyPayload);
             payloadToApply = mergedResult.payload;
             recoveredLocalChanges = mergedResult.changed;
           }catch(mergeError){
-            console.warn('No se pudo comparar la copia local con Firebase.', mergeError);
+            console.warn('No se pudo comparar la copia local heredada con Firebase.', mergeError);
           }
           applyStatePayload(payloadToApply, { includeCurrentUser: false });
           state.currentUser = currentLocalUser;
           firebaseRemoteLoaded = true;
           saveState({ localOnly: true });
+          cleanupLegacyLocalStorage();
           if(recoveredLocalChanges && hasFirebaseAuthSession() && isAdminEmail(getFirebaseSignedEmail())){
             await saveSharedStateToFirebaseNow();
-            if(!silent) toast('Se recuperaron cambios locales y se actualizaron en Firebase.');
+            if(!silent) toast('Se recuperaron cambios locales heredados y se actualizaron en Firebase.');
           }
           if(typeof refreshAllViews === 'function') refreshAllViews();
           if(!silent && !recoveredLocalChanges) toast('Base de datos Firebase sincronizada.');
@@ -18118,14 +18578,14 @@
         firebaseRemoteLoaded = true;
         if(canWriteSharedFirebaseState() || (hasFirebaseAuthSession() && isAdminEmail(getFirebaseSignedEmail()))){
           saveState();
-          if(!silent) toast('Base de datos Firebase creada con el estado inicial.');
+          if(!silent) toast('Base de datos Firebase creada con estructura optimizada.');
         }else if(!silent){
           toast('Firebase está conectado, pero todavía no existe la base inicial. Ingresa como administrador para crearla.');
         }
         return true;
       }catch(error){
         firebaseRemoteLoaded = false;
-        console.warn('No se pudo cargar Firestore. Se usará la copia local.', error);
+        console.warn('No se pudo cargar Firestore. Se usará la sesión liviana local.', error);
         if(!silent){
           toast('Firebase no cargó datos. Revisa reglas, dominio autorizado o sesión.');
         }
