@@ -17351,6 +17351,106 @@
       return JSON.parse(JSON.stringify(value));
     }
 
+
+    function normalizeCourseKey(value){
+      const raw = (value && typeof value === 'object') ? value.id : value;
+      const text = String(raw ?? '').trim();
+      if(!text) return '';
+      const numeric = Number(text);
+      return Number.isFinite(numeric) ? String(numeric) : text.toLowerCase();
+    }
+
+    function normalizeDeletedCourseIds(ids){
+      return Array.from(new Set((Array.isArray(ids) ? ids : [])
+        .map(normalizeCourseKey)
+        .filter(Boolean)));
+    }
+
+    function normalizeDeletedCourses(items){
+      return (Array.isArray(items) ? items : [])
+        .map(item => ({
+          id: normalizeCourseKey(item && typeof item === 'object' ? item.id : item),
+          title: String((item && typeof item === 'object' ? item.title : '') || ''),
+          deletedAt: String((item && typeof item === 'object' ? item.deletedAt : '') || '')
+        }))
+        .filter(item => item.id);
+    }
+
+    function getDeletedCourseKeySetFromPayload(payload = state){
+      const ids = [
+        ...(Array.isArray(payload?.deletedCourseIds) ? payload.deletedCourseIds : []),
+        ...(Array.isArray(payload?.deletedCourses) ? payload.deletedCourses.map(item => item?.id) : [])
+      ];
+      return new Set(normalizeDeletedCourseIds(ids));
+    }
+
+    function isSameCourseId(a, b){
+      const keyA = normalizeCourseKey(a);
+      const keyB = normalizeCourseKey(b);
+      return Boolean(keyA && keyB && keyA === keyB);
+    }
+
+    function isDeletedCourseId(courseId, payload = state){
+      const key = normalizeCourseKey(courseId);
+      return Boolean(key && getDeletedCourseKeySetFromPayload(payload).has(key));
+    }
+
+    function rememberDeletedCourse(course){
+      const key = normalizeCourseKey(course?.id ?? course);
+      if(!key) return;
+      const ids = normalizeDeletedCourseIds([...(state.deletedCourseIds || []), key]);
+      const previous = normalizeDeletedCourses(state.deletedCourses || []);
+      const filtered = previous.filter(item => item.id !== key);
+      filtered.unshift({
+        id: key,
+        title: String(course?.title || 'Curso eliminado'),
+        deletedAt: new Date().toISOString()
+      });
+      state.deletedCourseIds = ids;
+      state.deletedCourses = filtered.slice(0, 250);
+    }
+
+    function pruneDeletedCourseReferences(){
+      const deletedSet = getDeletedCourseKeySetFromPayload(state);
+      if(!deletedSet.size) return;
+      const keepByCourseId = value => !deletedSet.has(normalizeCourseKey(value));
+      state.courses = (state.courses || []).filter(course => keepByCourseId(course?.id));
+      state.resources = (state.resources || []).filter(resource => keepByCourseId(resource?.courseId));
+      state.certificates = (state.certificates || []).filter(certificate => keepByCourseId(certificate?.courseId));
+      state.accessRequests = (state.accessRequests || []).filter(request => keepByCourseId(request?.courseId));
+      state.registrationRequests = (state.registrationRequests || []).filter(request => keepByCourseId(request?.courseId));
+      state.payments = (state.payments || []).filter(payment => keepByCourseId(payment?.courseId));
+      state.favorites = (state.favorites || []).filter(keepByCourseId);
+      state.pendingLessons = [];
+      (state.users || []).forEach(user => {
+        const cleanArray = value => Array.from(new Set((Array.isArray(value) ? value : [])
+          .filter(keepByCourseId)
+          .map(Number)
+          .filter(Boolean)));
+        user.assignedCourseIds = cleanArray(user.assignedCourseIds || (user.courseId ? [user.courseId] : []));
+        user.revokedCourseIds = cleanArray(user.revokedCourseIds || []);
+        if(!keepByCourseId(user.courseId)) user.courseId = user.assignedCourseIds[0] || 0;
+        if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
+          Object.keys(user.completedLessonsByCourse).forEach(key => {
+            if(!keepByCourseId(key)) delete user.completedLessonsByCourse[key];
+          });
+        }
+        if(user.progressByCourse && typeof user.progressByCourse === 'object'){
+          Object.keys(user.progressByCourse).forEach(key => {
+            if(!keepByCourseId(key)) delete user.progressByCourse[key];
+          });
+        }
+      });
+      if(!keepByCourseId(state.currentCourseId)){
+        const fallbackCourse = (state.courses || [])[0] || null;
+        state.currentCourseId = fallbackCourse ? Number(fallbackCourse.id) || fallbackCourse.id : 0;
+        state.currentLessonIndex = 0;
+      }
+      if(state.currentUser && !keepByCourseId(state.currentUser.courseId)){
+        state.currentUser.courseId = state.currentCourseId || 0;
+      }
+    }
+
     function getPersistableState(){
       return {
         ...clonePlain({
@@ -17362,6 +17462,8 @@
           resources: state.resources || [],
           certificates: state.certificates || [],
           activityLog: state.activityLog || [],
+          deletedCourseIds: state.deletedCourseIds || [],
+          deletedCourses: state.deletedCourses || [],
           courses: state.courses || [],
           users: state.users || [],
           payments: state.payments || [],
@@ -17415,7 +17517,9 @@
         resources: state.resources || [],
         certificates: state.certificates || [],
         activityLog: state.activityLog || [],
-        courses: Array.isArray(state.courses) ? state.courses.map(sanitizeCourseForSharedState) : [],
+        deletedCourseIds: state.deletedCourseIds || [],
+        deletedCourses: state.deletedCourses || [],
+        courses: Array.isArray(state.courses) ? state.courses.filter(course => !isDeletedCourseId(course?.id)).map(sanitizeCourseForSharedState) : [],
         users: state.users || [],
         payments: state.payments || [],
         accessRequests: state.accessRequests || [],
@@ -17443,6 +17547,9 @@
       } else if(includeCurrentUser) {
         state.currentUser = null;
       }
+      state.deletedCourseIds = normalizeDeletedCourseIds(parsed?.deletedCourseIds || state.deletedCourseIds || []);
+      state.deletedCourses = normalizeDeletedCourses(parsed?.deletedCourses || state.deletedCourses || []);
+      pruneDeletedCourseReferences();
       syncUsersState();
     }
 
@@ -17630,8 +17737,20 @@
     function mergeRemoteStateWithLocalDraft(remotePayload, localPayload){
       const merged = clonePlain(remotePayload || {});
       let changed = false;
-      const localCourses = Array.isArray(localPayload && localPayload.courses) ? localPayload.courses : [];
-      const remoteCourses = Array.isArray(merged.courses) ? merged.courses : [];
+      const deletedCourseIds = normalizeDeletedCourseIds([
+        ...((remotePayload && Array.isArray(remotePayload.deletedCourseIds)) ? remotePayload.deletedCourseIds : []),
+        ...((localPayload && Array.isArray(localPayload.deletedCourseIds)) ? localPayload.deletedCourseIds : []),
+        ...((remotePayload && Array.isArray(remotePayload.deletedCourses)) ? remotePayload.deletedCourses.map(item => item?.id) : []),
+        ...((localPayload && Array.isArray(localPayload.deletedCourses)) ? localPayload.deletedCourses.map(item => item?.id) : [])
+      ]);
+      if(deletedCourseIds.length){
+        merged.deletedCourseIds = deletedCourseIds;
+        const deletedSetForMerge = new Set(deletedCourseIds);
+        merged.courses = (Array.isArray(merged.courses) ? merged.courses : []).filter(course => !deletedSetForMerge.has(normalizeCourseKey(course?.id)));
+      }
+      const deletedSet = getDeletedCourseKeySetFromPayload(merged);
+      const localCourses = (Array.isArray(localPayload && localPayload.courses) ? localPayload.courses : []).filter(course => !deletedSet.has(normalizeCourseKey(course?.id)));
+      const remoteCourses = (Array.isArray(merged.courses) ? merged.courses : []).filter(course => !deletedSet.has(normalizeCourseKey(course?.id)));
       const remoteStateTime = getStatePayloadTimestamp(remotePayload);
       if(localCourses.length){
         const remoteById = new Map(remoteCourses.map(course => [Number(course.id), course]));
@@ -19347,8 +19466,9 @@ syncUsersState();
     });
 
     function courseById(id){
-      const courseId = Number(id);
-      return (state.courses || []).find(c => Number(c.id) === courseId);
+      if(isDeletedCourseId(id)) return null;
+      const courseKey = normalizeCourseKey(id);
+      return (state.courses || []).find(c => normalizeCourseKey(c.id) === courseKey) || null;
     }
 
     async function downloadResource(id){
@@ -19887,6 +20007,7 @@ function renderAdminDashboard(){
     }
 
     function renderAdminCourses(){
+      pruneDeletedCourseReferences();
       const grid = document.getElementById('adminCoursesGrid');
       if(!grid) return;
       if(!Array.isArray(state.courses) || !state.courses.length){
@@ -25105,23 +25226,23 @@ async function authenticateWithFirebaseAuth(email, password){
     }
 
     function getCourseDeletionImpact(courseId){
-      const id = Number(courseId);
-      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).includes(id));
-      const payments = (state.payments || []).filter(payment => Number(payment.courseId) === id);
-      const resources = (state.resources || []).filter(resource => Number(resource.courseId) === id);
-      const certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) === id);
-      const requests = (state.accessRequests || []).filter(request => Number(request.courseId) === id);
+      const id = courseId;
+      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).some(item => isSameCourseId(item, id)));
+      const payments = (state.payments || []).filter(payment => isSameCourseId(payment.courseId, id));
+      const resources = (state.resources || []).filter(resource => isSameCourseId(resource.courseId, id));
+      const certificates = (state.certificates || []).filter(certificate => isSameCourseId(certificate.courseId, id));
+      const requests = (state.accessRequests || []).filter(request => isSameCourseId(request.courseId, id));
       return { users, payments, resources, certificates, requests };
     }
 
     function getCourseDeletionImpact(courseId){
-      const id = Number(courseId);
-      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).includes(id));
-      const payments = (state.payments || []).filter(payment => Number(payment.courseId) === id);
-      const resources = (state.resources || []).filter(resource => Number(resource.courseId) === id);
-      const certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) === id);
-      const requests = (state.accessRequests || []).filter(request => Number(request.courseId) === id);
-      const registrationRequests = (state.registrationRequests || []).filter(request => Number(request.courseId) === id);
+      const id = courseId;
+      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).some(item => isSameCourseId(item, id)));
+      const payments = (state.payments || []).filter(payment => isSameCourseId(payment.courseId, id));
+      const resources = (state.resources || []).filter(resource => isSameCourseId(resource.courseId, id));
+      const certificates = (state.certificates || []).filter(certificate => isSameCourseId(certificate.courseId, id));
+      const requests = (state.accessRequests || []).filter(request => isSameCourseId(request.courseId, id));
+      const registrationRequests = (state.registrationRequests || []).filter(request => isSameCourseId(request.courseId, id));
       return { users, payments, resources, certificates, requests, registrationRequests };
     }
 
@@ -25152,8 +25273,13 @@ async function authenticateWithFirebaseAuth(email, password){
       const ids = new Set();
       if(!firebaseDb) return ids;
       try{
-        const snap = await firebaseDb.collection(FIREBASE_COLLECTION).where('courseId', '==', Number(courseId)).get();
-        snap.forEach(doc => {
+        const queryValues = Array.from(new Set([Number(courseId), String(courseId)].filter(value => String(value) && value === value)));
+        const docs = [];
+        for(const queryValue of queryValues){
+          const snap = await firebaseDb.collection(FIREBASE_COLLECTION).where('courseId', '==', queryValue).get();
+          snap.forEach(doc => docs.push(doc));
+        }
+        docs.forEach(doc => {
           const data = doc.data() || {};
           const docId = String(doc.id || '');
           const kind = String(data.kind || '').toLowerCase();
@@ -25307,24 +25433,26 @@ async function authenticateWithFirebaseAuth(email, password){
     }
 
     async function deleteCourse(id){
-      const courseId = Number(id);
+      const courseId = id;
+      const courseKey = normalizeCourseKey(id);
       const course = courseById(courseId);
       if(!course){ toast('No se encontró el curso.'); return; }
-      if(window.__campusDeletingCourseId === courseId){ return; }
-      window.__campusDeletingCourseId = courseId;
+      if(window.__campusDeletingCourseId === courseKey){ return; }
+      window.__campusDeletingCourseId = courseKey;
       const courseTitle = course.title || 'Curso';
       const impact = getCourseDeletionImpact(courseId);
       const courseSnapshot = clonePlain(course);
 
       try{
         toast('Eliminando curso de la plataforma y Firestore...');
-        state.courses = (state.courses || []).filter(item => Number(item.id) !== courseId);
-        state.resources = (state.resources || []).filter(resource => Number(resource.courseId) !== courseId);
-        state.certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) !== courseId);
-        state.accessRequests = (state.accessRequests || []).filter(request => Number(request.courseId) !== courseId);
-        state.registrationRequests = (state.registrationRequests || []).filter(request => Number(request.courseId) !== courseId);
-        state.payments = (state.payments || []).filter(payment => Number(payment.courseId) !== courseId);
-        state.favorites = (state.favorites || []).map(Number).filter(item => item !== courseId);
+        rememberDeletedCourse(courseSnapshot);
+        state.courses = (state.courses || []).filter(item => !isSameCourseId(item.id, courseId));
+        state.resources = (state.resources || []).filter(resource => !isSameCourseId(resource.courseId, courseId));
+        state.certificates = (state.certificates || []).filter(certificate => !isSameCourseId(certificate.courseId, courseId));
+        state.accessRequests = (state.accessRequests || []).filter(request => !isSameCourseId(request.courseId, courseId));
+        state.registrationRequests = (state.registrationRequests || []).filter(request => !isSameCourseId(request.courseId, courseId));
+        state.payments = (state.payments || []).filter(payment => !isSameCourseId(payment.courseId, courseId));
+        state.favorites = (state.favorites || []).filter(item => !isSameCourseId(item, courseId));
         state.pendingLessons = [];
 
         const fallbackCourse = (state.courses || [])[0] || null;
@@ -25334,13 +25462,13 @@ async function authenticateWithFirebaseAuth(email, password){
           const remainingAssigned = Array.from(new Set([
             ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
             Number(user.courseId) || 0
-          ].map(Number).filter(item => item && item !== courseId)));
+          ].filter(item => item && !isSameCourseId(item, courseId)).map(Number).filter(Boolean)));
 
           user.assignedCourseIds = remainingAssigned;
           if(Array.isArray(user.revokedCourseIds)){
-            user.revokedCourseIds = user.revokedCourseIds.map(Number).filter(item => item && item !== courseId);
+            user.revokedCourseIds = user.revokedCourseIds.filter(item => item && !isSameCourseId(item, courseId)).map(Number).filter(Boolean);
           }
-          if(Number(user.courseId) === courseId){
+          if(isSameCourseId(user.courseId, courseId)){
             user.courseId = remainingAssigned[0] || 0;
           }
           if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
@@ -25352,7 +25480,7 @@ async function authenticateWithFirebaseAuth(email, password){
             delete user.progressByCourse[String(courseId)];
           }
           if(Array.isArray(user.certificates)){
-            user.certificates = user.certificates.filter(certificate => Number(certificate?.courseId || certificate) !== courseId);
+            user.certificates = user.certificates.filter(certificate => !isSameCourseId(certificate?.courseId || certificate, courseId));
           }
           if(!user.assignedCourseIds.length){
             user.progress = 0;
@@ -25368,17 +25496,18 @@ async function authenticateWithFirebaseAuth(email, password){
           }
         });
 
-        if(Number(state.currentCourseId) === courseId){
+        if(isSameCourseId(state.currentCourseId, courseId)){
           state.currentCourseId = fallbackId;
           state.currentLessonIndex = 0;
         }
-        if(state.currentUser && Number(state.currentUser.courseId) === courseId){
+        if(state.currentUser && isSameCourseId(state.currentUser.courseId, courseId)){
           state.currentUser.courseId = state.currentCourseId || 0;
         }
-        if(courseEditDraft && Number(courseEditDraft.courseId) === courseId){
+        if(courseEditDraft && isSameCourseId(courseEditDraft.courseId, courseId)){
           courseEditDraft = { courseId: null, lessons: [] };
         }
 
+        pruneDeletedCourseReferences();
         syncUsersState();
         syncRegistrationRequestsState();
         addActivity(`Se eliminó el curso ${courseTitle} de la plataforma y sus registros vinculados.`);
