@@ -18769,8 +18769,20 @@ function normalizeCourseVisibility(){
 
 function isCourseVisible(course){
   if(!course) return false;
+  if(isDeletedCourseId(course.id)) return false;
   if(String(course.status || '').trim() === 'Oculto') return false;
   return course.visible !== false;
+}
+
+function isCourseActiveAndPublic(course){
+  if(!course) return false;
+  if(isDeletedCourseId(course.id)) return false;
+  const status = String(course.status || 'Activo').trim();
+  return status === 'Activo' && isCourseVisible(course);
+}
+
+function getPublicActiveCourses(){
+  return (state.courses || []).filter(isCourseActiveAndPublic);
 }
 
 function courseVisibilityLabel(course){
@@ -20054,8 +20066,16 @@ function fillCourseSelects(){
   }
   const publicRegisterCourseSelect = document.getElementById('registerCourseField');
   if(publicRegisterCourseSelect){
-    const visibleCourses = getVisibleCourses().length ? getVisibleCourses() : state.courses;
-    publicRegisterCourseSelect.innerHTML = visibleCourses.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('') || '<option value="0">Sin cursos disponibles</option>';
+    const publicCourses = getPublicActiveCourses();
+    if(publicCourses.length){
+      publicRegisterCourseSelect.disabled = false;
+      publicRegisterCourseSelect.innerHTML = publicCourses.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('');
+    }else{
+      publicRegisterCourseSelect.disabled = true;
+      publicRegisterCourseSelect.innerHTML = '<option value="0">Sin cursos activos y públicos disponibles</option>';
+    }
+    const submitRegisterBtn = document.getElementById('btnSubmitRegister');
+    if(submitRegisterBtn) submitRegisterBtn.disabled = !publicCourses.length;
   }
   const accountingFilterSelect = document.getElementById('accountingCourseFilter');
   if(accountingFilterSelect){
@@ -23982,7 +24002,11 @@ async function authenticateWithFirebaseAuth(email, password){
 
     async function createAuthAndRegistrationRequest({ name, email, password, courseId }){
       const cleanEmail = normalizeEmail(email);
-      const selectedCourse = courseById(courseId) || getVisibleCourses()[0] || state.courses[0] || {};
+      const publicCourses = getPublicActiveCourses();
+      const selectedCourse = publicCourses.find(course => isSameCourseId(course.id, courseId)) || publicCourses[0] || {};
+      if(!selectedCourse.id){
+        throw new Error('No hay cursos activos y públicos disponibles para registro.');
+      }
       const request = normalizeRegistrationRequest({
         id: Date.now(),
         docId: getRegistrationDocId(cleanEmail),
@@ -24056,6 +24080,12 @@ async function authenticateWithFirebaseAuth(email, password){
       if(password !== passwordConfirm){ setRegisterMessage('Las contraseñas no coinciden.', 'error'); return; }
       if(findStudentUserByEmail(email)){
         setRegisterMessage('Este correo ya tiene una ficha dentro del campus. Intenta iniciar sesión o contacta al administrador.', 'error');
+        return;
+      }
+      const publicCourses = getPublicActiveCourses();
+      if(!publicCourses.length || !publicCourses.some(course => isSameCourseId(course.id, courseId))){
+        setRegisterMessage('En este momento no hay cursos activos y públicos disponibles para registro.', 'error');
+        fillCourseSelects();
         return;
       }
       const submitBtn = document.getElementById('btnSubmitRegister');
