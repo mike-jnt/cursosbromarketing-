@@ -23595,69 +23595,28 @@ function renderPlayer(courseId){
       if(tabId === 'student-profile') renderStudentProfileSummary();
     }
 
-    async function enterApp(user){
-      // Evita mostrar por unos segundos la vista del rol anterior mientras carga Firestore.
-      // Primero se oculta el panel, se limpia la navegación visible y luego se muestra el rol correcto.
-      if(authScreen) authScreen.style.display = 'none';
-      if(appShell) appShell.style.display = 'none';
-      document.querySelectorAll('.tab-section').forEach(section => section.classList.add('hidden'));
-      document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
-      const cleanUser = {
-        id: Number(user.id) || 0,
-        name: user.name || 'Usuario',
-        email: normalizeEmail(user.email || ''),
-        role: user.role || 'student',
-        courseId: Number(user.courseId) || 0
-      };
-      state.currentUser = cleanUser;
+    let interfaceSyncToken = 0;
 
-      // Siempre se carga la versión real de Firestore después de Auth.
-      // Así el alumno recibe cursos comprados/asignados, clases vistas, certificados y pagos actualizados.
-      if(hasFirebaseAuthSession()){
-        await loadFirebaseState({ silent: true, requireAuth: true, force: true });
-      }
+    function getVisibleRoleTabId(role){
+      if(role === 'admin') return 'admin-dashboard';
+      return 'student-home';
+    }
 
-      if(cleanUser.role === 'student'){
-        let studentRecord = getCurrentStudentRecord();
-        if(studentRecord){
-          cleanUser.id = studentRecord.id;
-          cleanUser.name = studentRecord.name;
-          cleanUser.email = normalizeEmail(studentRecord.email);
-          cleanUser.courseId = Number(studentRecord.courseId) || 0;
-          state.currentUser = cleanUser;
-          await loadStudentProgressFromFirebaseNow(cleanUser.email, { silent: true });
-          studentRecord = getCurrentStudentRecord();
-          if(studentRecord){
-            cleanUser.id = studentRecord.id;
-            cleanUser.name = studentRecord.name;
-            cleanUser.email = normalizeEmail(studentRecord.email);
-            cleanUser.courseId = Number(studentRecord.courseId) || 0;
-            state.currentUser = cleanUser;
-          }
-          const firstCourse = getStudentCourses()[0];
-          if(firstCourse && (!state.currentCourseId || !canCurrentStudentOpenCourse(state.currentCourseId))) state.currentCourseId = firstCourse.id;
-        }
-      }else{
-        state.currentUser = cleanUser;
-        await loadAllStudentProgressFromFirebaseNow({ silent: true });
-      }
-
-      // Guardamos solo la sesión local del navegador. Los cambios reales de cursos
-      // se suben con saveSharedStateToFirebaseNow() al crear/editar.
-      saveState({ localOnly: true });
+    function renderFastInterfaceForCurrentUser(options = {}){
+      const cleanUser = state.currentUser;
+      if(!cleanUser) return;
 
       const sideUserNameEl = document.getElementById('sideUserName');
       const sideUserEmailEl = document.getElementById('sideUserEmail');
       const avatarTextEl = document.getElementById('avatarText');
-      if(sideUserNameEl) sideUserNameEl.textContent = cleanUser.name;
-      if(sideUserEmailEl) sideUserEmailEl.textContent = cleanUser.email;
-      if(avatarTextEl) avatarTextEl.textContent = cleanUser.name.charAt(0).toUpperCase();
+      if(sideUserNameEl) sideUserNameEl.textContent = cleanUser.name || 'Usuario';
+      if(sideUserEmailEl) sideUserEmailEl.textContent = normalizeEmail(cleanUser.email || '');
+      if(avatarTextEl) avatarTextEl.textContent = String(cleanUser.name || 'U').charAt(0).toUpperCase();
 
       const roleChip = document.getElementById('roleChip');
       const sideRoleBadge = document.getElementById('sideRoleBadge');
       const topRoleTitle = document.getElementById('topRoleTitle');
       const topRoleSubtitle = document.getElementById('topRoleSubtitle');
-
       const menuAdmin = document.getElementById('menuAdmin');
       const menuStudent = document.getElementById('menuStudent');
 
@@ -23675,11 +23634,7 @@ function renderPlayer(courseId){
         const firstBtn = menuAdmin ? menuAdmin.querySelector('button[data-tab="admin-dashboard"]') : null;
         if(firstBtn) firstBtn.classList.add('active');
         document.getElementById('tab-admin-dashboard')?.classList.remove('hidden');
-        await loadRegistrationRequestsFromFirestore({ silent: true });
         renderAdminDashboard();
-        renderAdminCourses();
-        renderUsersTable();
-        renderRegistrationRequests();
       }else{
         if(roleChip) roleChip.textContent = 'ALUMNO';
         if(sideRoleBadge) sideRoleBadge.textContent = 'Alumno';
@@ -23692,16 +23647,120 @@ function renderPlayer(courseId){
         if(firstBtn) firstBtn.classList.add('active');
         document.getElementById('tab-student-home')?.classList.remove('hidden');
         renderStudentAssignedCourses();
-        renderStudentDiscover();
         renderStudentProgress();
         renderStudentCertificates();
-        const firstCourse = getStudentCourses()[0];
-        if(firstCourse) renderPlayer(firstCourse.id);
         updateStudentDesire();
       }
-      fillCourseSelects();
-      renderLessonsPreview();
+
+      if(options.includeSecondary !== false){
+        window.setTimeout(() => {
+          try{
+            if(state.currentUser?.role === 'admin'){
+              if(!document.getElementById('tab-admin-courses')?.classList.contains('hidden')) renderAdminCourses();
+              if(!document.getElementById('tab-admin-users')?.classList.contains('hidden')) renderUsersTable();
+              if(!document.getElementById('tab-admin-registrations')?.classList.contains('hidden')) renderRegistrationRequests();
+            }else{
+              if(!document.getElementById('tab-student-discover')?.classList.contains('hidden')) renderStudentDiscover();
+              if(!document.getElementById('tab-student-player')?.classList.contains('hidden')){
+                const currentId = Number(state.currentCourseId) || 0;
+                renderPlayer(currentId);
+              }
+            }
+            fillCourseSelects();
+            renderLessonsPreview();
+          }catch(error){
+            console.warn('No se pudo completar la carga secundaria de la interfaz.', error);
+          }
+        }, 40);
+      }
+    }
+
+    async function syncInterfaceAfterLogin(expectedUser, token){
+      try{
+        if(!expectedUser || token !== interfaceSyncToken) return;
+        const expectedEmail = normalizeEmail(expectedUser.email || '');
+        const expectedRole = expectedUser.role || 'student';
+        if(!state.currentUser || normalizeEmail(state.currentUser.email || '') !== expectedEmail || state.currentUser.role !== expectedRole) return;
+
+        if(hasFirebaseAuthSession()){
+          await loadFirebaseState({ silent: true, requireAuth: true, force: true });
+        }
+        if(token !== interfaceSyncToken || !state.currentUser || normalizeEmail(state.currentUser.email || '') !== expectedEmail) return;
+
+        if(expectedRole === 'student'){
+          let studentRecord = getCurrentStudentRecord();
+          if(studentRecord){
+            state.currentUser = {
+              id: Number(studentRecord.id) || Number(state.currentUser.id) || 0,
+              name: studentRecord.name || state.currentUser.name || 'Alumno',
+              email: normalizeEmail(studentRecord.email || state.currentUser.email || ''),
+              role: 'student',
+              courseId: Number(studentRecord.courseId) || 0
+            };
+            const firstCourse = getStudentCourses()[0];
+            if(firstCourse && (!state.currentCourseId || !canCurrentStudentOpenCourse(state.currentCourseId))) state.currentCourseId = firstCourse.id;
+            await loadStudentProgressFromFirebaseNow(state.currentUser.email, { silent: true });
+          }
+        }else{
+          state.currentUser = {
+            id: Number(state.currentUser.id) || Number(expectedUser.id) || 1,
+            name: state.currentUser.name || expectedUser.name || 'Administrador',
+            email: expectedEmail,
+            role: 'admin',
+            courseId: 0
+          };
+          await Promise.allSettled([
+            loadAllStudentProgressFromFirebaseNow({ silent: true }),
+            loadRegistrationRequestsFromFirestore({ silent: true })
+          ]);
+        }
+
+        if(token !== interfaceSyncToken || !state.currentUser || normalizeEmail(state.currentUser.email || '') !== expectedEmail) return;
+        saveState({ localOnly: true });
+        renderFastInterfaceForCurrentUser({ includeSecondary: true });
+      }catch(error){
+        console.warn('No se pudo sincronizar en segundo plano después del login.', error);
+      }
+    }
+
+    async function enterApp(user){
+      if(authScreen) authScreen.style.display = 'none';
+      if(appShell) appShell.style.display = 'none';
+      document.querySelectorAll('.tab-section').forEach(section => section.classList.add('hidden'));
+      document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
+
+      const cleanUser = {
+        id: Number(user.id) || 0,
+        name: user.name || 'Usuario',
+        email: normalizeEmail(user.email || ''),
+        role: user.role || 'student',
+        courseId: Number(user.courseId) || 0
+      };
+      state.currentUser = cleanUser;
+
+      if(cleanUser.role === 'student'){
+        const studentRecord = getCurrentStudentRecord();
+        if(studentRecord){
+          cleanUser.id = Number(studentRecord.id) || cleanUser.id;
+          cleanUser.name = studentRecord.name || cleanUser.name;
+          cleanUser.email = normalizeEmail(studentRecord.email || cleanUser.email);
+          cleanUser.courseId = Number(studentRecord.courseId) || 0;
+          state.currentUser = cleanUser;
+          const firstCourse = getStudentCourses()[0];
+          if(firstCourse && (!state.currentCourseId || !canCurrentStudentOpenCourse(state.currentCourseId))) state.currentCourseId = firstCourse.id;
+        }
+      }else{
+        state.currentUser = cleanUser;
+      }
+
+      saveState({ localOnly: true });
+      renderFastInterfaceForCurrentUser({ includeSecondary: true });
       if(appShell) appShell.style.display = 'block';
+
+      const token = ++interfaceSyncToken;
+      window.setTimeout(() => {
+        syncInterfaceAfterLogin(clonePlain(cleanUser), token);
+      }, 80);
     }
 
     function logout(){
@@ -23913,11 +23972,11 @@ async function authenticateWithFirebaseAuth(email, password){
       try{
         const credential = await firebaseAuth.signInWithEmailAndPassword(normalizeEmail(email), password);
         const authEmail = normalizeEmail(credential.user && credential.user.email ? credential.user.email : email);
-        await loadFirebaseState({ silent: true, requireAuth: true });
         if(isAdminEmail(authEmail)){
           const admin = ensureDefaultAdminProfile();
           admin.authUid = credential.user ? credential.user.uid : admin.authUid || '';
           admin.authSyncedAt = new Date().toISOString();
+          saveState({ localOnly: true });
           return {
             ok: true,
             user: {
@@ -23930,7 +23989,12 @@ async function authenticateWithFirebaseAuth(email, password){
           };
         }
         syncUsersState();
-        const user = findStudentUserByEmail(authEmail);
+        let user = findStudentUserByEmail(authEmail);
+        if(!user){
+          await loadFirebaseState({ silent: true, requireAuth: true, force: true });
+          syncUsersState();
+          user = findStudentUserByEmail(authEmail);
+        }
         if(!user){
           return { ok: false, reason: 'no_profile' };
         }
@@ -23939,7 +24003,6 @@ async function authenticateWithFirebaseAuth(email, password){
         user.authUid = credential.user ? credential.user.uid : user.authUid || '';
         user.lastAccess = 'Último ingreso autenticado';
         saveState({ localOnly: true });
-        await loadStudentProgressFromFirebaseNow(authEmail, { silent: true });
         return { ok: true, user: buildStudentSessionUser(user) };
       }catch(error){
         return { ok: false, reason: 'firebase_error', error, message: getFirebaseAuthMessage(error) };
@@ -24380,17 +24443,25 @@ async function authenticateWithFirebaseAuth(email, password){
       const studentAuth = authenticateSavedStudent(email, password);
       if(studentAuth.ok){
         const userRecord = findStudentUserByEmail(email);
-        if(userRecord){
-          const syncResult = await ensureFirebaseAuthUserForAccount({ email: userRecord.email, password: userRecord.password, name: userRecord.name, role: 'student' }, { email: userRecord.email, password: userRecord.password });
-          if(syncResult && syncResult.ok){
-            userRecord.authUid = syncResult.uid || userRecord.authUid || '';
-            userRecord.authSyncedAt = new Date().toISOString();
-            userRecord.authSyncStatus = syncResult.message || 'Sincronizado con Authentication.';
-            saveState({ localOnly: true });
-          }
-          await ensurePrimaryFirebaseAuthSession(userRecord.email, userRecord.password || password);
-        }
         await enterApp(studentAuth.user);
+        if(userRecord){
+          const currentToken = interfaceSyncToken;
+          window.setTimeout(async () => {
+            try{
+              const syncResult = await ensureFirebaseAuthUserForAccount({ email: userRecord.email, password: userRecord.password, name: userRecord.name, role: 'student' }, { email: userRecord.email, password: userRecord.password });
+              if(syncResult && syncResult.ok){
+                userRecord.authUid = syncResult.uid || userRecord.authUid || '';
+                userRecord.authSyncedAt = new Date().toISOString();
+                userRecord.authSyncStatus = syncResult.message || 'Sincronizado con Authentication.';
+                saveState({ localOnly: true });
+              }
+              await ensurePrimaryFirebaseAuthSession(userRecord.email, userRecord.password || password);
+              await syncInterfaceAfterLogin({ ...studentAuth.user, email: userRecord.email, role: 'student' }, currentToken);
+            }catch(error){
+              console.warn('No se pudo completar la sincronización Firebase del alumno en segundo plano.', error);
+            }
+          }, 80);
+        }
         return;
       }
 
