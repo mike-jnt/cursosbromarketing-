@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="campus-update-mode" content="manual-refresh"/>
 <title>Campus Cursos Pro | Login + Admin + Alumno</title>
 <style>
     :root{
@@ -17598,10 +17602,29 @@
       }
     }
 
+    function parseFirestoreLikeTimestamp(value){
+      if(!value) return 0;
+      if(typeof value.toDate === 'function'){
+        const date = value.toDate();
+        const time = date ? date.getTime() : 0;
+        return Number.isFinite(time) ? time : 0;
+      }
+      if(typeof value.seconds === 'number'){
+        return (value.seconds * 1000) + Math.floor((Number(value.nanoseconds) || 0) / 1000000);
+      }
+      const time = Date.parse(String(value));
+      return Number.isFinite(time) ? time : 0;
+    }
+
     function getCourseLocalTimestamp(course){
       const raw = course && (course.updatedAt || course.updatedAtClient || course.createdAt);
-      const time = raw ? Date.parse(raw) : 0;
+      const time = parseFirestoreLikeTimestamp(raw);
       return Number.isFinite(time) ? time : 0;
+    }
+
+    function getStatePayloadTimestamp(payload){
+      if(!payload || typeof payload !== 'object') return 0;
+      return parseFirestoreLikeTimestamp(payload.updatedAt || payload.updatedAtClient || payload.savedAt || payload.createdAt);
     }
 
     function mergeRemoteStateWithLocalDraft(remotePayload, localPayload){
@@ -17609,6 +17632,7 @@
       let changed = false;
       const localCourses = Array.isArray(localPayload && localPayload.courses) ? localPayload.courses : [];
       const remoteCourses = Array.isArray(merged.courses) ? merged.courses : [];
+      const remoteStateTime = getStatePayloadTimestamp(remotePayload);
       if(localCourses.length){
         const remoteById = new Map(remoteCourses.map(course => [Number(course.id), course]));
         localCourses.forEach(localCourse => {
@@ -17619,9 +17643,11 @@
           const remoteLessonCount = Array.isArray(remoteCourse && remoteCourse.lessons) ? remoteCourse.lessons.length : 0;
           const localTime = getCourseLocalTimestamp(localCourse);
           const remoteTime = getCourseLocalTimestamp(remoteCourse);
-          const localLooksNewer = !remoteCourse
-            || localTime > remoteTime
-            || (localLessonCount > remoteLessonCount && localTime >= remoteTime);
+          const localCourseExistsOnlyInBrowser = !remoteCourse;
+          const canRecoverLocalOnlyCourse = localCourseExistsOnlyInBrowser && (!remoteStateTime || (localTime && localTime > remoteStateTime));
+          const localLooksNewer = canRecoverLocalOnlyCourse
+            || (remoteCourse && localTime > remoteTime)
+            || (remoteCourse && localLessonCount > remoteLessonCount && localTime >= remoteTime);
           if(localLooksNewer){
             remoteById.set(id, clonePlain(localCourse));
             changed = true;
@@ -18116,11 +18142,11 @@
           return true;
         }
         firebaseRemoteLoaded = true;
-        if(canWriteSharedFirebaseState() || (hasFirebaseAuthSession() && isAdminEmail(getFirebaseSignedEmail()))){
-          saveState();
-          if(!silent) toast('Base de datos Firebase creada con el estado inicial.');
-        }else if(!silent){
-          toast('Firebase está conectado, pero todavía no existe la base inicial. Ingresa como administrador para crearla.');
+        // Protección de datos: si el documento principal no aparece, no se crea ni
+        // sobrescribe automáticamente con la demo. La información local se conserva
+        // y Firestore solo se actualizará cuando el administrador realice un cambio.
+        if(!silent){
+          toast('Firebase está conectado, pero no se encontró la base principal. Se conserva la información local y no se sobrescribe nada.');
         }
         return true;
       }catch(error){
@@ -25088,6 +25114,170 @@ async function authenticateWithFirebaseAuth(email, password){
       return { users, payments, resources, certificates, requests };
     }
 
+    function getCourseDeletionImpact(courseId){
+      const id = Number(courseId);
+      const users = (state.users || []).filter(user => getUserAssignedCourseIds(user).includes(id));
+      const payments = (state.payments || []).filter(payment => Number(payment.courseId) === id);
+      const resources = (state.resources || []).filter(resource => Number(resource.courseId) === id);
+      const certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) === id);
+      const requests = (state.accessRequests || []).filter(request => Number(request.courseId) === id);
+      const registrationRequests = (state.registrationRequests || []).filter(request => Number(request.courseId) === id);
+      return { users, payments, resources, certificates, requests, registrationRequests };
+    }
+
+    function collectDeletedCourseFirestoreAssetIds(course, impact = {}){
+      const ids = new Set();
+      const addCoverRef = value => {
+        const docId = getFirestoreCoverDocId(value || '');
+        if(docId) ids.add(docId);
+      };
+      const addResourceRef = value => {
+        const docId = getFirestoreResourceDocId(value || '');
+        if(docId) ids.add(docId);
+      };
+      addCoverRef(course?.cover || course?.thumbnail || course?.coverRef || '');
+      (Array.isArray(course?.lessons) ? course.lessons : []).forEach(lesson => {
+        addCoverRef(getLessonThumbnailRef(lesson));
+        (Array.isArray(lesson?.resources) ? lesson.resources : []).forEach(resource => {
+          addResourceRef(resource?.ref || resource?.url || resource?.href || '');
+        });
+      });
+      (impact.resources || []).forEach(resource => {
+        addResourceRef(resource?.ref || resource?.url || resource?.href || '');
+      });
+      return ids;
+    }
+
+    async function findDeletedCourseFirestoreAssetIds(courseId){
+      const ids = new Set();
+      if(!firebaseDb) return ids;
+      try{
+        const snap = await firebaseDb.collection(FIREBASE_COLLECTION).where('courseId', '==', Number(courseId)).get();
+        snap.forEach(doc => {
+          const data = doc.data() || {};
+          const docId = String(doc.id || '');
+          const kind = String(data.kind || '').toLowerCase();
+          const isCourseAsset = docId.startsWith(FIRESTORE_COVER_DOC_PREFIX)
+            || docId.startsWith(FIRESTORE_RESOURCE_DOC_PREFIX)
+            || kind === 'course-cover'
+            || kind === 'lesson-resource';
+          if(isCourseAsset) ids.add(docId);
+        });
+      }catch(error){
+        console.warn('No se pudieron buscar archivos Firestore vinculados al curso.', error);
+      }
+      return ids;
+    }
+
+    async function deleteFirestoreDocsInBatches(docIds){
+      const cleanIds = Array.from(new Set((docIds || []).map(id => String(id || '').trim()).filter(Boolean)));
+      if(!cleanIds.length || !firebaseDb) return { attempted: cleanIds.length, deleted: 0, failed: 0 };
+      let deleted = 0;
+      let failed = 0;
+      for(let i = 0; i < cleanIds.length; i += 430){
+        const chunk = cleanIds.slice(i, i + 430);
+        try{
+          const batch = firebaseDb.batch();
+          chunk.forEach(docId => batch.delete(firebaseDb.collection(FIREBASE_COLLECTION).doc(docId)));
+          await batch.commit();
+          deleted += chunk.length;
+          chunk.forEach(docId => { delete firestoreCoverCache[docId]; });
+        }catch(error){
+          failed += chunk.length;
+          console.warn('No se pudo borrar un grupo de archivos Firestore del curso.', error);
+        }
+      }
+      return { attempted: cleanIds.length, deleted, failed };
+    }
+
+    function cleanDeletedCourseFromProgressPayload(data, courseId, fallbackCourseId){
+      const id = String(Number(courseId));
+      const fallbackId = Number(fallbackCourseId) || 0;
+      const cleanArray = value => Array.from(new Set((Array.isArray(value) ? value : []).map(Number).filter(item => item && item !== Number(courseId))));
+      const cleanMap = value => {
+        const next = { ...(value && typeof value === 'object' ? value : {}) };
+        delete next[id];
+        delete next[Number(courseId)];
+        return next;
+      };
+      const next = {
+        assignedCourseIds: cleanArray(data.assignedCourseIds),
+        purchasedCourseIds: cleanArray(data.purchasedCourseIds),
+        revokedCourseIds: cleanArray(data.revokedCourseIds),
+        completedCourseIds: cleanArray(data.completedCourseIds),
+        completedLessonsByCourse: cleanMap(data.completedLessonsByCourse),
+        progressByCourse: cleanMap(data.progressByCourse),
+        certificates: (Array.isArray(data.certificates) ? data.certificates : []).filter(item => Number(item?.courseId || item) !== Number(courseId)),
+        updatedAtClient: new Date().toISOString()
+      };
+      next.courseId = Number(data.courseId) === Number(courseId) ? fallbackId : (Number(data.courseId) || 0);
+      next.currentCourseId = Number(data.currentCourseId) === Number(courseId) ? fallbackId : (Number(data.currentCourseId) || next.courseId || 0);
+      if(Number(data.currentCourseId) === Number(courseId)) next.currentLessonIndex = 0;
+      if(window.firebase && firebase.firestore && firebase.firestore.FieldValue){
+        next.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      return next;
+    }
+
+    async function cleanDeletedCourseFromStudentProgressDocs(users, courseId, fallbackCourseId){
+      if(!firebaseDb || !Array.isArray(users) || !users.length) return { cleaned: 0, failed: 0 };
+      let cleaned = 0;
+      let failed = 0;
+      for(const user of users){
+        const email = normalizeEmail(user?.email || '');
+        if(!email) continue;
+        const refs = getStudentProgressDocRefs(email);
+        for(const item of refs){
+          try{
+            const doc = await item.ref.get();
+            if(!doc.exists) continue;
+            await item.ref.set(cleanDeletedCourseFromProgressPayload(doc.data() || {}, courseId, fallbackCourseId), { merge: true });
+            cleaned += 1;
+          }catch(error){
+            failed += 1;
+            if(!isFirestorePermissionError(error)) console.warn('No se pudo limpiar progreso académico del curso eliminado en', item.label, error);
+          }
+        }
+      }
+      return { cleaned, failed };
+    }
+
+    async function deleteCourseRegistrationRequestDocs(registrationRequests){
+      if(!firebaseDb || !Array.isArray(registrationRequests) || !registrationRequests.length) return { deleted: 0, failed: 0 };
+      let deleted = 0;
+      let failed = 0;
+      for(const request of registrationRequests){
+        const docId = request?.docId || getRegistrationDocId(request?.email || '');
+        if(!docId) continue;
+        try{
+          await firebaseDb.collection(REGISTRATION_REQUESTS_COLLECTION).doc(docId).delete();
+          deleted += 1;
+        }catch(error){
+          failed += 1;
+          if(!isFirestorePermissionError(error)) console.warn('No se pudo borrar una solicitud pública vinculada al curso eliminado.', error);
+        }
+      }
+      return { deleted, failed };
+    }
+
+    async function deleteCourseRelatedFirestoreRecords(course, impact, fallbackCourseId){
+      if(!initFirebaseConnection() || !firebaseDb || !canWriteSharedFirebaseState()){
+        return { ok: false, reason: 'no_admin_firebase_session' };
+      }
+      const ids = collectDeletedCourseFirestoreAssetIds(course, impact);
+      const queryIds = await findDeletedCourseFirestoreAssetIds(course?.id || 0);
+      queryIds.forEach(id => ids.add(id));
+      const assets = await deleteFirestoreDocsInBatches(Array.from(ids));
+      const progress = await cleanDeletedCourseFromStudentProgressDocs(impact.users || [], Number(course?.id) || 0, fallbackCourseId);
+      const publicRequests = await deleteCourseRegistrationRequestDocs(impact.registrationRequests || []);
+      return {
+        ok: assets.failed === 0 && progress.failed === 0 && publicRequests.failed === 0,
+        assets,
+        progress,
+        publicRequests
+      };
+    }
+
     function openDeleteCourseConfirm(id){
       const course = courseById(Number(id));
       if(!course){ toast('No se encontró el curso.'); return; }
@@ -25095,13 +25285,15 @@ async function authenticateWithFirebaseAuth(email, password){
       openModal('Eliminar curso completo', `
         <div class="stack">
           <div class="mini-note">
-            Vas a eliminar el curso <strong>${escapeHtml(course.title)}</strong>. Esta acción quitará el curso de la plataforma y limpiará sus clases, recursos, solicitudes, certificados y pagos vinculados.
+            Vas a eliminar el curso <strong>${escapeHtml(course.title)}</strong>. Esta acción quitará el curso de la plataforma, de Firestore y limpiará clases, recursos, solicitudes, certificados, pagos, miniaturas y progreso vinculado.
           </div>
           <div class="grid grid-2">
             <div class="mini-note"><strong>${impact.users.length}</strong><br>Alumno${impact.users.length === 1 ? '' : 's'} con este curso asignado</div>
             <div class="mini-note"><strong>${impact.payments.length}</strong><br>Pago${impact.payments.length === 1 ? '' : 's'} asociado${impact.payments.length === 1 ? '' : 's'}</div>
             <div class="mini-note"><strong>${impact.resources.length}</strong><br>Recurso${impact.resources.length === 1 ? '' : 's'} vinculado${impact.resources.length === 1 ? '' : 's'}</div>
             <div class="mini-note"><strong>${impact.certificates.length}</strong><br>Certificado${impact.certificates.length === 1 ? '' : 's'} generado${impact.certificates.length === 1 ? '' : 's'}</div>
+            <div class="mini-note"><strong>${impact.requests.length}</strong><br>Solicitud${impact.requests.length === 1 ? '' : 'es'} de acceso vinculada${impact.requests.length === 1 ? '' : 's'}</div>
+            <div class="mini-note"><strong>${impact.registrationRequests.length}</strong><br>Registro${impact.registrationRequests.length === 1 ? '' : 's'} público${impact.registrationRequests.length === 1 ? '' : 's'} vinculado${impact.registrationRequests.length === 1 ? '' : 's'}</div>
           </div>
           <div class="error" style="margin-top:0">
             Esta acción no se puede deshacer desde la interfaz. Si solo quieres ocultarlo, cambia el estado del curso a "Oculto" desde Editar.
@@ -25114,77 +25306,106 @@ async function authenticateWithFirebaseAuth(email, password){
       `);
     }
 
-    function deleteCourse(id){
+    async function deleteCourse(id){
       const courseId = Number(id);
       const course = courseById(courseId);
       if(!course){ toast('No se encontró el curso.'); return; }
+      if(window.__campusDeletingCourseId === courseId){ return; }
+      window.__campusDeletingCourseId = courseId;
       const courseTitle = course.title || 'Curso';
+      const impact = getCourseDeletionImpact(courseId);
+      const courseSnapshot = clonePlain(course);
 
-      state.courses = (state.courses || []).filter(item => Number(item.id) !== courseId);
-      state.resources = (state.resources || []).filter(resource => Number(resource.courseId) !== courseId);
-      state.certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) !== courseId);
-      state.accessRequests = (state.accessRequests || []).filter(request => Number(request.courseId) !== courseId);
-      state.payments = (state.payments || []).filter(payment => Number(payment.courseId) !== courseId);
-      state.favorites = (state.favorites || []).map(Number).filter(item => item !== courseId);
+      try{
+        toast('Eliminando curso de la plataforma y Firestore...');
+        state.courses = (state.courses || []).filter(item => Number(item.id) !== courseId);
+        state.resources = (state.resources || []).filter(resource => Number(resource.courseId) !== courseId);
+        state.certificates = (state.certificates || []).filter(certificate => Number(certificate.courseId) !== courseId);
+        state.accessRequests = (state.accessRequests || []).filter(request => Number(request.courseId) !== courseId);
+        state.registrationRequests = (state.registrationRequests || []).filter(request => Number(request.courseId) !== courseId);
+        state.payments = (state.payments || []).filter(payment => Number(payment.courseId) !== courseId);
+        state.favorites = (state.favorites || []).map(Number).filter(item => item !== courseId);
+        state.pendingLessons = [];
 
-      const fallbackCourse = (state.courses || [])[0] || null;
-      const fallbackId = fallbackCourse ? Number(fallbackCourse.id) : 0;
+        const fallbackCourse = (state.courses || [])[0] || null;
+        const fallbackId = fallbackCourse ? Number(fallbackCourse.id) : 0;
 
-      (state.users || []).forEach(user => {
-        const remainingAssigned = Array.from(new Set([
-          ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
-          Number(user.courseId) || 0
-        ].map(Number).filter(item => item && item !== courseId)));
+        (state.users || []).forEach(user => {
+          const remainingAssigned = Array.from(new Set([
+            ...(Array.isArray(user.assignedCourseIds) ? user.assignedCourseIds : []),
+            Number(user.courseId) || 0
+          ].map(Number).filter(item => item && item !== courseId)));
 
-        user.assignedCourseIds = remainingAssigned;
-        if(Number(user.courseId) === courseId){
-          user.courseId = remainingAssigned[0] || 0;
-        }
-        if(!user.courseId && fallbackId && remainingAssigned.includes(fallbackId)){
-          user.courseId = fallbackId;
-        }
-        if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
-          delete user.completedLessonsByCourse[courseId];
-        }
-        if(user.progressByCourse && typeof user.progressByCourse === 'object'){
-          delete user.progressByCourse[courseId];
-        }
-        if(!user.assignedCourseIds.length){
-          user.progress = 0;
-          user.lastLesson = 'Sin curso asignado';
-          user.totalToPay = 0;
-          user.totalPaid = 0;
-          user.balance = 0;
-          user.financialStatus = 'Sin cobrar';
-          user.collectorNote = `El curso ${courseTitle} fue eliminado. Asigna un nuevo curso si deseas reactivar este acceso.`;
-        }
-      });
+          user.assignedCourseIds = remainingAssigned;
+          if(Array.isArray(user.revokedCourseIds)){
+            user.revokedCourseIds = user.revokedCourseIds.map(Number).filter(item => item && item !== courseId);
+          }
+          if(Number(user.courseId) === courseId){
+            user.courseId = remainingAssigned[0] || 0;
+          }
+          if(user.completedLessonsByCourse && typeof user.completedLessonsByCourse === 'object'){
+            delete user.completedLessonsByCourse[courseId];
+            delete user.completedLessonsByCourse[String(courseId)];
+          }
+          if(user.progressByCourse && typeof user.progressByCourse === 'object'){
+            delete user.progressByCourse[courseId];
+            delete user.progressByCourse[String(courseId)];
+          }
+          if(Array.isArray(user.certificates)){
+            user.certificates = user.certificates.filter(certificate => Number(certificate?.courseId || certificate) !== courseId);
+          }
+          if(!user.assignedCourseIds.length){
+            user.progress = 0;
+            user.lastLesson = 'Sin curso asignado';
+            user.totalToPay = 0;
+            user.totalPaid = 0;
+            user.balance = 0;
+            user.financialStatus = 'Sin cobrar';
+            user.collectorNote = `El curso ${courseTitle} fue eliminado. Asigna un nuevo curso si deseas reactivar este acceso.`;
+          }else if(Number(user.courseId)){
+            user.progress = Math.max(0, Math.min(100, Math.round(Number(user.progressByCourse?.[user.courseId]) || 0)));
+            user.lastLesson = user.progress > 0 ? 'Clase en progreso' : (user.lastLesson || 'Sin avance');
+          }
+        });
 
-      if(Number(state.currentCourseId) === courseId){
-        state.currentCourseId = fallbackId;
-        state.currentLessonIndex = 0;
+        if(Number(state.currentCourseId) === courseId){
+          state.currentCourseId = fallbackId;
+          state.currentLessonIndex = 0;
+        }
+        if(state.currentUser && Number(state.currentUser.courseId) === courseId){
+          state.currentUser.courseId = state.currentCourseId || 0;
+        }
+        if(courseEditDraft && Number(courseEditDraft.courseId) === courseId){
+          courseEditDraft = { courseId: null, lessons: [] };
+        }
+
+        syncUsersState();
+        syncRegistrationRequestsState();
+        addActivity(`Se eliminó el curso ${courseTitle} de la plataforma y sus registros vinculados.`);
+        saveState({ localOnly: true });
+
+        const firestoreCleanup = await deleteCourseRelatedFirestoreRecords(courseSnapshot, impact, state.currentCourseId || 0);
+        const remoteSaved = await saveSharedStateToFirebaseNow();
+
+        refreshAllViews();
+        renderAdminDashboard();
+        renderRegistrationRequests();
+        closeModal();
+
+        if(remoteSaved && firestoreCleanup.ok){
+          toast('Curso eliminado completamente de la página y Firestore.');
+        }else if(remoteSaved){
+          toast('Curso eliminado y base principal actualizada. Algunos archivos/progresos auxiliares no pudieron limpiarse por reglas de Firestore.');
+        }else{
+          saveState();
+          toast('Curso eliminado en esta sesión. No se pudo confirmar la eliminación completa en Firestore por sesión o reglas.');
+        }
+      }catch(error){
+        console.warn('No se pudo completar la eliminación total del curso.', error);
+        toast('No se pudo completar la eliminación total. Revisa la consola o reglas de Firestore.');
+      }finally{
+        window.__campusDeletingCourseId = null;
       }
-      if(state.currentUser && Number(state.currentUser.courseId) === courseId){
-        state.currentUser.courseId = state.currentCourseId || 0;
-      }
-
-      syncUsersState();
-      saveState();
-      renderAdminCourses();
-      renderAdminDashboard();
-      renderUsersTable();
-      renderAdminUsersSummary();
-      renderRegistrationRequests();
-      renderAccountingSection();
-      renderStudentDiscover();
-      renderStudentAssignedCourses();
-      renderStudentProgress();
-      renderStudentCertificates();
-      renderPlayer(state.currentCourseId);
-      fillCourseSelects();
-      addActivity(`Se eliminó el curso ${courseTitle}.`);
-      closeModal();
-      toast('Curso eliminado correctamente.');
     }
 
 function editUser(id){
