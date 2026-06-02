@@ -23596,8 +23596,12 @@ function renderPlayer(courseId){
     }
 
     async function enterApp(user){
-      authScreen.style.display = 'none';
-      appShell.style.display = 'block';
+      // Evita mostrar por unos segundos la vista del rol anterior mientras carga Firestore.
+      // Primero se oculta el panel, se limpia la navegación visible y luego se muestra el rol correcto.
+      if(authScreen) authScreen.style.display = 'none';
+      if(appShell) appShell.style.display = 'none';
+      document.querySelectorAll('.tab-section').forEach(section => section.classList.add('hidden'));
+      document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
       const cleanUser = {
         id: Number(user.id) || 0,
         name: user.name || 'Usuario',
@@ -23697,14 +23701,19 @@ function renderPlayer(courseId){
       }
       fillCourseSelects();
       renderLessonsPreview();
+      if(appShell) appShell.style.display = 'block';
     }
 
     function logout(){
       try{ if(firebaseAuth && firebaseAuth.currentUser) firebaseAuth.signOut(); }catch(error){ console.warn('No se pudo cerrar sesión Firebase Auth.', error); }
       state.currentUser = null;
-      saveState();
-      appShell.style.display = 'none';
-      authScreen.style.display = 'grid';
+      saveState({ localOnly: true });
+      document.querySelectorAll('.tab-section').forEach(section => section.classList.add('hidden'));
+      document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
+      document.getElementById('menuAdmin')?.classList.add('hidden');
+      document.getElementById('menuStudent')?.classList.add('hidden');
+      if(appShell) appShell.style.display = 'none';
+      if(authScreen) authScreen.style.display = 'grid';
       emailInput.value = '';
       passwordInput.value = '';
       loginError.classList.add('hidden');
