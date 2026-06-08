@@ -447,7 +447,6 @@
     #tab-student-discover,
     #tab-student-progress,
     #tab-student-resources,
-    #tab-student-certificates,
     #tab-student-history,
     #tab-student-profile{
       border:1px solid #dbe6ef;
@@ -675,7 +674,6 @@
     #tab-student-discover .pill-note,
     #tab-student-progress .pill-note,
     #tab-student-resources .pill-note,
-    #tab-student-certificates .pill-note,
     #tab-student-history .pill-note,
     #tab-student-profile .pill-note{
       background:linear-gradient(180deg,#f9fcff 0%, #eef6fb 100%);
@@ -714,7 +712,6 @@
     #tab-student-home .metric-box:hover,
     #tab-student-profile .mini-card:hover,
     #tab-student-resources .history-item:hover,
-    #tab-student-certificates .history-item:hover,
     #tab-student-history .history-item:hover{
       transform:translateY(-4px);
       box-shadow:var(--student-shadow-hover);
@@ -766,7 +763,6 @@
     #tab-student-discover .btn,
     #tab-student-progress .btn,
     #tab-student-resources .btn,
-    #tab-student-certificates .btn,
     #tab-student-history .btn,
     #tab-student-profile .btn{
       border-radius:12px;
@@ -779,7 +775,6 @@
     #tab-student-discover .btn:hover,
     #tab-student-progress .btn:hover,
     #tab-student-resources .btn:hover,
-    #tab-student-certificates .btn:hover,
     #tab-student-history .btn:hover,
     #tab-student-profile .btn:hover{
       transform:translateY(-1px);
@@ -810,7 +805,6 @@
     #tab-student-discover .btn-dark,
     #tab-student-progress .btn-dark,
     #tab-student-resources .btn-dark,
-    #tab-student-certificates .btn-dark,
     #tab-student-history .btn-dark,
     #tab-student-profile .btn-dark,
     #tab-student-home .btn-soft,
@@ -818,7 +812,6 @@
     #tab-student-discover .btn-soft,
     #tab-student-progress .btn-soft,
     #tab-student-resources .btn-soft,
-    #tab-student-certificates .btn-soft,
     #tab-student-history .btn-soft,
     #tab-student-profile .btn-soft,
     .student-inline-btn{
@@ -831,7 +824,6 @@
     #tab-student-discover .btn-dark:hover,
     #tab-student-progress .btn-dark:hover,
     #tab-student-resources .btn-dark:hover,
-    #tab-student-certificates .btn-dark:hover,
     #tab-student-history .btn-dark:hover,
     #tab-student-profile .btn-dark:hover,
     #tab-student-home .btn-soft:hover,
@@ -839,7 +831,6 @@
     #tab-student-discover .btn-soft:hover,
     #tab-student-progress .btn-soft:hover,
     #tab-student-resources .btn-soft:hover,
-    #tab-student-certificates .btn-soft:hover,
     #tab-student-history .btn-soft:hover,
     #tab-student-profile .btn-soft:hover,
     .student-inline-btn:hover{
@@ -847,12 +838,10 @@
       border-color:#b8d1df;
     }
     #tab-student-resources .list-box,
-    #tab-student-certificates .list-box,
     #tab-student-history .list-box{
       gap:14px;
     }
     #tab-student-resources .history-item,
-    #tab-student-certificates .history-item,
     #tab-student-history .history-item{
       border-radius:18px;
       border:1px solid #dbe7f0;
@@ -863,7 +852,6 @@
       overflow:hidden;
     }
     #tab-student-resources .history-item::before,
-    #tab-student-certificates .history-item::before,
     #tab-student-history .history-item::before{
       content:'';
       position:absolute;
@@ -875,14 +863,12 @@
       opacity:.92;
     }
     #tab-student-resources .history-item strong,
-    #tab-student-certificates .history-item strong,
     #tab-student-history .history-item strong{
       color:var(--student-text);
       display:block;
       line-height:1.35;
     }
     #tab-student-resources .history-item small,
-    #tab-student-certificates .history-item small,
     #tab-student-history .history-item small{
       color:var(--student-muted);
       line-height:1.6;
@@ -921,7 +907,6 @@
       padding-left:14px;
     }
     #tab-student-resources .resource-chip,
-    #tab-student-certificates .resource-chip,
     #tab-student-history .history-chip{
       padding:7px 12px;
       border-radius:999px;
@@ -975,7 +960,6 @@
       .student-panel-header h2{font-size:26px}
       .student-list-actions{justify-content:flex-start;padding-left:0;width:100%;margin-left:0}
       #tab-student-resources .history-item,
-      #tab-student-certificates .history-item,
       #tab-student-history .history-item{align-items:flex-start}
       #tab-student-courses .cover,
       #tab-student-discover .cover,
@@ -5634,7 +5618,6 @@
     #tab-student-discover .btn,
     #tab-student-progress .btn,
     #tab-student-resources .btn,
-    #tab-student-certificates .btn,
     #tab-student-history .btn,
     #tab-student-profile .btn{
       border-color:var(--bro-line) !important;
@@ -6035,7 +6018,6 @@
     #tab-student-discover,
     #tab-student-progress,
     #tab-student-resources,
-    #tab-student-certificates,
     #tab-student-history,
     #tab-student-profile{
       --student-accent:var(--bro-accent) !important;
@@ -6063,7 +6045,6 @@
     #tab-student-discover .course-card,
     #tab-student-progress .course-card,
     #tab-student-resources .history-item,
-    #tab-student-certificates .history-item,
     #tab-student-history .history-item{
       background:linear-gradient(180deg,#191820 0%,#0f0d14 100%) !important;
       border-color:var(--bro-line) !important;
@@ -6076,7 +6057,6 @@
     #tab-student-progress .course-card::before,
     #tab-student-profile .mini-card::before,
     #tab-student-resources .history-item::before,
-    #tab-student-certificates .history-item::before,
     #tab-student-history .history-item::before{
       background:linear-gradient(90deg,var(--bro-accent) 0%,var(--bro-accent-2) 100%) !important;
     }
@@ -10080,410 +10060,6 @@
       }
     }
 
-    /* === Certificados visuales del alumno === */
-    #tab-student-certificates .list-box{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:24px;
-    }
-    .student-certificate-card{
-      position:relative;
-      overflow:hidden;
-      border-radius:28px;
-      border:1px solid rgba(125,243,165,.18);
-      padding:30px;
-      background:
-        radial-gradient(circle at top right, rgba(127,243,165,.10), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(61,107,255,.10), transparent 24%),
-        linear-gradient(135deg,#0d141f 0%, #121b27 45%, #0f1722 100%);
-      box-shadow:0 22px 54px rgba(0,0,0,.30);
-      color:#eef6fb;
-    }
-    .student-certificate-card::before{
-      content:'';
-      position:absolute;
-      inset:14px;
-      border-radius:22px;
-      border:1px solid rgba(127,243,165,.14);
-      pointer-events:none;
-    }
-    .student-certificate-card::after{
-      content:'';
-      position:absolute;
-      top:0;
-      right:0;
-      width:210px;
-      height:210px;
-      background:radial-gradient(circle, rgba(127,243,165,.16) 0%, rgba(127,243,165,0) 70%);
-      pointer-events:none;
-    }
-    .student-certificate-head{
-      position:relative;
-      z-index:1;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:18px;
-      flex-wrap:wrap;
-      margin-bottom:24px;
-    }
-    .student-certificate-brand{
-      display:grid;
-      gap:10px;
-    }
-    .student-certificate-brand strong{
-      color:#ffffff;
-      font-size:15px;
-      letter-spacing:.28em;
-      text-transform:uppercase;
-    }
-    .student-certificate-brand small{
-      color:#9fc0d0;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-    }
-    .student-certificate-seal{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:118px;
-      min-height:118px;
-      border-radius:999px;
-      padding:18px;
-      text-align:center;
-      background:linear-gradient(135deg, rgba(10,132,56,.18) 0%, rgba(10,132,56,.08) 100%);
-      border:1px solid rgba(127,243,165,.24);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
-      color:#dffcea;
-      font-size:12px;
-      font-weight:800;
-      line-height:1.45;
-      letter-spacing:.05em;
-      text-transform:uppercase;
-    }
-    .student-certificate-kicker{
-      color:#7ff3a5;
-      font-size:12px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      margin-bottom:12px;
-    }
-    .student-certificate-title{
-      margin:0;
-      color:#ffffff;
-      font-size:40px;
-      line-height:1.02;
-      letter-spacing:-.04em;
-    }
-    .student-certificate-sub{
-      margin:12px 0 0;
-      max-width:760px;
-      color:#a9c1ce;
-      line-height:1.72;
-      font-size:15px;
-    }
-    .student-certificate-body{
-      position:relative;
-      z-index:1;
-      display:grid;
-      gap:18px;
-    }
-    .student-certificate-text{
-      margin:0;
-      color:#dbe8ef;
-      line-height:1.8;
-      font-size:15px;
-    }
-    .student-certificate-course-wrap{
-      position:relative;
-      overflow:hidden;
-      padding:22px 24px;
-      border-radius:22px;
-      background:
-        radial-gradient(circle at top right, rgba(255,255,255,.08), transparent 30%),
-        linear-gradient(135deg, rgba(10,132,56,.32) 0%, rgba(19,36,52,.96) 100%);
-      border:1px solid rgba(127,243,165,.20);
-      box-shadow:0 16px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    .student-certificate-course-wrap::before{
-      content:'';
-      position:absolute;
-      inset:0 auto 0 0;
-      width:6px;
-      background:linear-gradient(180deg,#7ff3a5 0%, #0a8438 100%);
-    }
-    .student-certificate-label{
-      display:block;
-      margin-bottom:10px;
-      color:#b7d8c3;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-    }
-    .student-certificate-course{
-      margin:0;
-      color:#ffffff;
-      font-size:30px;
-      line-height:1.14;
-      font-weight:900;
-      letter-spacing:-.03em;
-    }
-    .student-certificate-footer{
-      position:relative;
-      z-index:1;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:16px;
-      flex-wrap:wrap;
-      margin-top:22px;
-      padding-top:18px;
-      border-top:1px dashed rgba(159,192,208,.28);
-    }
-    .student-certificate-sign strong{
-      display:block;
-      color:#ffffff;
-      font-size:15px;
-      margin-bottom:6px;
-    }
-    .student-certificate-sign small,
-    .student-certificate-date{
-      color:#9fc0d0;
-      line-height:1.6;
-      font-size:13px;
-    }
-    .student-certificate-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .student-certificate-actions .btn{
-      min-width:160px;
-    }
-    .student-certificates-grid-empty{
-      padding:24px;
-      border-radius:22px;
-      border:1px dashed rgba(127,243,165,.22);
-      background:linear-gradient(135deg,#111924 0%, #172231 100%);
-      color:#a9c1ce;
-    }
-    @media (max-width:760px){
-      .student-certificate-card{padding:22px}
-      .student-certificate-title{font-size:30px}
-      .student-certificate-course{font-size:22px}
-      .student-certificate-seal{min-width:88px; min-height:88px; font-size:10px; padding:12px}
-      .student-certificate-actions .btn{min-width:100%}
-    }
-
-
-
-    /* === Controles de volumen + final de clase === */
-    .youtube-volume-control{
-      display:inline-flex !important;
-      align-items:center !important;
-      gap:8px !important;
-      min-width:132px !important;
-      max-width:160px !important;
-      padding:6px 8px !important;
-      border-radius:999px !important;
-      border:1px solid rgba(255,255,255,.12) !important;
-      background:rgba(255,255,255,.07) !important;
-      position:relative !important;
-      z-index:2 !important;
-    }
-    .youtube-volume-control .youtube-control-btn{
-      width:34px !important;
-      height:34px !important;
-      min-width:34px !important;
-      font-size:14px !important;
-      box-shadow:none !important;
-    }
-    .youtube-volume-range{
-      width:86px !important;
-      min-width:72px !important;
-      height:4px !important;
-      cursor:pointer !important;
-      accent-color:#0a8438 !important;
-      background:linear-gradient(90deg,#0a8438 var(--yt-volume,80%), rgba(255,255,255,.20) var(--yt-volume,80%)) !important;
-      border-radius:999px !important;
-      appearance:none;
-      -webkit-appearance:none;
-      outline:none;
-    }
-    .youtube-volume-range::-webkit-slider-thumb{
-      -webkit-appearance:none;
-      width:14px;
-      height:14px;
-      border-radius:999px;
-      background:#ffffff;
-      border:2px solid #0a8438;
-      box-shadow:0 3px 9px rgba(0,0,0,.35);
-    }
-    .youtube-volume-range::-moz-range-thumb{
-      width:14px;
-      height:14px;
-      border-radius:999px;
-      background:#ffffff;
-      border:2px solid #0a8438;
-      box-shadow:0 3px 9px rgba(0,0,0,.35);
-    }
-    .lesson-end-overlay{
-      position:absolute;
-      inset:0;
-      z-index:60;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:22px;
-      background:radial-gradient(circle at top, rgba(10,132,56,.30), rgba(0,0,0,.82) 48%, rgba(0,0,0,.92) 100%);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-    }
-    .lesson-end-overlay.hidden{display:none !important;}
-    .lesson-end-card{
-      width:min(560px,94%);
-      border-radius:26px;
-      border:1px solid rgba(127,243,165,.26);
-      background:linear-gradient(180deg, rgba(18,24,28,.94), rgba(5,8,7,.96));
-      box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
-      padding:26px;
-      text-align:center;
-      color:#ffffff;
-      animation:modalIn .28s ease both;
-    }
-    .lesson-end-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:8px 13px;
-      border-radius:999px;
-      border:1px solid rgba(127,243,165,.28);
-      background:rgba(10,132,56,.20);
-      color:#b9ffd0;
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      margin-bottom:14px;
-    }
-    .lesson-end-card h3{
-      margin:0 0 10px;
-      font-size:clamp(24px,3vw,34px);
-      line-height:1.08;
-      letter-spacing:-.04em;
-      color:#ffffff;
-    }
-    .lesson-end-card p{
-      margin:0 auto 20px;
-      max-width:440px;
-      color:#d7e7dc;
-      line-height:1.65;
-    }
-    .lesson-end-actions{
-      display:flex;
-      gap:12px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-    .lesson-end-actions .btn{
-      border-radius:14px !important;
-      min-width:150px;
-    }
-    @media (max-width:860px){
-      .youtube-custom-controls.has-timebar{
-        grid-template-columns:42px 48px 42px 42px 1fr 86px !important;
-      }
-      .youtube-custom-controls.has-timebar .youtube-volume-control{
-        grid-column:1 / -1 !important;
-        grid-row:3 !important;
-        width:100% !important;
-        max-width:none !important;
-        justify-content:center !important;
-      }
-      .youtube-custom-controls.has-timebar .youtube-volume-range{
-        width:min(220px,65vw) !important;
-      }
-      .youtube-custom-controls.has-timebar #btnYoutubeFullscreen{grid-column:4 !important;grid-row:1 !important;}
-      .youtube-custom-controls.has-timebar .youtube-quality-control{grid-column:6 !important;grid-row:1 !important;}
-    }
-
-
-    /* Ajuste seguro: volumen más fácil de seleccionar sin tocar estructura de Clases */
-    .youtube-volume-range{
-      height:9px !important;
-      border-radius:999px !important;
-    }
-    .youtube-volume-range::-webkit-slider-thumb{
-      width:22px !important;
-      height:22px !important;
-      border-width:3px !important;
-    }
-    .youtube-volume-range::-moz-range-thumb{
-      width:22px !important;
-      height:22px !important;
-      border-width:3px !important;
-    }
-
-
-    /* Certificados: lista simple con nombre del curso y botón PDF */
-    #tab-student-certificates #studentCertificatesList{
-      display:flex !important;
-      flex-direction:column !important;
-      gap:14px !important;
-    }
-    .certificate-simple-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:16px 18px;
-      border-radius:18px;
-      border:1px solid rgba(127,243,165,.20);
-      background:
-        radial-gradient(circle at top right, rgba(127,243,165,.10), transparent 28%),
-        linear-gradient(135deg,#111924 0%, #172231 100%);
-      box-shadow:0 16px 34px rgba(0,0,0,.18);
-    }
-    .certificate-simple-course{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:5px;
-    }
-    .certificate-simple-course small{
-      color:#7ff3a5 !important;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-    .certificate-simple-course strong{
-      color:#ffffff !important;
-      font-size:18px;
-      line-height:1.25;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .certificate-simple-row .btn{
-      flex:0 0 auto;
-      white-space:nowrap;
-    }
-    @media (max-width:760px){
-      .certificate-simple-row{
-        align-items:flex-start;
-        flex-direction:column;
-      }
-      .certificate-simple-row .btn{
-        width:100%;
-      }
-    }
-
-
     /* Ajuste seguro de la barra de controles en Clases */
     #tab-student-player .video-frame .youtube-custom-controls{
       left:50% !important;
@@ -10735,7 +10311,7 @@
       .student-certificate-card,.certificate-simple-row{border-radius:18px !important;padding:16px !important;}
       .certificate-simple-row{flex-direction:column !important;align-items:stretch !important;}
       .certificate-simple-course strong{font-size:16px !important;}
-      .history-item,#tab-student-resources .history-item,#tab-student-certificates .history-item,#tab-student-history .history-item{flex-direction:column !important;align-items:flex-start !important;gap:12px !important;}
+      .history-item,#tab-student-resources .history-item,#tab-student-history .history-item{flex-direction:column !important;align-items:flex-start !important;gap:12px !important;}
       .student-list-actions{margin-left:0 !important;padding-left:0 !important;}
       .player-video-wrap .video-frame,.video-frame{border-radius:16px !important;min-height:220px !important;max-height:none !important;aspect-ratio:16/9 !important;}
       .player-empty-courses-card{border-radius:20px !important;padding:22px 18px !important;}
@@ -15975,7 +15551,6 @@
 <div class="menu top-nav-menu hidden" id="menuStudent">
 <button class="active" data-tab="student-home" onclick="showTab('student-home', this)" type="button">Mi panel</button>
 <button data-tab="student-discover" onclick="showTab('student-discover', this)" type="button">Explorar cursos</button>
-<button data-tab="student-certificates" onclick="showTab('student-certificates', this)" type="button">Certificados</button>
 <button data-tab="student-player" onclick="showTab('student-player', this)" type="button">Clases</button>
 <button data-tab="student-profile" onclick="showTab('student-profile', this)" type="button">Mi perfil</button>
 </div>
@@ -16843,17 +16418,6 @@
 <div class="student-paid-grid" id="studentRecentCoursesGrid"></div>
 </div>
 </section>
-<section class="panel section-card tab-section hidden" id="tab-student-certificates">
-<div class="student-panel-header">
-<div>
-<span class="student-panel-kicker">Logros</span>
-<h2>Certificados</h2>
-<p>Aquí verás los cursos terminados y la recompensa visual de haberlos completado.</p>
-</div>
-<span class="pill-note">Tus metas cumplidas quedan visibles</span>
-</div>
-<div class="list-box" id="studentCertificatesList" style="margin-top:18px"></div>
-</section>
 <section class="panel section-card tab-section hidden" id="tab-student-player">
 <div class="player-empty-courses hidden" id="playerNoCoursesBox">
 <div class="player-empty-courses-card">
@@ -17052,7 +16616,7 @@
 <h3>Tu resumen</h3>
 <ul id="studentProfileStats" style="margin:0;padding-left:18px;color:#5f7164;line-height:1.9">
 <li>Progreso general del alumno</li>
-<li>Cursos activos y certificados</li>
+<li>Cursos activos y progreso</li>
 <li>Solicitudes y recursos</li>
 </ul>
 </div>
@@ -22729,7 +22293,7 @@ function renderPlayer(courseId){
       }
 
       let message = 'Sigue avanzando. Cada clase te acerca más a completar este curso.';
-      if(progress >= 100) message = 'Excelente. Ya completaste este curso y puedes revisar tu certificado.';
+      if(progress >= 100) message = 'Excelente. Ya completaste este curso. Puedes repasarlo cuando quieras o iniciar uno nuevo.';
       else if(progress >= 80) message = 'Ya casi lo completas. Este es el mejor momento para terminarlo.';
       else if(progress >= 50) message = 'Vas por muy buen camino. Mantén el ritmo y sigue avanzando.';
       else if(progress > 0) message = 'Ya empezaste. No lo dejes a medias.';
@@ -23545,6 +23109,7 @@ function renderPlayer(courseId){
     }
 
     function showTab(tabId, btn){
+      if(tabId === 'student-certificates') tabId = 'student-home';
       const target = document.getElementById('tab-' + tabId);
       if(!target){
         console.warn('No se encontró la sección solicitada:', tabId);
@@ -23578,7 +23143,6 @@ function renderPlayer(courseId){
       if(tabId === 'admin-registrations') renderRegistrationRequests();
       if(tabId === 'student-discover') renderStudentDiscover();
       if(tabId === 'student-progress') renderStudentProgress();
-      if(tabId === 'student-certificates') renderStudentCertificates();
       if(tabId === 'student-player'){
         const currentId = Number(state.currentCourseId) || 0;
         if(state.currentUser && state.currentUser.role === 'student'){
@@ -26299,7 +25863,7 @@ function openSelectedStudentCourseInClasses(courseId){
         if(continueLessonText) continueLessonText.textContent = completedLessons ? `Has completado ${completedLessons} de ${next.lessons.length} clases.` : 'Aún no has empezado este curso.';
         if(continueProgressText) continueProgressText.textContent = next.progress >= 100 ? 'Curso finalizado. Ya tienes recompensa disponible.' : `Vas al ${next.progress || 0}% y te falta poco para avanzar más.`;
         if(rec) rec.textContent = next.progress >= 100 ? 'Este curso ya está terminado. Puedes retomar otro que tengas en proceso.' : `Tu mejor siguiente paso es continuar con ${next.title}.`;
-        if(reward) reward.textContent = next.progress >= 100 ? 'Tu siguiente recompensa es iniciar un nuevo curso y mantener tu ritmo.' : 'Completa este curso para desbloquear tu certificado visual.';
+        if(reward) reward.textContent = next.progress >= 100 ? 'Tu siguiente meta es iniciar un nuevo curso y mantener tu ritmo.' : 'Completa este curso para avanzar en tu formación.';
         if(goalText) goalText.textContent = next.progress >= 100 ? 'Hoy puedes empezar otro curso y mantener tu impulso.' : `Tu meta de hoy: avanzar al menos una clase en ${next.title}.`;
         if(opportunityText) opportunityText.textContent = next.progress >= 80 ? 'Ya casi lo completas. Este es el mejor momento para terminar.' : 'Siempre hay un curso con potencial de avance esperando por ti.';
         if(quickWin) quickWin.textContent = next.progress >= 100 ? 'Ya lograste un avance importante. Aprovecha y abre tu siguiente curso.' : 'Un pequeño avance hoy mantiene viva la motivación y te acerca a un resultado real.';
@@ -26385,7 +25949,7 @@ function openSelectedStudentCourseInClasses(courseId){
               <span class="tag">${completed}/${course.lessons.length} clases</span>
             </div>
             <p class="course-benefit">${course.benefit || course.description}</p>
-            <div class="micro-copy">${course.progress >= 100 ? 'Completado. Ya puedes revisar tu certificado.' : 'Tu siguiente clase puede marcar una gran diferencia en tu avance.'}</div>
+            <div class="micro-copy">${course.progress >= 100 ? 'Completado. Puedes repasar el contenido cuando quieras.' : 'Tu siguiente clase puede marcar una gran diferencia en tu avance.'}</div>
             <div class="student-bar"><span style="width:${course.progress}%"></span></div>
             <div class="course-actions-row">
               <button class="btn btn-primary" onclick="openCoursePlayer(${course.id})">Seguir curso</button>
@@ -26775,9 +26339,9 @@ function openSelectedStudentCourseInClasses(courseId){
       const continueBtn = document.getElementById('btnContinueAfterEnd');
       if(title) title.textContent = isLastLesson ? 'Curso finalizado' : 'Muy bien, terminaste esta clase';
       if(text) text.textContent = isLastLesson
-        ? 'Puedes repetir esta clase o ir a tus certificados para revisar el logro desbloqueado.'
+        ? 'Puedes repetir esta clase o continuar explorando nuevos contenidos.'
         : 'Puedes repetirla para reforzar la idea principal o continuar con la siguiente clase.';
-      if(continueBtn) continueBtn.textContent = isLastLesson ? 'Ver certificado' : 'Siguiente clase';
+      if(continueBtn) continueBtn.textContent = isLastLesson ? 'Finalizar curso' : 'Siguiente clase';
       overlay.classList.remove('hidden');
     }
 
@@ -26834,7 +26398,7 @@ function openSelectedStudentCourseInClasses(courseId){
         saveState({ localOnly:true });
         renderPlayer(course.id);
       }else{
-        showTab('student-certificates');
+        showTab('student-player');
       }
     }
 
